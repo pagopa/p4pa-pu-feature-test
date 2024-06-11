@@ -1,0 +1,15 @@
+# Environments
+.env
+.venv
+env/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Ignore dynaconf secret files
+config/pu_feature_secrets.yaml
+
+#Test report
+/tests/reports/
