@@ -10,3 +10,6 @@ venv/
 
 # Ignore dynaconf secret files
 config/pu_feature_secrets.yaml
+
+#Test report
+/tests/reports/
