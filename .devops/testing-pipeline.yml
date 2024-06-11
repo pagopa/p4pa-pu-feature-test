@@ -40,13 +40,13 @@ stages:
           maxParallel: 3
           matrix:
             matrix:
-              gestione enti:
+              gestione_enti:
                 current_tag: 'ente'
-              gestione tipi dovuti:
+              gestione_tipi_dovuti:
                 current_tag: 'tipiDovuti'
-              gestione dovuti:
+              gestione_dovuti:
                 current_tag: 'dovuti'
-              gestione flussi:
+              gestione_flussi:
                 current_tag: 'flussi'
         steps:
           - checkout: self
