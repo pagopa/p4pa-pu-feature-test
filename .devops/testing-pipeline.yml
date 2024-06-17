@@ -34,7 +34,7 @@ stages:
     pool:
       name: $(selfHostedAgentPool)
     jobs:
-      - job: "Run_feature_tests_by_tag"
+      - job: "Run_all_feature_tests"
         condition: and(succeeded(), or(eq('${{ parameters.tag }}', ''), eq('${{ parameters.tag }}', 'all')))
         strategy:
           maxParallel: 3
@@ -78,7 +78,7 @@ stages:
               searchFolder: $(Build.SourcesDirectory)
               failTaskOnFailedTests: true
             continueOnError: true
-      - job: "Run_manual_feature_tests"
+      - job: "Run_feature_tests_by_tag"
         condition: and(succeeded(), and( not(eq('${{ parameters.tag }}', '')), not(eq('${{ parameters.tag }}', 'all'))))
         steps:
           - checkout: self
