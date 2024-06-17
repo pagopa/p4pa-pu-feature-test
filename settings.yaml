@@ -1,2 +1,27 @@
 SECRETS_PATH: "config/pu_feature_secrets.yaml"
 TARGET_ENV: "dev"
+default_timeout: 5000
+authorization_header: 'Authorization'
+api:
+  base_path:
+    payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
+  path_root:
+    public: "/public"
+    app_admin: "/appadmin"
+    operatore: "/operatore"
+    operatore_admin: "/operatore/admin"
+ente:
+  status:
+    inserito: 'INSERITO'
+    pre-esercizio: 'PRE-ESERCIZIO'
+    esercizio: 'ESERCIZIO'
+  tipo:
+    comune: 'COMUNE'
+    provincia: 'PROVINCIA'
+    regione: 'REGIONE'
+  funzionalita:
+    avviso_digitale: 'AVVISO_DIGITALE'
+    ente_pubblico: 'ENTE_PUBBLICO'
+    esito_push: 'INOLTRO_ESITO_PAGAMENTO_PUSH'
+    avviso_io: 'NOTIFICA_AVVISI_IO'
+    pagamento_spontaneo: 'PAGAMENTO_SPONTANEO'
