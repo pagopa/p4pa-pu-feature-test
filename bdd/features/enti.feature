@@ -36,3 +36,17 @@ Funzionalità: Gestione enti
             | dato errato    | causa errore            |
             | email          | E-mail invalida         |
             | codice fiscale | Codice fiscale invalido |
+
+    @inserimento
+    @admin_ente
+    Scenario: L'Amministratore Ente prova ad inserire un nuovo Ente
+        Dato un nuovo Ente di tipo Comune con codice IPA X
+        Quando l'Amministratore Ente prova ad inserire i dati dell'Ente X
+        Allora l'inserimento non va a buon fine a causa di "Utente non autorizzato"
+
+    @inserimento
+    @operatore
+    Scenario: L'Operatore prova ad inserire un nuovo Ente
+        Dato un nuovo Ente di tipo Comune con codice IPA X
+        Quando l'Operatore prova ad inserire i dati dell'Ente X
+        Allora l'inserimento non va a buon fine a causa di "Utente non autorizzato"

@@ -84,6 +84,7 @@ def step_insert_ente_ok(context, tipo, label):
 
 
 @when('l\'{user} prova a reinserire i dati dell\'Ente {label}')
+@when('l\'{user} prova ad inserire i dati dell\'Ente {label}')
 @when('l\'{user} prova ad inserire i dati dell\'Ente {label} con {field} non valido')
 def step_try_insert_ente(context, user, label, field=None):
     step_user_authentication(context, user)
@@ -122,6 +123,9 @@ def step_check_latest_insert_ente(context, cause_ko):
     elif cause_ko == 'E-mail invalida':
         assert context.latest_insert_ente.status_code == 500
         assert context.latest_insert_ente.json()['message'] == 'E-mail Amministratore è invalido'
+    elif cause_ko == 'Utente non autorizzato':
+        assert context.latest_insert_ente.status_code == 401
+        assert 'utente non autorizzato' in context.latest_insert_ente.json()['message']
 
 
 @then('l\'Ente {label} è in stato "{status}"')
