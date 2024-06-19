@@ -20,7 +20,19 @@ Funzionalità: Gestione enti
 
     @inserimento
     @admin_globale
-    Scenario: L'Amministratore Globale prova ad inserire un nuovo Ente con codice IPA già presente
+    Scenario: L'Amministratore Globale prova ad inserire un Ente con codice IPA già presente
         Dato un Ente di tipo Comune con codice IPA Z già inserito correttamente
         Quando l'Amministratore Globale prova a reinserire i dati dell'Ente Z
         Allora l'inserimento non va a buon fine a causa di "Ente già presente"
+
+    @inserimento
+    @admin_globale
+    Schema dello scenario: L'Amministratore Globale prova ad inserire un nuovo Ente con email o codice fiscale non validi
+        Dato un nuovo Ente di tipo Regione con codice IPA W
+        Quando l'Amministratore Globale prova ad inserire i dati dell'Ente W con <dato errato> non valido
+        Allora l'inserimento non va a buon fine a causa di "<causa errore>"
+
+        Esempi: Campi errati
+            | dato errato    | causa errore            |
+            | email          | E-mail invalida         |
+            | codice fiscale | Codice fiscale invalido |

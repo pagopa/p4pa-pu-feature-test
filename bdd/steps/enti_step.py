@@ -84,9 +84,15 @@ def step_insert_ente_ok(context, tipo, label):
 
 
 @when('l\'{user} prova a reinserire i dati dell\'Ente {label}')
-def step_try_insert_ente(context, user, label):
+@when('l\'{user} prova ad inserire i dati dell\'Ente {label} con {field} non valido')
+def step_try_insert_ente(context, user, label, field):
     step_user_authentication(context, user)
     token = context.token[user]
+
+    if field == 'codice fiscale':
+        context.ente_data[label]['fiscal_code'] = fiscal_code_ente.get('not_valid')
+    elif field == 'email':
+        context.ente_data[label]['email'] = 'email$email.it'
 
     ente_data = context.ente_data[label]
     cod_stato_ente = get_info_stato_ente(token=token, cod_stato=status_ente.inserito)
@@ -102,6 +108,7 @@ def step_try_insert_ente(context, user, label):
                            cod_tipo_ente=cod_tipo_ente)
 
     context.latest_insert_ente = res
+    print(res.json())
 
 
 @then('l\'inserimento non va a buon fine a causa di "{cause_ko}"')
@@ -109,6 +116,12 @@ def step_check_latest_insert_ente(context, cause_ko):
     if cause_ko == 'Ente già presente':
         assert context.latest_insert_ente.status_code == 500
         assert context.latest_insert_ente.json()['message'] == 'Ente già presente nel database'
+    elif cause_ko == 'Codice fiscale invalido':
+        assert context.latest_insert_ente.status_code == 500
+        assert context.latest_insert_ente.json()['message'] == 'Codice Fiscale Ente è invalido'
+    elif cause_ko == 'E-mail invalida':
+        assert context.latest_insert_ente.status_code == 500
+        assert context.latest_insert_ente.json()['message'] == 'E-mail Amministratore è invalido'
 
 
 @then('l\'Ente {label} è in stato "{status}"')
