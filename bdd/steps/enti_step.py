@@ -85,7 +85,7 @@ def step_insert_ente_ok(context, tipo, label):
 
 @when('l\'{user} prova a reinserire i dati dell\'Ente {label}')
 @when('l\'{user} prova ad inserire i dati dell\'Ente {label} con {field} non valido')
-def step_try_insert_ente(context, user, label, field):
+def step_try_insert_ente(context, user, label, field=None):
     step_user_authentication(context, user)
     token = context.token[user]
 
