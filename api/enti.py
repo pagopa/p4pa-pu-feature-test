@@ -9,7 +9,8 @@ def get_enti_list(token, logo_mode: str = 'hash'):
         headers={
             'Authorization': f'{token}'
         },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
 
 
 def get_ente_details(token, ente_id: int):
@@ -18,7 +19,18 @@ def get_ente_details(token, ente_id: int):
         headers={
             'Authorization': f'{token}'
         },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
+
+
+def get_ente_details_public(token, ente_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.public}/enti/{ente_id}',
+        headers={
+            'Authorization': f'{token}'
+        },
+        timeout=settings.default_timeout
+    )
 
 
 def post_insert_ente(token,
@@ -36,7 +48,8 @@ def post_insert_ente(token,
     return requests.post(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/ente/insert',
         headers={
-            'Authorization': f'{token}'
+            'Authorization': f'{token}',
+            'Content-Type': 'application/json'
         },
         json={
             'codIpaEnte': cod_ipa_ente,
@@ -50,7 +63,8 @@ def post_insert_ente(token,
             'codRpDatiVersDatiSingVersBicAccreditoSeller': bic_accredito_seller,
             'codRpDatiVersDatiSingVersIbanAccredito': iban_accredito
     },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
 
 
 def get_anagrafica_stati_ente(token):
@@ -59,7 +73,8 @@ def get_anagrafica_stati_ente(token):
         headers={
             'Authorization': f'{token}'
         },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
 
 
 def get_tipi_ente(token):
@@ -68,7 +83,8 @@ def get_tipi_ente(token):
         headers={
             'Authorization': f'{token}'
         },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
 
 
 def get_funzionalita_ente(token, ente_id: int):
@@ -77,4 +93,18 @@ def get_funzionalita_ente(token, ente_id: int):
         headers={
             'Authorization': f'{token}'
         },
-        timeout=settings.default_timeout)
+        timeout=settings.default_timeout
+    )
+
+
+def post_save_logo(token, ente_id: int, file):
+    return requests.post(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/{ente_id}/saveLogo',
+        headers={
+            'Authorization': f'{token}'
+        },
+        files={
+            'file': file
+        },
+        timeout=settings.default_timeout
+    )
