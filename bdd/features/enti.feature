@@ -1,5 +1,5 @@
 #language: it
-@ente
+@enti
 Funzionalità: Gestione enti
 
     @inserimento
