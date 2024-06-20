@@ -65,7 +65,6 @@ Funzionalità: Gestione enti
 
     @modifica
     @admin_globale
-        @test
     Schema dello scenario: L'Amministratore Globale prova a modificare <dato> di un Ente con valore non valido
         Dato un Ente di tipo Comune con codice IPA <etichetta> già inserito correttamente
         Quando l'Amministratore Globale prova a modificare <dato> dell'Ente <etichetta> in <nuovo valore>
