@@ -27,9 +27,9 @@ Funzionalità: Gestione enti
 
     @inserimento
     @admin_globale
-    Schema dello scenario: L'Amministratore Globale prova ad inserire un nuovo Ente con email o codice fiscale non validi
+    Schema dello scenario: L'Amministratore Globale prova ad inserire un nuovo Ente con valore del dato <dato errato> non valido
         Dato un nuovo Ente di tipo Regione con codice IPA W
-        Quando l'Amministratore Globale prova ad inserire i dati dell'Ente W con <dato errato> non valido
+        Quando l'Amministratore Globale prova ad inserire i dati dell'Ente W con valore del dato <dato errato> non valido
         Allora l'inserimento non va a buon fine a causa di "<causa errore>"
 
         Esempi: Campi errati
@@ -50,3 +50,28 @@ Funzionalità: Gestione enti
         Dato un nuovo Ente di tipo Comune con codice IPA X
         Quando l'Operatore prova ad inserire i dati dell'Ente X
         Allora l'inserimento non va a buon fine a causa di "Utente non autorizzato"
+
+    @modifica
+    @admin_globale
+    Schema dello scenario: L'Amministratore Globale modifica <dato> di un Ente precedentemente inserito
+        Dato un Ente di tipo Provincia con codice IPA <etichetta> già inserito correttamente
+        Quando l'Amministratore Globale modifica <dato> dell'Ente <etichetta> in <nuovo valore>
+        Allora <dato> dell'Ente <etichetta> risulta correttamente modificato
+
+        Esempi: Valori da modificare
+            | etichetta | dato     | nuovo valore   |
+            | A         | lo stato | pre-esercizio  |
+            | B         | il tipo  | Comune         |
+
+    @modifica
+    @admin_globale
+        @test
+    Schema dello scenario: L'Amministratore Globale prova a modificare <dato> di un Ente con valore non valido
+        Dato un Ente di tipo Comune con codice IPA <etichetta> già inserito correttamente
+        Quando l'Amministratore Globale prova a modificare <dato> dell'Ente <etichetta> in <nuovo valore>
+        Allora la modifica non va a buon fine a causa di "<causa errore>"
+
+        Esempi: Valori da modificare
+            | etichetta | dato                    | nuovo valore    | causa errore                 |
+            | C         | la email                | email$email.it  | E-mail invalida              |
+            | D         | il codice segregazione  | 1234            | Codice segregazione invalido |

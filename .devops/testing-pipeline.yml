@@ -30,8 +30,11 @@ parameters:
     values:
       - all
       - admin_globale
+      - admin_ente
+      - operatore
       - enti
       - inserimento
+      - modifica
       - logo
 
 stages:

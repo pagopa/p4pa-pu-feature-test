@@ -11,6 +11,7 @@ from api.enti import get_ente_details_public
 from api.enti import post_save_logo
 from api.enti import post_insert_ente
 from api.enti import get_ente_details
+from api.enti import post_update_ente
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import settings
 from config.configuration import secrets
@@ -58,8 +59,8 @@ def step_insert_ente(context, user, label):
     token = context.token[user]
 
     ente_data = context.ente_data[label]
-    cod_stato_ente = get_info_stato_ente(token=token, cod_stato=status_ente.inserito)
-    cod_tipo_ente = get_tipo_ente(token=token, desc_tipo=ente_data['tipo'].upper())
+    context.ente_data[label]['cod_stato_ente'] = get_info_stato_ente(token=token, cod_stato=status_ente.inserito)
+    context.ente_data[label]['cod_tipo_ente'] = get_tipo_ente(token=token, desc_tipo=ente_data['tipo'].upper())
 
     res = post_insert_ente(token=token,
                            name_ente=ente_data['name'],
@@ -67,8 +68,8 @@ def step_insert_ente(context, user, label):
                            email_ente=ente_data['email'],
                            application_code=ente_data['application_code'],
                            fiscal_code_ente=ente_data['fiscal_code'],
-                           cod_stato_ente=cod_stato_ente,
-                           cod_tipo_ente=cod_tipo_ente)
+                           cod_stato_ente=ente_data['cod_stato_ente'],
+                           cod_tipo_ente=ente_data['cod_tipo_ente'])
 
     assert res.status_code == 200
     ente_id = res.json()['mygovEnteId']
@@ -85,7 +86,7 @@ def step_insert_ente_ok(context, tipo, label):
 
 @when('l\'{user} prova a reinserire i dati dell\'Ente {label}')
 @when('l\'{user} prova ad inserire i dati dell\'Ente {label}')
-@when('l\'{user} prova ad inserire i dati dell\'Ente {label} con {field} non valido')
+@when('l\'{user} prova ad inserire i dati dell\'Ente {label} con valore del dato {field} non valido')
 def step_try_insert_ente(context, user, label, field=None):
     step_user_authentication(context, user)
     token = context.token[user]
@@ -109,7 +110,6 @@ def step_try_insert_ente(context, user, label, field=None):
                            cod_tipo_ente=cod_tipo_ente)
 
     context.latest_insert_ente = res
-    print(res.json())
 
 
 @then('l\'inserimento non va a buon fine a causa di "{cause_ko}"')
@@ -188,3 +188,74 @@ def step_check_correct_logo(context, label):
     image_returned = Image.open(io.BytesIO(base64.decodebytes(bytes(res_data['deLogoEnte'], "utf-8"))))
 
     assert list(image_returned.getdata()) == list(image_uploaded.getdata())
+
+
+@when('l\'{user} modifica {field_to_change} dell\'Ente {label} in {new_value}')
+def step_update_info_ente(context, user, label, field_to_change, new_value):
+    step_user_authentication(context, user)
+    token = context.token[user]
+    ente_data = context.ente_data[label]
+
+    status = status_ente.get(new_value) if field_to_change == 'lo stato' else status_ente.inserito
+    context.ente_data[label]['cod_stato_ente'] = get_info_stato_ente(token=token, cod_stato=status)
+
+    desc_tipo = new_value.upper() if field_to_change == 'il tipo' else ente_data['tipo'].upper()
+    context.ente_data[label]['cod_tipo_ente'] = get_tipo_ente(token=token, desc_tipo=desc_tipo)
+
+    res = post_update_ente(token=token,
+                           ente_id=context.ente_data[label]['id'],
+                           name_ente=ente_data['name'],
+                           cod_ipa_ente=ente_data['cod_ipa'],
+                           email_ente=ente_data['email'],
+                           application_code=ente_data['application_code'],
+                           fiscal_code_ente=ente_data['fiscal_code'],
+                           cod_stato_ente=context.ente_data[label]['cod_stato_ente'],
+                           cod_tipo_ente=context.ente_data[label]['cod_tipo_ente'])
+
+    assert res.status_code == 200
+
+
+@then('{field} dell\'Ente {label} risulta correttamente modificato')
+def step_check_ente_info_updated(context, field, label):
+    token = context.token[context.latest_user_authenticated]
+    res = get_ente_details(token=token, ente_id=context.ente_data[label]['id'])
+
+    assert res.status_code == 200
+
+    ente = res.json()
+    if 'stato' in field:
+        assert ente['cdStatoEnte']['codStato'] == context.ente_data[label]['cod_stato_ente']['codStato']
+    if 'tipo' in field:
+        assert ente['codTipoEnte'] == context.ente_data[label]['cod_tipo_ente']
+
+
+@when('l\'{user} prova a modificare {field_to_change} dell\'Ente {label} in {new_value}')
+def step_update_info_ente(context, user, label, field_to_change, new_value):
+    step_user_authentication(context, user)
+    token = context.token[user]
+    ente_data = context.ente_data[label]
+
+    ente_data['email'] = new_value if field_to_change == 'la email' else ente_data['email']
+    ente_data['application_code'] = new_value if field_to_change == 'il codice segregazione' else ente_data['application_code']
+
+    res = post_update_ente(token=token,
+                           ente_id=context.ente_data[label]['id'],
+                           name_ente=ente_data['name'],
+                           cod_ipa_ente=ente_data['cod_ipa'],
+                           email_ente=ente_data['email'],
+                           application_code=ente_data['application_code'],
+                           fiscal_code_ente=ente_data['fiscal_code'],
+                           cod_stato_ente=context.ente_data[label]['cod_stato_ente'],
+                           cod_tipo_ente=context.ente_data[label]['cod_tipo_ente'])
+
+    context.latest_update_ente = res
+
+
+@then('la modifica non va a buon fine a causa di "{cause_ko}"')
+def step_check_latest_update_ente(context, cause_ko):
+    if cause_ko == 'E-mail invalida':
+        assert context.latest_update_ente.status_code == 500
+        assert context.latest_update_ente.json()['message'] == 'E-mail Amministratore è invalido'
+    elif cause_ko == 'Codice segregazione invalido':
+        assert context.latest_update_ente.status_code == 500
+        assert context.latest_update_ente.json()['message'] == 'Segregation Code è invalido'
