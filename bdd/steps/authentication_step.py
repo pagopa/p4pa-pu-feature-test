@@ -10,4 +10,9 @@ def step_user_authentication(context, user):
 
     assert res.status_code == 200
 
-    context.token = res.headers.get('Authorization')
+    try:
+        context.token[user] = res.headers.get('Authorization')
+    except AttributeError:
+        context.token = {user: res.headers.get('Authorization')}
+
+    context.latest_user_authenticated = user

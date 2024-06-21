@@ -26,7 +26,16 @@ parameters:
   - name: tag
     displayName: Target tests tag (use unquoted "all" to run every un-skipped test)
     type: string
-    default: ''
+    default: 'all'
+    values:
+      - all
+      - admin_globale
+      - admin_ente
+      - operatore
+      - enti
+      - inserimento
+      - modifica
+      - logo
 
 stages:
   - stage: Feature_tests
@@ -40,7 +49,7 @@ stages:
           maxParallel: 3
           matrix:
             gestione enti:
-              current_tag: 'ente'
+              current_tag: 'enti'
             gestione tipi dovuti:
               current_tag: 'tipiDovuti'
             gestione dovuti:
