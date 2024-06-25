@@ -6,16 +6,18 @@ from behave import when
 from behave import then
 from behave import given
 
-from api.enti import get_funzionalita_ente
 from api.enti import get_ente_details_public
 from api.enti import post_save_logo
 from api.enti import post_insert_ente
 from api.enti import get_ente_details
 from api.enti import post_update_ente
+from api.enti import get_activate_funzionalita
+from api.enti import get_deactivate_funzionalita
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import settings
 from config.configuration import secrets
 from util.utility import get_info_stato_ente
+from util.utility import get_funzionalita_details
 from util.utility import get_tipo_ente
 
 cod_ipa_ente_template = 'FEATURE_TEST_{label}'
@@ -81,7 +83,7 @@ def step_insert_ente(context, user, label):
 def step_insert_ente_ok(context, tipo, label):
     step_create_ente_data(context=context, tipo=tipo, label=label)
     step_insert_ente(context=context, user='Amministratore Globale', label=label)
-    step_check_ente_details(context=context, label=label, status=status_ente.inserito)
+    step_check_ente_status(context=context, label=label, status=status_ente.inserito)
 
 
 @when('l\'{user} prova a reinserire i dati dell\'Ente {label}')
@@ -129,7 +131,7 @@ def step_check_latest_insert_ente(context, cause_ko):
 
 
 @then('l\'Ente {label} è in stato "{status}"')
-def step_check_ente_details(context, label, status):
+def step_check_ente_status(context, label, status):
     token = context.token[context.latest_user_authenticated]
     status = status.upper()
     res = get_ente_details(token=token, ente_id=context.ente_data[label]['id'])
@@ -138,25 +140,6 @@ def step_check_ente_details(context, label, status):
 
     ente = res.json()
     assert ente['cdStatoEnte']['codStato'] == status
-
-
-@then('l\'Ente {label} ha la funzionalità di {cod_funzionalita} attivata')
-def step_check_default_funzionalita_ente(context, label, cod_funzionalita):
-    token = context.token[context.latest_user_authenticated]
-    cod_funzionalita = cod_funzionalita.upper().replace(" ", "_")
-    res = get_funzionalita_ente(token=token, ente_id=context.ente_data[label]['id'])
-
-    assert res.status_code == 200
-
-    funzionalita_list = res.json()
-    assert funzionalita_list != []
-
-    active_funzionalita = False
-    for i in range(len(funzionalita_list)):
-        if funzionalita_list[i]['codFunzionalita'] == cod_funzionalita and funzionalita_list[i]['flgAttivo']:
-            active_funzionalita = True
-
-    assert active_funzionalita
 
 
 @when('l\'{user} aggiunge il logo all\'Ente {label}')
@@ -259,3 +242,83 @@ def step_check_latest_update_ente(context, cause_ko):
     elif cause_ko == 'Codice segregazione invalido':
         assert context.latest_update_ente.status_code == 500
         assert context.latest_update_ente.json()['message'] == 'Segregation Code è invalido'
+
+
+@when('l\'{user} attiva la funzionalità {cod_funzionalita} per l\'Ente {label}')
+def step_activate_funzionalita(context, user, cod_funzionalita, label):
+    step_user_authentication(context, user)
+    token = context.token[user]
+
+    cod_funzionalita = cod_funzionalita.upper().replace(" ", "_")
+    funzionalita = get_funzionalita_details(token=token,
+                                            ente_id=context.ente_data[label]['id'],
+                                            cod_funzionalita=cod_funzionalita)
+    assert funzionalita is not None
+
+    res = get_activate_funzionalita(token=token, funzionalita_id=funzionalita['mygovEnteFunzionalitaId'])
+
+    assert res.status_code == 200
+
+
+@when('l\'{user} disattiva la funzionalità {cod_funzionalita} per l\'Ente {label}')
+def step_deactivate_funzionalita(context, user, cod_funzionalita, label):
+    step_user_authentication(context, user)
+    token = context.token[user]
+
+    cod_funzionalita = cod_funzionalita.upper().replace(" ", "_")
+    funzionalita = get_funzionalita_details(token=token,
+                                            ente_id=context.ente_data[label]['id'],
+                                            cod_funzionalita=cod_funzionalita)
+    assert funzionalita is not None
+
+    res = get_deactivate_funzionalita(token=token, funzionalita_id=funzionalita['mygovEnteFunzionalitaId'])
+
+    assert res.status_code == 200
+
+
+@given('l\'{user} che attiva correttamente la funzionalità {cod_funzionalita} per l\'Ente {label}')
+def step_activate_funzionalita_ok(context, user, cod_funzionalita, label):
+    step_activate_funzionalita(context=context, user=user, cod_funzionalita=cod_funzionalita, label=label)
+    step_check_active_funzionalita_ente(context=context, cod_funzionalita=cod_funzionalita, label=label)
+
+
+@when('l\'{user} prova ad attivare la funzionalità {cod_funzionalita} per l\'Ente {label}')
+def step_try_activate_funzionalita(context, user, cod_funzionalita, label):
+    step_user_authentication(context, user)
+    token = context.token[user]
+
+    cod_funzionalita = cod_funzionalita.upper().replace(" ", "_")
+    funzionalita = get_funzionalita_details(token=token,
+                                            ente_id=context.ente_data[label]['id'],
+                                            cod_funzionalita=cod_funzionalita)
+    if funzionalita is None:
+        funzionalita_id = 0
+    else:
+        funzionalita_id = funzionalita['mygovEnteFunzionalitaId']
+
+    res = get_activate_funzionalita(token=token, funzionalita_id=funzionalita_id)
+    context.latest_activate_funzionalita = res
+
+
+@then('l\'attivazione non va a buon fine a causa di "{cause_ko}"')
+def step_check_latest_activate_funzionalita(context, cause_ko):
+    if cause_ko == 'Funzionalità non esistente':
+        assert context.latest_activate_funzionalita.status_code == 418
+        assert 'EnteFunzionalita not found.' in context.latest_activate_funzionalita.json()['message']
+
+
+@then('l\'Ente {label} ha la funzionalità di {cod_funzionalita} attivata')
+def step_check_active_funzionalita_ente(context, label, cod_funzionalita, active=True):
+    token = context.token[context.latest_user_authenticated]
+    cod_funzionalita = cod_funzionalita.upper().replace(" ", "_")
+
+    funzionalita = get_funzionalita_details(token=token,
+                                            ente_id=context.ente_data[label]['id'],
+                                            cod_funzionalita=cod_funzionalita)
+
+    assert funzionalita['flgAttivo'] is active
+
+
+@then('l\'Ente {label} ha la funzionalità di {cod_funzionalita} disattivata')
+def step_check_not_active_funzionalita_ente(context, label, cod_funzionalita):
+    step_check_active_funzionalita_ente(context=context, label=label, cod_funzionalita=cod_funzionalita, active=False)
