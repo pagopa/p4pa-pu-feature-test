@@ -133,6 +133,36 @@ def get_funzionalita_ente(token, ente_id: int):
     )
 
 
+def get_registro_funzionalita(token, ente_id: int, funzionalita: str):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/funzionalita/{ente_id}/{funzionalita}',
+        headers={
+            'Authorization': f'{token}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def get_activate_funzionalita(token, funzionalita_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/funzionalita/activate/{funzionalita_id}',
+        headers={
+            'Authorization': f'{token}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def get_deactivate_funzionalita(token, funzionalita_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/funzionalita/deactivate/{funzionalita_id}',
+        headers={
+            'Authorization': f'{token}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
 def post_save_logo(token, ente_id: int, file):
     return requests.post(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti/{ente_id}/saveLogo',

@@ -36,6 +36,7 @@ parameters:
       - inserimento
       - modifica
       - logo
+      - funzionalita
 
 stages:
   - stage: Feature_tests

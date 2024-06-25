@@ -74,3 +74,25 @@ Funzionalità: Gestione enti
             | etichetta | dato                    | nuovo valore    | causa errore                 |
             | C         | la email                | email$email.it  | E-mail invalida              |
             | D         | il codice segregazione  | 1234            | Codice segregazione invalido |
+
+    @funzionalita
+    @admin_globale
+    Scenario: L'Amministratore Globale attiva la funzionalità Notifica Avvisi IO per un Ente
+        Dato un Ente di tipo Comune con codice IPA E già inserito correttamente
+        Quando l'Amministratore Globale attiva la funzionalità Notifica Avvisi IO per l'Ente E
+        Allora l'Ente E ha la funzionalità di Notifica Avvisi IO attivata
+
+    @funzionalita
+    @admin_globale
+    Scenario: L'Amministratore Globale prova ad attivare una funzionalità non esistente per un Ente
+        Dato un Ente di tipo Comune con codice IPA F già inserito correttamente
+        Quando l'Amministratore Globale prova ad attivare la funzionalità Test per l'Ente F
+        Allora l'attivazione non va a buon fine a causa di "Funzionalità non esistente"
+
+    @funzionalita
+    @admin_globale
+    Scenario: L'Amministratore Globale disattiva la funzionalità Avviso Digitale per un Ente
+        Dato un Ente di tipo Comune con codice IPA G già inserito correttamente
+        E l'Amministratore Globale che attiva correttamente la funzionalità Avviso Digitale per l'Ente G
+        Quando l'Amministratore Globale disattiva la funzionalità Avviso Digitale per l'Ente G
+        Allora l'Ente G ha la funzionalità di Avviso Digitale disattivata

@@ -1,4 +1,5 @@
 from api.enti import get_tipi_ente
+from api.enti import get_funzionalita_ente
 from api.enti import get_anagrafica_stati_ente
 from config.configuration import secrets
 
@@ -41,3 +42,19 @@ def get_tipo_ente(token, desc_tipo: str) -> str:
             cod_tipo_ente = tipi_ente[i]['code']
             break
     return cod_tipo_ente
+
+
+def get_funzionalita_details(token, ente_id, cod_funzionalita) -> dict:
+    res = get_funzionalita_ente(token=token, ente_id=ente_id)
+
+    assert res.status_code == 200
+
+    funzionalita_list = res.json()
+    assert funzionalita_list != []
+
+    funzionalita = None
+    for i in range(len(funzionalita_list)):
+        if funzionalita_list[i]['codFunzionalita'] == cod_funzionalita:
+            funzionalita = funzionalita_list[i]
+
+    return funzionalita
