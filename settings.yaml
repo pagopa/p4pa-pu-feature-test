@@ -5,11 +5,17 @@ authorization_header: 'Authorization'
 api:
   base_path:
     payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
+    internal: "https://hub.internal.dev.p4pa.pagopa.it"
   path_root:
     public: "/public"
     app_admin: "/appadmin"
     operatore: "/operatore"
     operatore_admin: "/operatore/admin"
+  auth:
+    client_id: 'piattaforma-unitaria'
+    grant_type: 'grant-type-test'
+    subject_token_type: 'token-type-test'
+    scope: 'openid'
 ente:
   status:
     inserito: 'INSERITO'

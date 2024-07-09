@@ -13,7 +13,3 @@ config/pu_feature_secrets.yaml
 
 #Test report
 /tests/reports/
-
-#Local utils
-/bdd/features/cache.feature
-/bdd/steps/cache_flush.py
