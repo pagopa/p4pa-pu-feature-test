@@ -3,11 +3,15 @@ import requests
 from config.configuration import settings
 
 
-def get_enti_list(token, logo_mode: str = 'hash'):
+def get_enti_list(token, logo_mode: str = 'hash', cod_ipa_ente: str = None):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti?logoMode={logo_mode}',
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore_admin}/enti',
         headers={
             'Authorization': f'Bearer {token}'
+        },
+        params={
+            'logoMode': logo_mode,
+            'codIpaEnte': cod_ipa_ente
         },
         timeout=settings.default_timeout
     )
