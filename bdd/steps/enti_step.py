@@ -7,6 +7,7 @@ from behave import then
 from behave import given
 
 from api.enti import get_ente_details_public
+from api.enti import get_enti_list
 from api.enti import post_save_logo
 from api.enti import post_insert_ente
 from api.enti import get_ente_details
@@ -142,6 +143,19 @@ def step_check_ente_status(context, label, status):
     assert ente['cdStatoEnte']['codStato'] == status
 
 
+@given('l\'Ente {label} censito correttamente')
+def step_check_ente_exists(context, label):
+    step_user_authentication(context, 'Amministratore Globale')
+    token = context.token['Amministratore Globale']
+
+    res = get_enti_list(token=token, cod_ipa_ente=context.ente_data[label]['cod_ipa'])
+    assert res.status_code == 200
+    assert res.json() != []
+    assert res.json()[0]['codIpaEnte'] == context.ente_data[label]['cod_ipa']
+
+    context.current_ente = context.ente_data[label]
+
+
 @when('l\'{user} aggiunge il logo all\'Ente {label}')
 def step_add_logo_ente(context, user, label):
     token = context.token[user]
@@ -218,15 +232,15 @@ def step_update_info_ente(context, user, label, field_to_change, new_value):
     token = context.token[user]
     ente_data = context.ente_data[label]
 
-    ente_data['email'] = new_value if field_to_change == 'la email' else ente_data['email']
-    ente_data['application_code'] = new_value if field_to_change == 'il codice segregazione' else ente_data['application_code']
+    email = new_value if field_to_change == 'la email' else ente_data['email']
+    application_code = new_value if field_to_change == 'il codice segregazione' else ente_data['application_code']
 
     res = post_update_ente(token=token,
                            ente_id=context.ente_data[label]['id'],
                            name_ente=ente_data['name'],
                            cod_ipa_ente=ente_data['cod_ipa'],
-                           email_ente=ente_data['email'],
-                           application_code=ente_data['application_code'],
+                           email_ente=email,
+                           application_code=application_code,
                            fiscal_code_ente=ente_data['fiscal_code'],
                            cod_stato_ente=context.ente_data[label]['cod_stato_ente'],
                            cod_tipo_ente=context.ente_data[label]['cod_tipo_ente'])

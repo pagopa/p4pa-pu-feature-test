@@ -5,6 +5,8 @@ authorization_header: 'Authorization'
 api:
   base_path:
     payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
+    internal: "https://hub.internal.dev.p4pa.pagopa.it"
+    io_notification: "https://hub.internal.dev.p4pa.pagopa.it/p4paionotification/ionotification"
   path_root:
     public: "/public"
     app_admin: "/appadmin"
@@ -25,3 +27,16 @@ ente:
     esito_push: 'INOLTRO_ESITO_PAGAMENTO_PUSH'
     avviso_io: 'NOTIFICA_AVVISI_IO'
     pagamento_spontaneo: 'PAGAMENTO_SPONTANEO'
+ente_data:
+  enteE:
+    cod_ipa: 'FEATURE_TEST_E'
+    name: 'Ente Feature Test E'
+    email: 'entefeaturetestE@email.it'
+    application_code: '0E'
+    tipo: 'Comune'
+  enteF:
+    cod_ipa: 'FEATURE_TEST_F'
+    name: 'Ente Feature Test F'
+    email: 'entefeaturetestF@email.it'
+    application_code: '0F'
+    tipo: 'Comune'
