@@ -169,7 +169,7 @@ def step_check_debt_position_exists(context, label):
     for i in range(len(payment_options)):
         if nav == payment_options[i]['nav']:
             assert payment_options[i]['status'] == 'PO_UNPAID'
-            assert str(round(payment_options[i]['amount'] / 100, 2)) == context.dovuto_data[label]['importo']
+            assert float(payment_options[i]['amount'] / 100) == float(context.dovuto_data[label]['importo'])
 
 
 @then('la posizione debitoria relativa al dovuto {label} non è più presente')
@@ -198,4 +198,4 @@ def step_check_detail_of_debt_position(context, label, field, value):
         if context.dovuto_data[label]['iuv'] == payment_options[i]['iuv']:
             assert payment_options[i]['status'] == 'PO_UNPAID'
             if field == 'importo':
-                assert str(round(payment_options[i]['amount'] / 100, 2)) == value.removesuffix(' euro')
+                assert float(payment_options[i]['amount'] / 100) == float(value.removesuffix(' euro'))
