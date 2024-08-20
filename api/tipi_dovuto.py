@@ -187,3 +187,13 @@ def delete_tipo_dovuto(token, tipo_dovuto_id: int):
         },
         timeout=settings.default_timeout
     )
+
+
+def get_tipi_dovuto_operatore(token, ente_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/enti/{ente_id}/tipiDovutoOperatore',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        timeout=settings.default_timeout
+    )

@@ -1,10 +1,11 @@
 from api.enti import get_tipi_ente
 from api.enti import get_funzionalita_ente
 from api.enti import get_anagrafica_stati_ente
-from api.tipi_dovuti import get_macro_area
-from api.tipi_dovuti import get_tipo_servizio
-from api.tipi_dovuti import get_motivo_riscossione
-from api.tipi_dovuti import get_cod_tassonomico
+from api.tipi_dovuto import get_macro_area
+from api.tipi_dovuto import get_tipi_dovuto_operatore
+from api.tipi_dovuto import get_tipo_servizio
+from api.tipi_dovuto import get_motivo_riscossione
+from api.tipi_dovuto import get_cod_tassonomico
 from config.configuration import secrets
 
 
@@ -109,3 +110,17 @@ def get_cod_tassonomia(token, cod_tipo_ente, cod_macro_area, cod_tipo_servizio, 
     assert cod_tassonomico_list != []
 
     return cod_tassonomico_list[0]['code']
+
+
+def get_tipo_dovuto_of_operator(token, cod_tipo_dovuto, ente_id):
+    res = get_tipi_dovuto_operatore(token=token,
+                                    ente_id=ente_id)
+
+    assert res.status_code == 200
+
+    tipi_dovuto_operatore = res.json()
+    assert tipi_dovuto_operatore != []
+
+    for i in range(len(tipi_dovuto_operatore)):
+        if cod_tipo_dovuto in tipi_dovuto_operatore[i]['codTipo']:
+            return tipi_dovuto_operatore[i]
