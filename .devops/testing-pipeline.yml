@@ -33,11 +33,12 @@ parameters:
       - admin_ente
       - operatore
       - enti
+      - dovuti
+      - gpd
       - inserimento
       - modifica
       - logo
       - funzionalita
-
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
