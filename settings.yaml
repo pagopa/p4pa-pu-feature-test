@@ -1,12 +1,13 @@
 SECRETS_PATH: "config/pu_feature_secrets.yaml"
 TARGET_ENV: "dev"
 default_timeout: 5000
-authorization_header: 'Authorization'
+API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 api:
   base_path:
     payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
     internal: "https://hub.internal.dev.p4pa.pagopa.it"
     io_notification: "https://hub.internal.dev.p4pa.pagopa.it/p4paionotification/ionotification"
+    gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
   path_root:
     public: "/public"
     app_admin: "/appadmin"
