@@ -1,0 +1,67 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:common="http://pagopa-api.pagopa.gov.it/xsd/common-types/v1.0.0/" xmlns:pafn="http://pagopa-api.pagopa.gov.it/pa/paForNode.xsd" xmlns:tns="http://pagopa-api.pagopa.gov.it/paForNode" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<soapenv:Body>
+		<pafn:paSendRTV2Request>
+			<idPA>{ente_fiscal_code}</idPA>
+			<idBrokerPA>{broker_fiscal_code}</idBrokerPA>
+			<idStation>{broker_station_id}</idStation>
+			<receipt>
+				<receiptId>{receipt_id}</receiptId>
+				<noticeNumber>3{iuv}</noticeNumber>
+				<fiscalCode>{ente_fiscal_code}</fiscalCode>
+				<outcome>OK</outcome>
+				<creditorReferenceId>{iuv}</creditorReferenceId>
+				<paymentAmount>{amount}</paymentAmount>
+				<description>Dovuto feature test</description>
+				<companyName>{ente_name}</companyName>
+				<debtor>
+                    <uniqueIdentifier>
+                        <entityUniqueIdentifierType>F</entityUniqueIdentifierType>
+                        <entityUniqueIdentifierValue>{citizen_fiscal_code}</entityUniqueIdentifierValue>
+                    </uniqueIdentifier>
+                    <fullName>{citizen_name}</fullName>
+                    <streetName>Via Test</streetName>
+                    <civicNumber>123</civicNumber>
+                    <postalCode>00000</postalCode>
+                    <city>Rome</city>
+                    <stateProvinceRegion>RM</stateProvinceRegion>
+                    <country>IT</country>
+                    <e-mail>{citizen_email}</e-mail>
+				</debtor>
+				<transferList>
+					<transfer>
+						<idTransfer>1</idTransfer>
+						<transferAmount>{amount}</transferAmount>
+						<fiscalCodePA>{ente_fiscal_code}</fiscalCodePA>
+						<IBAN>IT39X0300203280451585346538</IBAN>
+						<remittanceInformation>/RFB/{iuv}/{amount}/TXT/Dovuto feature test</remittanceInformation>
+						<transferCategory>0201115AP</transferCategory>
+					</transfer>
+				</transferList>
+				<idPSP>FEATURE_TEST_ID</idPSP>
+				<pspFiscalCode>FEATURE_TEST_FC</pspFiscalCode>
+				<PSPCompanyName>FEATURE_TEST</PSPCompanyName>
+				<idChannel>FEATURE_TEST_CHANNEL_ID</idChannel>
+				<channelDescription>NA</channelDescription>
+				<payer>
+                    <uniqueIdentifier>
+                        <entityUniqueIdentifierType>F</entityUniqueIdentifierType>
+                        <entityUniqueIdentifierValue>{citizen_fiscal_code}</entityUniqueIdentifierValue>
+                    </uniqueIdentifier>
+                    <fullName>{citizen_name}</fullName>
+                    <streetName>Via Test</streetName>
+                    <civicNumber>123</civicNumber>
+                    <postalCode>00000</postalCode>
+                    <city>Rome</city>
+                    <stateProvinceRegion>RM</stateProvinceRegion>
+                    <country>IT</country>
+                    <e-mail>{citizen_email}</e-mail>
+				</payer>
+				<paymentMethod>creditCard</paymentMethod>
+				<fee>1.30</fee>
+				<paymentDateTime>{current_datetime}</paymentDateTime>
+				<applicationDate>{current_date}</applicationDate>
+				<transferDate>{current_date}</transferDate>
+			</receipt>
+		</pafn:paSendRTV2Request>
+	</soapenv:Body>
+</soapenv:Envelope>

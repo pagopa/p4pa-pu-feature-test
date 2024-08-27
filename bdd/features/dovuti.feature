@@ -19,5 +19,13 @@ Funzionalità: Gestione dovuti
   Scenario: L'Operatore modifica un dovuto e viene modificata anche la posizione debitoria
     Dato il dovuto C di tipo Licenza di Test del valore di 80 euro per la cittadina Maria
     E il dovuto C inserito correttamente con la relativa posizione debitoria
-    Quando l'Operatore modifica il valore dell'importo del dovuto C da 80 a 105.5 euro
-    Allora l'importo della posizione debitoria relativa al dovuto C è ora di 105.5 euro
+    Quando l'Operatore modifica il valore dell'importo del dovuto C da 80 a 105.50 euro
+    Allora l'importo della posizione debitoria relativa al dovuto C è ora di 105.50 euro
+
+  @pagamento
+  Scenario: L'Operatore inserisce un nuovo dovuto e il pagamento avviene con successo
+    Dato il dovuto D di tipo Licenza di Test del valore di 75.50 euro per la cittadina Maria
+    E il dovuto D inserito correttamente con la relativa posizione debitoria
+    Quando la cittadina Maria effettua il pagamento del dovuto D
+    Allora il dovuto D è in stato "pagato" nell'archivio
+    E l'Operatore può scaricare la ricevuta di pagamento effettuato per il dovuto D

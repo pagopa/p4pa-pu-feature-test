@@ -1,3 +1,7 @@
+import time
+from datetime import datetime, timedelta
+
+from api.dovuti import get_processed_dovuto_list
 from api.enti import get_tipi_ente
 from api.enti import get_funzionalita_ente
 from api.enti import get_anagrafica_stati_ente
@@ -124,3 +128,26 @@ def get_tipo_dovuto_of_operator(token, cod_tipo_dovuto, ente_id):
     for i in range(len(tipi_dovuto_operatore)):
         if cod_tipo_dovuto in tipi_dovuto_operatore[i]['codTipo']:
             return tipi_dovuto_operatore[i]
+
+
+def retry_check_exists_processed_dovuto(token, ente_id, dovuto_iuv, tries=8, delay=2):
+    count = 0
+    date_from = (datetime.utcnow() - timedelta(days=1)).strftime('%Y/%m/%d')
+    date_to = (datetime.utcnow() + timedelta(days=30)).strftime('%Y/%m/%d')
+
+    res = get_processed_dovuto_list(token=token, ente_id=ente_id, date_from=date_from, date_to=date_to, iuv=dovuto_iuv)
+
+    success = (res.status_code == 200 and len(res.json()['list']) == 1)
+    while not success:
+        count += 1
+        if count == tries:
+            break
+        time.sleep(delay)
+        res = get_processed_dovuto_list(token=token, ente_id=ente_id, date_from=date_from,
+                                        date_to=date_to, iuv=dovuto_iuv)
+        success = (res.status_code == 200 and len(res.json()['list']) == 1)
+
+    assert success
+    return res.json()['list'][0]
+
+

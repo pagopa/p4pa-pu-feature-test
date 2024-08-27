@@ -128,3 +128,13 @@ def post_update_dovuto(token,
         },
         timeout=settings.default_timeout
     )
+
+
+def download_rt(token, dovuto_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/pagati/{dovuto_id}/rt',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        timeout=settings.default_timeout
+    )
