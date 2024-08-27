@@ -35,6 +35,7 @@ parameters:
       - enti
       - dovuti
       - gpd
+      - pagamento
       - inserimento
       - modifica
       - logo
