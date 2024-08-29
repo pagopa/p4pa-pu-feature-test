@@ -10,6 +10,8 @@ dynaconf = "==3.2.4"
 pipenv = "==2024.0.1"
 requests = "==2.32.2"
 pillow = "==10.3.0"
+xmltodict = "==0.13.0"
+pymupdf = "==1.24.9"
 
 [dev-packages]
 

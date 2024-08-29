@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Body>
+    <paGetPaymentV2Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://pagopa-api.pagopa.gov.it/pa/paForNode.xsd">
+      <idPA xmlns="">{ente_fiscal_code}</idPA>
+      <idBrokerPA xmlns="">{broker_fiscal_code}</idBrokerPA>
+      <idStation xmlns="">{broker_station_id}</idStation>
+      <qrCode xmlns="">
+        <fiscalCode>{ente_fiscal_code}</fiscalCode>
+        <noticeNumber>3{iuv}</noticeNumber>
+      </qrCode>
+    </paGetPaymentV2Request>
+  </Body>
+</Envelope>
