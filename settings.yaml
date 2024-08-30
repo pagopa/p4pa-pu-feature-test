@@ -3,6 +3,7 @@ TARGET_ENV: "dev"
 default_timeout: 5000
 API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 SOAP_ACTION_HEADER: "SOAPAction"
+BROKER_ID_HEADER: "brokerId"
 api:
   base_path:
     payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
