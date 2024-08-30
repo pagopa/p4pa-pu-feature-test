@@ -146,3 +146,14 @@ def download_rt(token, dovuto_id: int):
         },
         timeout=settings.default_timeout
     )
+
+
+def download_avviso(token, dovuto_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/avvisi/{dovuto_id}/pn',
+        headers={
+            'Authorization': f'Bearer {token}',
+            settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
+        },
+        timeout=settings.default_timeout
+    )

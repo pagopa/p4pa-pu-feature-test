@@ -16,6 +16,7 @@ from api.dovuti import get_debt_position_details_by_nav
 from api.dovuti import delete_dovuto
 from api.dovuti import post_update_dovuto
 from api.dovuti import download_rt
+from api.dovuti import download_avviso
 from api.gpd import get_debt_position_by_iupd
 from api.soap.fesp import pa_get_payment_v2
 from api.soap.fesp import pa_send_rt_v2
@@ -256,10 +257,10 @@ def step_download_rt(context, user, label):
 
     with fitz.open(stream=io.BytesIO(res.content)) as pdf:
         page = pdf[0]
-        check_data_on_pdf(pdf_page=page, dovuto=dovuto_data)
+        check_data_on_pdf(page=page, dovuto=dovuto_data)
 
 
-def check_data_on_pdf(pdf_page, dovuto: dict):
+def check_data_on_pdf(page, dovuto: dict):
     def convert(lst):
         res_dict = {}
         for i in range(0, len(lst), 2):
@@ -268,7 +269,7 @@ def check_data_on_pdf(pdf_page, dovuto: dict):
 
     # in RT there is only one table, regarding the dovuto data
     data_dict = {}
-    table = pdf_page.find_tables()[0]
+    table = page.find_tables()[0]
     data_list = table.extract()
     for data in data_list:
         data_dict.update(convert(data))
@@ -279,6 +280,30 @@ def check_data_on_pdf(pdf_page, dovuto: dict):
     assert data_dict['Data pagamento'] == datetime.utcnow().strftime('%d/%m/%Y')
 
     # Assertion of other values in pdf
-    text = pdf_page.get_text("text")
+    text = page.get_text("text")
     assert 'CODICE UNIVOCO:\n'+dovuto['cod_fiscale'] in text
     assert ente_fiscal_code in text
+
+
+@then('l\'{user} può scaricare l\'avviso di pagamento per il dovuto {label}')
+def step_download_avviso(context, user, label):
+    step_user_authentication(context, user)
+    token = context.token[user]
+    dovuto_data = context.dovuto_data[label]
+
+    res = download_avviso(token=token, dovuto_id=dovuto_data['id'])
+    assert res.status_code == 200
+    assert res.headers.get('content-type') == 'application/pdf'
+
+    with fitz.open(stream=io.BytesIO(res.content)) as pdf:
+        page = pdf[0]
+
+        table = page.find_tables()[0]
+        data_table = table.extract()[0]
+        assert data_table[0] == 'ENTE CREDITORE Cod. Fiscale ' + ente_fiscal_code
+        assert data_table[1] == 'DESTINATARIO AVVISO Cod. Fiscale ' + dovuto_data['cod_fiscale']
+
+        text = page.get_text(sort=True)
+        assert (dovuto_data['importo'].replace('.', ',') + ' Euro\nentro il\n' +
+                datetime.strptime(dovuto_data['data_scadenza'], '%Y/%m/%d').strftime('%d/%m/%Y')) in text
+        assert 'Oggetto del pagamento\n' + dovuto_data['causale']
