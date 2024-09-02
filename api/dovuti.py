@@ -16,7 +16,8 @@ def post_insert_dovuto(token,
                        tipo_soggetto: str = 'F',
                        flag_anagrafica_anonima: bool = False,
                        flag_multibeneficiario: bool = False,
-                       data_scadenza: str = None
+                       data_scadenza: str = None,
+                       altro_beneficiario: dict = None
                        ):
     return requests.post(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/insert/{ente_id}',
@@ -37,6 +38,7 @@ def post_insert_dovuto(token,
             'causale': causale,
             'flgGenerateIuv': flag_generate_iuv,
             'flgMultibeneficiario': flag_multibeneficiario,
+            'dovutoMultibeneficiario': altro_beneficiario
         },
         timeout=settings.default_timeout
     )

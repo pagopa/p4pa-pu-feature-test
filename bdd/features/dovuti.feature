@@ -32,3 +32,11 @@ Funzionalità: Gestione dovuti
     Quando la cittadina Maria effettua il pagamento del dovuto D
     Allora il dovuto D è in stato "pagato" nell'archivio
     E l'Operatore può scaricare la ricevuta di pagamento effettuato per il dovuto D
+
+  @multibeneficiario
+  Scenario: L'Operatore inserisce un nuovo dovuto con multibeneficiario
+    Dato il dovuto E di tipo Licenza di Test del valore di 65.00 euro per la cittadina Maria
+    E l'aggiunta dell'Ente intermediato 1 come altro beneficiario del dovuto E con importo di 45.00 euro
+    Quando l'Operatore inserisce il dovuto E con generazione avviso e con multibeneficiario
+    Allora il dovuto E è in stato "da pagare"
+    E una nuova posizione debitoria relativa al dovuto E risulta creata con il dettaglio dei due enti beneficiari

@@ -26,7 +26,7 @@ from util.utility import get_tipo_dovuto_of_operator, retry_check_exists_process
 
 cod_tipo_dovuto = 'LICENZA_FEATURE_TEST'
 ente_id = secrets.user_info.operator.ente_id
-ente_name = 'Ente P4PA intermediato 2'
+ente_name = secrets.user_info.operator.ente_name
 ente_fiscal_code = secrets.user_info.operator.ente_fiscal_code
 broker_fiscal_code = secrets.payment_info.broker_fiscal_code
 broker_station_id = secrets.payment_info.broker_station_id
@@ -56,8 +56,23 @@ def step_create_dovuto_data(context, label, importo, citizen):
         context.dovuto_data = {label: dovuto_data}
 
 
+@given('l\'aggiunta dell\'Ente intermediato 1 come altro beneficiario del dovuto {label} con importo di {importo} euro')
+def step_add_multibeneficiario_data(context, label, importo):
+    ente_beneficiario = secrets.ente.intermediato_1
+
+    altro_beneficiario = {
+        'denominazioneBeneficiario': ente_beneficiario.name,
+        'codiceIdentificativoUnivoco': ente_beneficiario.fiscal_code,
+        'ibanAddebito': ente_beneficiario.iban,
+        'importoSecondario': importo,
+        'datiSpecificiRiscossione': '9/' + ente_beneficiario.tipo_dovuto + '/'
+    }
+
+    context.dovuto_data[label]['altro_beneficiario'] = altro_beneficiario
+
+
 @when('l\'{user} inserisce il dovuto {label} con generazione avviso')
-def step_insert_dovuto(context, user, label, generate_iuv=True):
+def step_insert_dovuto(context, user, label, generate_iuv=True, multibeneficiario=False, altro_beneficiario=None):
     step_user_authentication(context, user)
     token = context.token[user]
 
@@ -72,7 +87,9 @@ def step_insert_dovuto(context, user, label, generate_iuv=True):
                              importo=dovuto_data['importo'],
                              causale=dovuto_data['causale'],
                              flag_generate_iuv=generate_iuv,
-                             data_scadenza=dovuto_data['data_scadenza'])
+                             data_scadenza=dovuto_data['data_scadenza'],
+                             flag_multibeneficiario=multibeneficiario,
+                             altro_beneficiario=altro_beneficiario)
 
     assert res.status_code == 200
     new_dovuto = res.json()
@@ -83,6 +100,13 @@ def step_insert_dovuto(context, user, label, generate_iuv=True):
     if generate_iuv:
         assert new_dovuto['iuv'] is not None
         context.dovuto_data[label]['iuv'] = new_dovuto['iuv']
+
+
+@when('l\'{user} inserisce il dovuto {label} con generazione avviso e con multibeneficiario')
+def step_insert_dovuto_multibeneficiario(context, user, label):
+    altro_beneficiario = context.dovuto_data[label]['altro_beneficiario']
+    step_insert_dovuto(context=context, user=user, label=label,
+                       multibeneficiario=True, altro_beneficiario=altro_beneficiario)
 
 
 @then('il dovuto {label} è in stato "{status}"')
@@ -153,7 +177,7 @@ def step_update_amount_dovuto(context, user, label, old_value, new_value):
 
 # GPD
 @then('una nuova posizione debitoria relativa al dovuto {label} risulta creata')
-def step_check_debt_position_exists(context, label):
+def step_check_debt_position_exists(context, label, multibeneficiario=False):
     step_user_authentication(context, 'Amministratore Globale')
     token = context.token['Amministratore Globale']
 
@@ -171,11 +195,25 @@ def step_check_debt_position_exists(context, label):
     assert debt_position['status'] == 'VALID'
 
     payment_options = debt_position['paymentOption']
-
     for i in range(len(payment_options)):
         if nav == payment_options[i]['nav']:
             assert payment_options[i]['status'] == 'PO_UNPAID'
-            assert float(payment_options[i]['amount'] / 100) == float(context.dovuto_data[label]['importo'])
+            if not multibeneficiario:
+                assert float(payment_options[i]['amount'] / 100) == float(dovuto['importo'])
+            else:
+                importo_secondario = dovuto['altro_beneficiario']['importoSecondario']
+                assert float(payment_options[i]['amount'] / 100) == float(dovuto['importo']) + float(importo_secondario)
+                transfer = payment_options[i]['transfer']
+                assert len(transfer) == 2
+                assert transfer[0]['organizationFiscalCode'] == ente_fiscal_code
+                assert float(transfer[0]['amount'] / 100) == float(dovuto['importo'])
+                assert transfer[1]['organizationFiscalCode'] == dovuto['altro_beneficiario']['codiceIdentificativoUnivoco']
+                assert float(transfer[1]['amount'] / 100) == float(importo_secondario)
+
+
+@then('una nuova posizione debitoria relativa al dovuto {label} risulta creata con il dettaglio dei due enti beneficiari')
+def step_check_debt_position_with_multibeneficiario(context, label):
+    step_check_debt_position_exists(context=context, label=label, multibeneficiario=True)
 
 
 @then('la posizione debitoria relativa al dovuto {label} non è più presente')
