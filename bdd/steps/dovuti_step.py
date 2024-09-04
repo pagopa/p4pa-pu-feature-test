@@ -47,7 +47,7 @@ def step_create_dovuto_data(context, label, importo, citizen):
         'cod_fiscale': citizen_data.fiscal_code,
         'email': citizen_data.email,
         'importo': importo,
-        'data_scadenza': (datetime.utcnow() + timedelta(days=10)).strftime('%Y/%m/%d'),
+        'data_scadenza': (datetime.utcnow() + timedelta(days=1)).strftime('%Y/%m/%d'),
         'causale': 'Dovuto feature test'
     }
 
