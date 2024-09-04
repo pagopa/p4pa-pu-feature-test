@@ -44,7 +44,7 @@ Funzionalità: Gestione dovuti
   Scenario: L'Amministratore Ente prova ad inserire un nuovo dovuto con tipo dovuto su cui non è abilitato
     Dato il tipo dovuto Licenza di Test disabilitato per l'utente Amministratore Ente
     E il dovuto G di tipo Licenza di Test del valore di 83.55 euro per la cittadina Maria
-    Quando l'Amministratore Ente prova ad inserire il dovuto G con generazione avviso
+    Quando l'Amministratore Ente prova ad inserire il dovuto G
     Allora l'inserimento del nuovo dovuto non va a buon fine a causa di "tipo dovuto non attivo per l'operatore"
 
   Schema dello scenario: L'Operatore prova ad inserire un nuovo dovuto senza <dato>
