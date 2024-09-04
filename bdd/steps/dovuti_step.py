@@ -22,7 +22,8 @@ from api.soap.fesp import pa_get_payment_v2
 from api.soap.fesp import pa_send_rt_v2
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
-from util.utility import get_tipo_dovuto_of_operator, retry_check_exists_processed_dovuto
+from util.utility import get_tipo_dovuto_of_operator
+from util.utility import retry_check_exists_processed_dovuto
 
 cod_tipo_dovuto = 'LICENZA_FEATURE_TEST'
 ente_id = secrets.user_info.operator.ente_id
@@ -107,6 +108,47 @@ def step_insert_dovuto_multibeneficiario(context, user, label):
     altro_beneficiario = context.dovuto_data[label]['altro_beneficiario']
     step_insert_dovuto(context=context, user=user, label=label,
                        multibeneficiario=True, altro_beneficiario=altro_beneficiario)
+
+
+@when('l\'{user} prova ad inserire il dovuto {label}')
+@when('l\'{user} prova ad inserire il dovuto {label} senza {missing_field}')
+def step_try_insert_dovuto(context, user, label, missing_field=None):
+    step_user_authentication(context, user)
+    token = context.token[user]
+
+    dovuto_data = context.dovuto_data[label]
+
+    if missing_field == 'codice fiscale':
+        dovuto_data['cod_fiscale'] = None
+    elif missing_field == 'causale':
+        dovuto_data['causale'] = None
+
+    res = post_insert_dovuto(token=token,
+                             ente_id=ente_id,
+                             tipo_dovuto=dovuto_data['tipo_dovuto'],
+                             anagrafica=dovuto_data['anagrafica'],
+                             cod_fiscale=dovuto_data['cod_fiscale'],
+                             email=dovuto_data['email'],
+                             importo=dovuto_data['importo'],
+                             causale=dovuto_data['causale'],
+                             flag_generate_iuv=False,
+                             data_scadenza=dovuto_data['data_scadenza'])
+
+    context.latest_insert_dovuto = res
+
+
+@then('l\'inserimento del nuovo dovuto non va a buon fine a causa di "{cause_ko}"')
+def step_check_latest_delete_dovuto(context, cause_ko):
+    # TODO it is correct that if there is an error then response return 200 as status code?
+    if cause_ko == 'tipo dovuto non attivo per l\'operatore':
+        assert context.latest_insert_dovuto.status_code == 200
+        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'EnteTipoDovuto non e\' attivo per l\'operatore.'
+    elif cause_ko == 'codice fiscale obbligatorio':
+        assert context.latest_insert_dovuto.status_code == 200
+        assert 'Codice fiscale / Partita Iva: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
+    elif cause_ko == 'causale obbligatoria':
+        assert context.latest_insert_dovuto.status_code == 200
+        assert 'Causale: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
 
 
 @then('il dovuto {label} è in stato "{status}"')
@@ -207,11 +249,13 @@ def step_check_debt_position_exists(context, label, multibeneficiario=False):
                 assert len(transfer) == 2
                 assert transfer[0]['organizationFiscalCode'] == ente_fiscal_code
                 assert float(transfer[0]['amount'] / 100) == float(dovuto['importo'])
-                assert transfer[1]['organizationFiscalCode'] == dovuto['altro_beneficiario']['codiceIdentificativoUnivoco']
+                assert transfer[1]['organizationFiscalCode'] == dovuto['altro_beneficiario'][
+                    'codiceIdentificativoUnivoco']
                 assert float(transfer[1]['amount'] / 100) == float(importo_secondario)
 
 
-@then('una nuova posizione debitoria relativa al dovuto {label} risulta creata con il dettaglio dei due enti beneficiari')
+@then(
+    'una nuova posizione debitoria relativa al dovuto {label} risulta creata con il dettaglio dei due enti beneficiari')
 def step_check_debt_position_with_multibeneficiario(context, label):
     step_check_debt_position_exists(context=context, label=label, multibeneficiario=True)
 
@@ -319,7 +363,7 @@ def check_data_on_pdf(page, dovuto: dict):
 
     # Assertion of other values in pdf
     text = page.get_text("text")
-    assert 'CODICE UNIVOCO:\n'+dovuto['cod_fiscale'] in text
+    assert 'CODICE UNIVOCO:\n' + dovuto['cod_fiscale'] in text
     assert ente_fiscal_code in text
 
 

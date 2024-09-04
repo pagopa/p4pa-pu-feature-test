@@ -40,3 +40,20 @@ Funzionalità: Gestione dovuti
     Quando l'Operatore inserisce il dovuto E con generazione avviso e con multibeneficiario
     Allora il dovuto E è in stato "da pagare"
     E una nuova posizione debitoria relativa al dovuto E risulta creata con il dettaglio dei due enti beneficiari
+
+  Scenario: L'Amministratore Ente prova ad inserire un nuovo dovuto con tipo dovuto su cui non è abilitato
+    Dato il tipo dovuto Licenza di Test disabilitato per l'utente Amministratore Ente
+    E il dovuto G di tipo Licenza di Test del valore di 83.55 euro per la cittadina Maria
+    Quando l'Amministratore Ente prova ad inserire il dovuto G con generazione avviso
+    Allora l'inserimento del nuovo dovuto non va a buon fine a causa di "tipo dovuto non attivo per l'operatore"
+
+  Schema dello scenario: L'Operatore prova ad inserire un nuovo dovuto senza <dato>
+    Dato il dovuto H di tipo Licenza di Test del valore di 83.55 euro per la cittadina Maria
+    Quando l'Operatore prova ad inserire il dovuto H senza <dato>
+    Allora l'inserimento del nuovo dovuto non va a buon fine a causa di "<causa errore>"
+
+    Esempi: Campi errati
+            | dato           | causa errore                |
+            | codice fiscale | codice fiscale obbligatorio |
+            | causale        | causale obbligatoria        |
+
