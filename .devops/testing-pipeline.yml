@@ -10,7 +10,6 @@ variables:
   working-dir: '.'
   # Project root folder
   projectRoot: $(System.DefaultWorkingDirectory)/$(working-dir)
-  selfHostedAgentPool: 'p4pa-dev-linux-app'
 
 pool:
   vmImage: 'ubuntu-22.04'
@@ -45,7 +44,7 @@ stages:
   - stage: Feature_tests
     dependsOn: [ ]
     pool:
-      name: $(selfHostedAgentPool)
+      name: 'p4pa-${{ parameters.env }}-linux-app'
     jobs:
       - job: "Run_all_feature_tests"
         condition: and(succeeded(), or(eq('${{ parameters.tag }}', ''), eq('${{ parameters.tag }}', 'all')))
