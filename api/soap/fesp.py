@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import requests
 
 from config.configuration import settings
+from config.configuration import secrets
 
 
 def pa_get_payment_v2(ente_fiscal_code: str, broker_fiscal_code: str, broker_station_id: str, iuv: str):
@@ -14,7 +15,7 @@ def pa_get_payment_v2(ente_fiscal_code: str, broker_fiscal_code: str, broker_sta
                        iuv=iuv)
 
     return requests.post(
-        url=f'{settings.api.base_path.payhub}/ws/fesp/PagamentiTelematiciCCP36',
+        url=f'{secrets.internal_base_url}/payhub/ws/fesp/PagamentiTelematiciCCP36',
         headers={
             'Content-Type': 'text/xml',
             settings.SOAP_ACTION_HEADER: 'paGetPaymentV2'
@@ -42,7 +43,7 @@ def pa_send_rt_v2(body: dict):
                        )
 
     return requests.post(
-        url=f'{settings.api.base_path.payhub}/ws/fesp/PagamentiTelematiciCCP36',
+        url=f'{secrets.internal_base_url}/payhub/ws/fesp/PagamentiTelematiciCCP36',
         headers={
             'Content-Type': 'text/xml',
             settings.SOAP_ACTION_HEADER: 'paSendRTV2'
