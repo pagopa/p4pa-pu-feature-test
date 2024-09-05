@@ -11,6 +11,7 @@ from behave import then
 from behave import given
 
 from api.dovuti import post_insert_dovuto
+from api.dovuti import get_dovuto_list
 from api.dovuti import get_dovuto_details
 from api.dovuti import get_debt_position_details_by_nav
 from api.dovuti import delete_dovuto
@@ -389,3 +390,68 @@ def step_download_avviso(context, user, label):
         assert (dovuto_data['importo'].replace('.', ',') + ' Euro\nentro il\n' +
                 datetime.strptime(dovuto_data['data_scadenza'], '%Y/%m/%d').strftime('%d/%m/%Y')) in text
         assert 'Oggetto del pagamento\n' + dovuto_data['causale']
+
+
+#TODO this step could be replaced by a new 'dovuto' created to which the due date is forced
+@given('il dovuto {label} di tipo Licenza di Test per la cittadina {citizen} in stato scaduto')
+def step_search_dovuto_scaduto(context, label, citizen):
+    step_user_authentication(context, 'Operatore')
+    token = context.token['Operatore']
+
+    citizen_data = secrets.citizen_info.get(citizen.lower())
+    date_from = (datetime.utcnow() - timedelta(days=15)).strftime('%Y/%m/%d')
+    date_to = (datetime.utcnow() + timedelta(days=1)).strftime('%Y/%m/%d')
+
+    res = get_dovuto_list(token=token, ente_id=ente_id, date_from=date_from, date_to=date_to,
+                          fiscal_code=citizen_data.fiscal_code, status='scaduto', causale='Dovuto feature test')
+
+    assert res.status_code == 200
+    assert len(res.json()['list']) != 0
+
+    dovuto = res.json()['list'][0]
+    data_scadenza = datetime.strptime(dovuto['dataScadenza'], '%Y/%m/%d')
+
+    assert data_scadenza < datetime.today()
+
+    res_details = get_dovuto_details(token=token, ente_id=ente_id, dovuto_id=dovuto['id'])
+    assert res_details.status_code == 200
+
+    try:
+        context.dovuto_data[label] = res_details.json()
+    except AttributeError:
+        context.dovuto_data = {label: res_details.json()}
+
+
+@when('l\'{user} proroga la data di scadenza del dovuto {label} di {period} giorni')
+def step_update_due_date_dovuto(context, user, label, period):
+    step_user_authentication(context, user)
+    token = context.token[user]
+    dovuto_data = context.dovuto_data[label]
+
+    new_data_scadenza = (datetime.utcnow() + timedelta(days=int(period))).strftime('%Y/%m/%d')
+    context.dovuto_data[label]['data_scadenza'] = new_data_scadenza
+
+    res = post_update_dovuto(token=token,
+                             ente_id=ente_id,
+                             dovuto_id=dovuto_data['id'],
+                             dovuto_iud=dovuto_data['iud'],
+                             tipo_dovuto=dovuto_data['tipoDovuto'],
+                             anagrafica=dovuto_data['anagrafica'],
+                             cod_fiscale=dovuto_data['codFiscale'],
+                             email=dovuto_data['email'],
+                             importo=dovuto_data['importo'],
+                             causale=dovuto_data['causale'],
+                             data_scadenza=new_data_scadenza)
+
+    assert res.status_code == 200
+
+
+@then('la {field} del dovuto {label} è stata aggiornata correttamente')
+def step_check_field_updated(context, label, field):
+    token = context.token[context.latest_user_authenticated]
+
+    res = get_dovuto_details(token=token, ente_id=ente_id, dovuto_id=context.dovuto_data[label]['id'])
+    assert res.status_code == 200
+
+    if field == 'data di scadenza':
+        assert res.json()['dataScadenza'] == context.dovuto_data[label]['data_scadenza']

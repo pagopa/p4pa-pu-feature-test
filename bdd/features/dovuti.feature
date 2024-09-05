@@ -57,3 +57,8 @@ Funzionalità: Gestione dovuti
             | codice fiscale | codice fiscale obbligatorio |
             | causale        | causale obbligatoria        |
 
+  Scenario: L'Operatore modifica un dovuto scaduto aggiornando la data di scadenza
+    Dato il dovuto X di tipo Licenza di Test per la cittadina Maria in stato scaduto
+    Quando l'Operatore proroga la data di scadenza del dovuto X di 10 giorni
+    Allora la data di scadenza del dovuto X è stata aggiornata correttamente
+    E il dovuto X è in stato "da pagare"

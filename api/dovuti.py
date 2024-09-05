@@ -77,6 +77,26 @@ def get_debt_position_details_by_nav(token, ente_fiscal_code: str, nav: str):
     )
 
 
+def get_dovuto_list(token, ente_id: int, date_from, date_to,
+                    iuv: str = None, fiscal_code: str = None, status: str = None, causale: str = None):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/{ente_id}/search',
+        headers={
+            'Authorization': f'Bearer {token}',
+            settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
+        },
+        params={
+            'from': date_from,
+            'to': date_to,
+            'iuv': iuv,
+            'codStato': status,
+            'codFiscale': fiscal_code,
+            'causale': causale
+        },
+        timeout=settings.default_timeout
+    )
+
+
 def get_processed_dovuto_list(token, ente_id: int, date_from, date_to, iuv: str = None):
     return requests.get(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/pagati/{ente_id}/search',
