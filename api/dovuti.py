@@ -80,7 +80,7 @@ def get_debt_position_details_by_nav(token, ente_fiscal_code: str, nav: str):
 def get_dovuto_list(token, ente_id: int, date_from, date_to,
                     iuv: str = None, fiscal_code: str = None, status: str = None, causale: str = None):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/{ente_id}/search',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/{ente_id}/search',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
@@ -172,7 +172,7 @@ def download_rt(token, dovuto_id: int):
 
 def download_avviso(token, dovuto_id: int):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/avvisi/{dovuto_id}/pn',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/avvisi/{dovuto_id}/pn',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
