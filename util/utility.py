@@ -24,6 +24,17 @@ def get_user_id(user: str) -> str:
         raise ValueError
 
 
+def get_user_info(user: str):
+    if user == 'Amministratore Globale':
+        return secrets.user_info.admin_global
+    elif user == 'Amministratore Ente':
+        return secrets.user_info.admin_ente
+    elif user == 'Operatore':
+        return secrets.user_info.operator
+    else:
+        raise ValueError
+
+
 def get_info_stato_ente(token, cod_stato: str) -> dict:
     res = get_anagrafica_stati_ente(token=token)
     assert res.status_code == 200
@@ -149,5 +160,3 @@ def retry_check_exists_processed_dovuto(token, ente_id, dovuto_iuv, tries=8, del
 
     assert success
     return res.json()['list'][0]
-
-

@@ -7,6 +7,7 @@ from behave import given
 
 from api.generic import get_service_io
 from api.generic import delete_service_io
+from api.utenti import get_utenti_ente_tipo_dovuto
 from bdd.steps.authentication_step import step_user_authentication
 from api.tipi_dovuto import post_insert_tipo_dovuto
 from api.tipi_dovuto import get_tipo_dovuto_by_id
@@ -17,6 +18,7 @@ from api.tipi_dovuto import get_tipi_dovuto_list
 from api.tipi_dovuto import get_details_tipo_dovuto
 from api.tipi_dovuto import delete_tipo_dovuto
 from util.utility import get_cod_macro_area
+from util.utility import get_user_info
 from util.utility import get_cod_tipo_servizio
 from util.utility import get_cod_motivo_riscossione
 from util.utility import get_cod_tassonomia
@@ -283,3 +285,23 @@ def step_check_tipo_dovuto_not_present(context, label, ente_label):
     res = get_tipo_dovuto_by_id(token=token, tipo_dovuto_id=tipo_dovuto['id'])
 
     assert res.status_code == 500
+
+
+@given('il tipo dovuto {tipo_dovuto} disabilitato per l\'utente {user}')
+def step_check_tipo_dovuto_active_on_user(context, user, tipo_dovuto):
+    step_user_authentication(context, 'Amministratore Globale')
+    token = context.token['Amministratore Globale']
+    user_info = get_user_info(user)
+
+    if tipo_dovuto == 'Licenza di Test':
+        res = get_details_tipo_dovuto(token=token, ente_id=user_info.ente_id, cod_tipo='LICENZA_FEATURE_TEST')
+        assert res.status_code == 200
+        tipo_dovuto_id = res.json()['mygovEnteTipoDovutoId']
+
+        res = get_utenti_ente_tipo_dovuto(token=token, ente_id=user_info.ente_id, tipo_dovuto_id=tipo_dovuto_id)
+        assert res.status_code == 200
+
+        utenti = res.json()
+        for i in range(len(utenti)):
+            if utenti[i]['codiceFiscale'] == user_info.fiscal_code:
+                assert utenti[i]['flgAssociato'] is False

@@ -16,7 +16,8 @@ def post_insert_dovuto(token,
                        tipo_soggetto: str = 'F',
                        flag_anagrafica_anonima: bool = False,
                        flag_multibeneficiario: bool = False,
-                       data_scadenza: str = None
+                       data_scadenza: str = None,
+                       altro_beneficiario: dict = None
                        ):
     return requests.post(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/insert/{ente_id}',
@@ -37,6 +38,7 @@ def post_insert_dovuto(token,
             'causale': causale,
             'flgGenerateIuv': flag_generate_iuv,
             'flgMultibeneficiario': flag_multibeneficiario,
+            'dovutoMultibeneficiario': altro_beneficiario
         },
         timeout=settings.default_timeout
     )
@@ -70,6 +72,26 @@ def get_debt_position_details_by_nav(token, ente_fiscal_code: str, nav: str):
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def get_dovuto_list(token, ente_id: int, date_from, date_to,
+                    iuv: str = None, fiscal_code: str = None, status: str = None, causale: str = None):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/{ente_id}/search',
+        headers={
+            'Authorization': f'Bearer {token}',
+            settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
+        },
+        params={
+            'from': date_from,
+            'to': date_to,
+            'iuv': iuv,
+            'codStato': status,
+            'codFiscale': fiscal_code,
+            'causale': causale
         },
         timeout=settings.default_timeout
     )
@@ -140,6 +162,17 @@ def post_update_dovuto(token,
 def download_rt(token, dovuto_id: int):
     return requests.get(
         f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/pagati/{dovuto_id}/rt',
+        headers={
+            'Authorization': f'Bearer {token}',
+            settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def download_avviso(token, dovuto_id: int):
+    return requests.get(
+        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/avvisi/{dovuto_id}/pn',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
