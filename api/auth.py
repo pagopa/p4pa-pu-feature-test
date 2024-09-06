@@ -1,11 +1,12 @@
 import requests
 
 from config.configuration import settings
+from config.configuration import secrets
 
 
 def post_auth_password(user_id: str):
     return requests.post(
-        url=f'{settings.api.base_path.internal}/p4paauth/payhub/auth/token',
+        url=f'{secrets.internal_base_url}/p4paauth/payhub/auth/token',
         params={
             'client_id': 'piattaforma-unitaria',
             'grant_type': 'grant-type-fake',

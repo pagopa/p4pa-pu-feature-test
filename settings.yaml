@@ -1,20 +1,18 @@
 SECRETS_PATH: "config/pu_feature_secrets.yaml"
-TARGET_ENV: "dev"
+TARGET_ENV: "uat"
 default_timeout: 5000
 API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 SOAP_ACTION_HEADER: "SOAPAction"
 BROKER_ID_HEADER: "brokerId"
 api:
   base_path:
-    payhub: "https://hub.internal.dev.p4pa.pagopa.it/payhub"
-    internal: "https://hub.internal.dev.p4pa.pagopa.it"
-    io_notification: "https://hub.internal.dev.p4pa.pagopa.it/p4paionotification/ionotification"
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
   path_root:
-    public: "/public"
-    app_admin: "/appadmin"
-    operatore: "/operatore"
-    operatore_admin: "/operatore/admin"
+    public: "/payhub/public"
+    app_admin: "/payhub/appadmin"
+    operatore: "/payhub/operatore"
+    operatore_admin: "/payhub/operatore/admin"
+    io_notification: "/p4paionotification/ionotification"
 ente:
   status:
     inserito: 'INSERITO'

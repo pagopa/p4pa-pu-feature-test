@@ -20,7 +20,7 @@ def post_insert_dovuto(token,
                        altro_beneficiario: dict = None
                        ):
     return requests.post(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/insert/{ente_id}',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/insert/{ente_id}',
         headers={
             'Authorization': f'Bearer {token}',
             'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ def post_insert_dovuto(token,
 
 def get_dovuto_details(token, ente_id: int, dovuto_id: int):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/{ente_id}/{dovuto_id}',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/{ente_id}/{dovuto_id}',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
@@ -57,7 +57,7 @@ def get_dovuto_details(token, ente_id: int, dovuto_id: int):
 
 def delete_dovuto(token, ente_id: int, dovuto_id: int):
     return requests.post(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/remove/{ente_id}/{dovuto_id}',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/remove/{ente_id}/{dovuto_id}',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
@@ -68,7 +68,7 @@ def delete_dovuto(token, ente_id: int, dovuto_id: int):
 
 def get_debt_position_details_by_nav(token, ente_fiscal_code: str, nav: str):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/gpd/{ente_fiscal_code}/{nav}',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/gpd/{ente_fiscal_code}/{nav}',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
@@ -99,7 +99,7 @@ def get_dovuto_list(token, ente_id: int, date_from, date_to,
 
 def get_processed_dovuto_list(token, ente_id: int, date_from, date_to, iuv: str = None):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/pagati/{ente_id}/search',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/pagati/{ente_id}/search',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
@@ -132,7 +132,7 @@ def post_update_dovuto(token,
                        data_scadenza: str = None
                        ):
     return requests.post(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/dovuti/update/{ente_id}/{dovuto_id}',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/update/{ente_id}/{dovuto_id}',
         headers={
             'Authorization': f'Bearer {token}',
             'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ def post_update_dovuto(token,
 
 def download_rt(token, dovuto_id: int):
     return requests.get(
-        f'{settings.api.base_path.payhub}/{settings.api.path_root.operatore}/pagati/{dovuto_id}/rt',
+        f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/pagati/{dovuto_id}/rt',
         headers={
             'Authorization': f'Bearer {token}',
             settings.BROKER_ID_HEADER: secrets.ente.intermediario_id
