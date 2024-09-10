@@ -33,6 +33,6 @@ steps:
       testResultsFiles: 'tests/reports/behave/*.xml'
       searchFolder: $(Build.SourcesDirectory)
       failTaskOnFailedTests: true
-      testRunTitle: 'Feature test results'
+      testRunTitle: 'Feature test results: ${{ parameters.tag }}'
     continueOnError: true
 
