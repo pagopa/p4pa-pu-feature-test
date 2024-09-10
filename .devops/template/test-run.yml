@@ -33,5 +33,6 @@ steps:
       testResultsFiles: 'tests/reports/behave/*.xml'
       searchFolder: $(Build.SourcesDirectory)
       failTaskOnFailedTests: true
+      testRunTitle: 'Feature test results'
     continueOnError: true
 
