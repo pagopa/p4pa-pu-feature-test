@@ -57,64 +57,15 @@ stages:
               current_tag: 'flussi'
         steps:
           - checkout: self
-          - script: |
-              python3 --version
-              pip3 --version
-            displayName: "Display Python version"
-          - script: |
-              python3 --version
-              python3 -m pip install --user pipenv
-              python3 -m pipenv sync
-            displayName: "Install requirements"
-          - task: DownloadSecureFile@1
-            name: pu_feature_secrets
-            displayName: 'Download PU secrets'
-            inputs:
-              secureFile: 'pu_feature_secrets.yaml'
-          - script: |
-              python3 -m pipenv run behave --junit --junit-directory "tests/reports/behave" --tags $TAGS --tags "~skip"
-            displayName: 'Run tests with Behave'
-            env:
-              PU_SECRETS_PATH: $(pu_feature_secrets.secureFilePath)
-              PU_TARGET_ENV: ${{ parameters.env }}
-              TAGS: '$(current_tag)'
-            continueOnError: true
-          - task: PublishTestResults@2
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: 'tests/reports/behave/*.xml'
-              searchFolder: $(Build.SourcesDirectory)
-              failTaskOnFailedTests: true
-            continueOnError: true
+          - template: template\test-run.yml
+            parameters:
+              env: ${{ parameters.env }}
+              tag: '$(current_tag)'
       - job: "${{ upper(parameters.env) }}_Run_feature_tests_by_tag"
         condition: and(succeeded(), and( not(eq('${{ parameters.tag }}', '')), not(eq('${{ parameters.tag }}', 'all'))))
         steps:
           - checkout: self
-          - script: |
-              python3 --version
-              pip3 --version
-            displayName: "Display Python version"
-          - script: |
-              python3 --version
-              python3 -m pip install --user pipenv
-              python3 -m pipenv sync
-            displayName: "Install requirements"
-          - task: DownloadSecureFile@1
-            name: pu_feature_secrets
-            displayName: 'Download PU secrets'
-            inputs:
-              secureFile: 'pu_feature_secrets.yaml'
-          - script: |
-              python3 -m pipenv run behave --junit --junit-directory "tests/reports/behave" --tags "${{ parameters.tag }}"
-            displayName: 'Run tests with Behave'
-            env:
-              PU_SECRETS_PATH: $(pu_feature_secrets.secureFilePath)
-              PU_TARGET_ENV: ${{ parameters.env }}
-            continueOnError: true
-          - task: PublishTestResults@2
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: 'tests/reports/behave/*.xml'
-              searchFolder: $(Build.SourcesDirectory)
-              failTaskOnFailedTests: true
-            continueOnError: true
+          - template: template\test-run.yml
+            parameters:
+              env: ${{ parameters.env }}
+              tag: ${{ parameters.tag }}
