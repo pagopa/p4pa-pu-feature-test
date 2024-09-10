@@ -6,7 +6,6 @@ parameters:
     type: string
 
 steps:
-  - checkout: self
   - script: |
       python3 --version
       pip3 --version
