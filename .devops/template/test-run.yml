@@ -14,7 +14,6 @@ steps:
   - script: |
       python3 --version
       python3 -m pip install --user pipenv
-      python3 -m pipenv lock
       python3 -m pipenv sync
     displayName: "Install requirements"
   - task: DownloadSecureFile@1
