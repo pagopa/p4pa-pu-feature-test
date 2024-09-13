@@ -5,6 +5,8 @@ from api.dovuti import get_processed_dovuto_list
 from api.enti import get_tipi_ente
 from api.enti import get_funzionalita_ente
 from api.enti import get_anagrafica_stati_ente
+from api.flussi import get_imported_flussi
+from api.flussi import get_list_flussi_export
 from api.tipi_dovuto import get_macro_area
 from api.tipi_dovuto import get_tipi_dovuto_operatore
 from api.tipi_dovuto import get_tipo_servizio
@@ -158,5 +160,48 @@ def retry_check_exists_processed_dovuto(token, ente_id, dovuto_iuv, tries=8, del
                                         date_to=date_to, iuv=dovuto_iuv)
         success = (res.status_code == 200 and len(res.json()['list']) == 1)
 
+    assert success
+    return res.json()['list'][0]
+
+
+def retry_get_imported_flussi(token, ente_id, nome_flusso, tries=10, delay=3):
+    count = 0
+    date_from = (datetime.utcnow() - timedelta(days=1)).strftime('%Y/%m/%d')
+    date_to = (datetime.utcnow() + timedelta(days=1)).strftime('%Y/%m/%d')
+
+    res = get_imported_flussi(token=token, date_from=date_from, date_to=date_to,
+                              ente_id=ente_id, nome_flusso=nome_flusso)
+
+    success = (res.status_code == 200 and len(res.json()['list']) == 1)
+    while not success:
+        count += 1
+        if count == tries:
+            break
+        time.sleep(delay)
+        res = get_imported_flussi(token=token, date_from=date_from, date_to=date_to,
+                                  ente_id=ente_id, nome_flusso=nome_flusso)
+
+        success = (res.status_code == 200 and len(res.json()['list']) == 1)
+    assert success
+    return res.json()['list'][0]
+
+
+def retry_get_list_flussi_export(token, ente_id, nome_flusso, tries=10, delay=3):
+    count = 0
+    date_from = date_to = (datetime.utcnow()).strftime('%Y/%m/%d')
+
+    res = get_list_flussi_export(token=token, ente_id=ente_id, date_from=date_from, date_to=date_to,
+                                 nome_flusso=nome_flusso)
+
+    success = (res.status_code == 200 and len(res.json()['list']) == 1)
+    while not success:
+        count += 1
+        if count == tries:
+            break
+        time.sleep(delay)
+        res = get_list_flussi_export(token=token, ente_id=ente_id, date_from=date_from, date_to=date_to,
+                                     nome_flusso=nome_flusso)
+
+        success = (res.status_code == 200 and len(res.json()['list']) == 1)
     assert success
     return res.json()['list'][0]

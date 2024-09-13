@@ -1,5 +1,5 @@
 SECRETS_PATH: "config/pu_feature_secrets.yaml"
-TARGET_ENV: "uat"
+TARGET_ENV: "dev"
 default_timeout: 5000
 API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 SOAP_ACTION_HEADER: "SOAPAction"
@@ -8,6 +8,7 @@ api:
   base_path:
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
   path_root:
+    payhub: "/payhub"
     public: "/payhub/public"
     app_admin: "/payhub/appadmin"
     operatore: "/payhub/operatore"

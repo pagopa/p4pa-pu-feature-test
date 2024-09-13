@@ -78,7 +78,8 @@ def get_debt_position_details_by_nav(token, ente_fiscal_code: str, nav: str):
 
 
 def get_dovuto_list(token, ente_id: int, date_from, date_to,
-                    iuv: str = None, fiscal_code: str = None, status: str = None, causale: str = None):
+                    iuv: str = None, fiscal_code: str = None, status: str = None, causale: str = None,
+                    nome_flusso: str = None):
     return requests.get(
         f'{secrets.internal_base_url}/{settings.api.path_root.operatore}/dovuti/{ente_id}/search',
         headers={
@@ -91,7 +92,8 @@ def get_dovuto_list(token, ente_id: int, date_from, date_to,
             'iuv': iuv,
             'codStato': status,
             'codFiscale': fiscal_code,
-            'causale': causale
+            'causale': causale,
+            'nomeFlusso': nome_flusso
         },
         timeout=settings.default_timeout
     )
