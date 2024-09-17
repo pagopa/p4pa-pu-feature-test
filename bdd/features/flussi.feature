@@ -7,7 +7,17 @@ Funzionalità: Gestione flussi
     Dato un nuovo flusso A con 3 dovuti di tipo Licenza di Test
     Quando l'Operatore carica il flusso A
     Allora il flusso A è presente nella lista con stato "caricato"
-    E i dovuti del flusso A sono in stato "da pagare"
+    E i dovuti inseriti tramite flusso A sono in stato "da pagare"
+
+  @import
+  @multibeneficiario
+  Scenario: L'Operatore carica un flusso contenente nuovi dovuti di cui uno multibeneficiario
+    Dato un nuovo flusso B con 3 dovuti di tipo Licenza di Test e versione tracciato "1_4"
+    E un dovuto 4 di tipo multibeneficiario aggiunto nel flusso B
+    Quando l'Operatore carica il flusso B
+    Allora il flusso B è presente nella lista con stato "flusso in caricamento"
+    E i dovuti inseriti tramite flusso B sono in stato "predisposto"
+    E il dovuto 4 del flusso B nel dettaglio presenta due beneficiari
 
   @export_rt
   Scenario: L'Operatore prenota l'export delle ricevute telematiche e verifica il pagamento di un dovuto
