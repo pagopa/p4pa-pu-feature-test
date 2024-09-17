@@ -32,6 +32,7 @@ parameters:
       - enti
       - tipi_dovuto
       - dovuti
+      - flussi
       - gpd
       - pagamento
       - logo
