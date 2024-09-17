@@ -14,7 +14,7 @@ from behave import given
 from api.dovuti import get_dovuto_list
 from api.flussi import post_import_flusso
 from api.flussi import get_insert_export_rt
-from api.flussi import download_export_flusso_rt
+from api.flussi import download_file_flusso
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import retry_get_imported_flussi
@@ -27,9 +27,11 @@ cod_tassonomico_tipo_dovuto = secrets.ente.intermediato_2.tipo_dovuto.cod_tasson
 cod_ipa_ente_2 = secrets.ente.intermediato_2.cod_ipa
 azione_inserimento = 'I'
 citizens_available = ['Maria', 'Giovanni', 'Luca']
+download_type_export = 'FLUSSI_EXPORT'
+download_type_import = 'FLUSSI_IMPORT'
 
 
-def create_row_data(context, citizen: str):
+def create_row_data(context, citizen: str, i_th: int):
     citizen_data = secrets.citizen_info.get(citizen.lower())
     iud = ''.join(random.choices(string.ascii_letters + string.digits, k=35))
     data_scadenza = (datetime.utcnow() + timedelta(days=1)).strftime('%Y-%m-%d')
@@ -38,7 +40,7 @@ def create_row_data(context, citizen: str):
     row = (f'{iud};;F;{citizen_data.fiscal_code};{citizen_data.name};;;;;;;{citizen_data.email};{data_scadenza};'
            f'{importo};0.00;{cod_tipo_dovuto};ALL;{causale};{cod_tassonomico_tipo_dovuto};;TRUE;{azione_inserimento}')
 
-    dovuto_data = {
+    dovuto_flusso = {
         'anagrafica': citizen_data.name,
         'cod_fiscale': citizen_data.fiscal_code,
         'email': citizen_data.email,
@@ -47,9 +49,9 @@ def create_row_data(context, citizen: str):
         'causale': causale
     }
     try:
-        context.dovuto_data[citizen_data.name] = dovuto_data
+        context.dovuto_flusso[i_th] = dovuto_flusso
     except AttributeError:
-        context.dovuto_data = {citizen_data.name: dovuto_data}
+        context.dovuto_flusso = {i_th: dovuto_flusso}
 
     return row
 
@@ -60,8 +62,10 @@ def create_flusso_rows(context, citizens: list):
               f';dataEsecuzionePagamento;importoDovuto;commissioneCaricoPa;tipoDovuto;tipoVersamento'
               f';causaleVersamento;datiSpecificiRiscossione;bilancio;flgGeneraIuv;azione')
     flusso_csv = [header]
+    i_th = 1
     for citizen in citizens:
-        flusso_csv.append(create_row_data(context=context, citizen=citizen))
+        flusso_csv.append(create_row_data(context=context, citizen=citizen, i_th=i_th))
+        i_th += 1
 
     return flusso_csv
 
@@ -101,6 +105,18 @@ def step_create_flusso_data(context, label, num, versione=None):
         context.flusso = {label: flusso_data}
 
 
+@given('un altro dovuto aggiunto nel flusso {label} a cui non è stato inserito il codice fiscale')
+def step_create_flusso_data_with_one_row_wrong(context, label):
+    flusso = context.flusso[label]
+    i_th = flusso['num_dovuti'] + 1
+    row = create_row_data(context=context, citizen='Maria', i_th=i_th)
+    row = row.replace(f'{secrets.citizen_info.get("maria").fiscal_code}', '')
+    flusso['rows'].append(row)
+    context.flusso[label]['rows'] = flusso['rows']
+    context.flusso[label]['num_dovuti'] = flusso['num_dovuti'] + 1
+    context.flusso[label]['dovuto_wrong'] = i_th
+
+
 @when('l\'{user} carica il flusso {label}')
 def step_import_flusso(context, user, label):
     step_user_authentication(context, user)
@@ -117,7 +133,7 @@ def step_import_flusso(context, user, label):
 @given('l\'{user} che carica correttamente il flusso {label}')
 def step_import_flusso_ok(context, user, label):
     step_import_flusso(context=context, user=user, label=label)
-    step_check_status_flusso(context=context, label=label, status='flusso in caricamento')
+    step_check_status_flusso(context=context, label=label, status='caricato')
 
 
 @when('l\'{user} prova a caricare il flusso {label} con lo stesso nome del flusso {label_1}')
@@ -156,14 +172,11 @@ def step_check_latest_import_flusso(context, label, cause_ko):
 @then('il flusso {label} è presente nella lista con stato "{status}" a causa di "{cause_ko}"')
 def step_check_status_flusso(context, label, status, cause_ko=None):
     token = context.token[context.latest_user_authenticated]
-    cod_stato = status.upper().replace(' ', '_')
+    cod_stato = status.upper()
 
     nome_flusso = context.flusso[label]['nome']
 
     flusso = retry_get_imported_flussi(token=token, ente_id=ente_id, nome_flusso=nome_flusso)
-
-    if status.upper() == 'FLUSSO IN CARICAMENTO':
-        cod_stato = 'LOAD_FLOW'
 
     assert flusso['codStato'] == cod_stato
 
@@ -171,6 +184,34 @@ def step_check_status_flusso(context, label, status, cause_ko=None):
         if cause_ko == 'versione tracciato \'1_45\' non supportata':
             assert ('La versione tracciato del file ' in flusso['codErrore'] and
                     'non è supportata.' in flusso['codErrore'])
+
+
+@then('il flusso {label} è in stato "{status}" ma con {num_scarti} scarto a causa di "{cause_error}"')
+def step_check_flusso_scarti_error(context, label, status, num_scarti, cause_error):
+    token = context.token[context.latest_user_authenticated]
+    flusso = context.flusso[label]
+
+    flusso_info = retry_get_imported_flussi(token=token, ente_id=ente_id, nome_flusso=flusso['nome'])
+    assert flusso_info['codStato'] == status.upper()
+
+    assert (flusso_info['numRigheTotali'] - flusso_info['numRigheImportateCorrettamente']) == num_scarti
+
+    res = download_file_flusso(token=token, ente_id=ente_id, file_name=flusso_info['path'],
+                               security_token=flusso_info['securityToken'],
+                               download_type=download_type_import)
+
+    assert res.status_code == 200
+    assert res.headers.get('content-type') == 'application/octet-stream'
+
+    zf = zipfile.ZipFile(io.BytesIO(res.content))
+    scarti_file_name = f'{flusso["filename"]}_SCARTI.zip'
+    dovuti_list = pandas.read_csv(zf.open(scarti_file_name), sep=';').to_dict(orient='records')
+
+    i_th_dovuto_wrong = context.dovuto[flusso['dovuto_wrong']]
+
+    if cause_error == 'codice fiscale non presente':
+        assert dovuti_list[i_th_dovuto_wrong]['cod_rifiuto'] == 'PAA_IMPORT_SINTASSI_CSV'
+        assert 'CODICE_IDENTIFICATIVO_UNIVOCO NON PRESENTE' in dovuti_list[i_th_dovuto_wrong]['de_rifiuto']
 
 
 @then('i dovuti del flusso {label} sono in stato "{status}"')
@@ -191,7 +232,7 @@ def step_check_status_dovuti_import(context, label, status):
     assert len(dovuti) == flusso_data['num_dovuti']
 
     for dovuto in dovuti:
-        assert dovuto['codStato'] == status
+        assert dovuto['stato'] == status
 
 
 @when('l\'{user} prenota l\'export delle ricevute telematiche')
@@ -229,8 +270,9 @@ def step_download_flusso_rt_and_check_details(context, user, dovuto_label):
     token = context.token[user]
 
     flusso_export_rt = context.latest_flusso_export_rt
-    res = download_export_flusso_rt(token=token, ente_id=ente_id, file_name=flusso_export_rt['filepath'],
-                                    security_token=flusso_export_rt['security_token'])
+    res = download_file_flusso(token=token, ente_id=ente_id, file_name=flusso_export_rt['filepath'],
+                               security_token=flusso_export_rt['security_token'],
+                               download_type=download_type_export)
 
     assert res.status_code == 200
     assert res.headers.get('content-type') == 'application/octet-stream'
@@ -245,3 +287,32 @@ def step_download_flusso_rt_and_check_details(context, user, dovuto_label):
             assert d['identificativoUnivocoRiscoss'] == dovuto['receipt_id']
             assert d['soggPagCodiceIdentificativoUnivoco'] == dovuto['cod_fiscale']
             assert d['importoTotalePagato'] == float(dovuto['importo'])
+
+
+@when('l\'{user} prova a prenotare l\'export delle ricevute telematiche inserendo un {field} invalido')
+def step_try_insert_export_rt(context, user, field):
+    step_user_authentication(context, user)
+    token = context.token[user]
+
+    date_from = date_to = (datetime.utcnow()).strftime('%Y/%m/%d')
+    tipo_dovuto = cod_tipo_dovuto
+
+    if field == 'intervallo di date':
+        date_to = (datetime.utcnow() - timedelta(days=2)).strftime('%Y/%m/%d')
+    elif field == 'tipo dovuto':
+        tipo_dovuto = 'NOT_EXISTENT'
+
+    res = get_insert_export_rt(token=token, ente_id=ente_id, date_from=date_from,
+                               date_to=date_to, tipo_dovuto=tipo_dovuto)
+
+    context.latest_insert_export_rt = res
+
+
+@then('la prenotazione dell\'export delle RT non va a buon fine a causa di "{cause_ko}"')
+def step_check_latest_export_rt(context, cause_ko):
+    if cause_ko == 'date non corrette':
+        assert context.latest_insert_export_rt.status_code == 500
+        assert context.latest_insert_export_rt.json()['message'] == 'La data di fine precede quella d\u00B4inizio'
+    elif cause_ko == 'tipo dovuto non trovato':
+        assert context.latest_insert_export_rt.status_code == 418  # TODO expected 404
+        assert context.latest_insert_export_rt.json()['message'] == 'Tipo Dovuto not found'

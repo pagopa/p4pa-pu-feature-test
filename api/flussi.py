@@ -68,8 +68,8 @@ def get_list_flussi_export(token, ente_id: int, date_from, date_to, nome_flusso:
     )
 
 
-def download_export_flusso_rt(token, ente_id: int, file_name: str, security_token: str,
-                              download_type: str = 'FLUSSI_EXPORT'):
+def download_file_flusso(token, ente_id: int, file_name: str, security_token: str,
+                         download_type: str):
     return requests.get(
         f'{secrets.internal_base_url}/{settings.api.path_root.payhub}/mybox/download/{ente_id}',
         headers={

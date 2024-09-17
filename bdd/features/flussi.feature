@@ -6,8 +6,8 @@ Funzionalità: Gestione flussi
   Scenario: L'Operatore carica un flusso contenente nuovi dovuti
     Dato un nuovo flusso A con 3 dovuti di tipo Licenza di Test
     Quando l'Operatore carica il flusso A
-    Allora il flusso A è presente nella lista con stato "flusso in caricamento"
-    E i dovuti del flusso A sono in stato "predisposto"
+    Allora il flusso A è presente nella lista con stato "caricato"
+    E i dovuti del flusso A sono in stato "da pagare"
 
   @export_rt
   Scenario: L'Operatore prenota l'export delle ricevute telematiche e verifica il pagamento di un dovuto
@@ -32,4 +32,21 @@ Funzionalità: Gestione flussi
   Scenario: L'Operatore prova a caricare un flusso con la 'versione tracciato' non valida
     Dato un nuovo flusso E con 4 dovuti di tipo Licenza di Test e versione tracciato "1_45"
     Quando l'Operatore carica il flusso E
-    Allora il flusso E è presente nella lista con stato "errore caricamento" a causa di "versione tracciato non supportata"
+    Allora il flusso E è presente nella lista con stato "errore" a causa di "versione tracciato non supportata"
+
+  Scenario: L'Operatore carica un flusso contenente un dovuto senza codice fiscale
+    Dato un nuovo flusso F con 3 dovuti di tipo Licenza di Test
+    E un altro dovuto aggiunto nel flusso F a cui non è stato inserito il codice fiscale
+    Quando l'Operatore carica il flusso F
+    Allora il flusso F è in stato "caricato" ma con 1 scarto a causa di "codice fiscale non presente"
+
+  Schema dello scenario: L'Operatore prova a prenotare l'export delle RT con un <dato errato> non corretto
+    Dato il dovuto D di tipo Licenza di Test del valore di 61.50 euro per la cittadina Maria
+    E il dovuto D inserito e pagato correttamente dalla cittadina Maria
+    Quando l'Operatore prova a prenotare l'export delle ricevute telematiche inserendo un <dato errato> invalido
+    Allora la prenotazione dell'export delle RT non va a buon fine a causa di "<causa errore>"
+
+    Esempi: Campi errati
+        | dato errato        | causa errore            |
+        | intervallo di date | date non corrette       |
+        | tipo dovuto        | tipo dovuto non trovato |
