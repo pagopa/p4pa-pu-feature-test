@@ -57,7 +57,7 @@ def create_row_data(context, citizen: str, i_th: int, file_multibeneficiario: bo
         row = (f'{iud};;F;{citizen_data.fiscal_code};{citizen_data.name};;;;;;;{citizen_data.email};{data_scadenza};'
                f'{importo};0.00;{intermediato_2.tipo_dovuto.cod_tipo};ALL;{causale};'
                f'{intermediato_2.tipo_dovuto.cod_tassonomico};;TRUE;TRUE;{intermediato_1.fiscal_code};'
-               f'{intermediato_1.name};{intermediato_1.iban};;;;;;;{intermediato_1.tipo_dovuto.cod_tipo};'
+               f'{intermediato_1.name};{intermediato_1.iban};;;;;;;{intermediato_1.tipo_dovuto.cod_tassonomico};'
                f'{causale_ente_secondario};{importo_ente_secondario};{azione_inserimento}')
 
     dovuto_flusso = {
@@ -110,7 +110,7 @@ def create_flusso_zip(flusso):
     dataset_dataframe = pandas.DataFrame(data=flusso_rows)
 
     zip_file_path = f'{flusso["filename"]}.zip'
-    dataset_dataframe.to_csv(zip_file_path, index=False, header=True,
+    dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{flusso["filename"]}.csv'))
     return zip_file_path
 
@@ -143,10 +143,9 @@ def step_create_flusso_data(context, label, num, versione=None):
         context.flusso = {label: flusso_data}
 
 
-@given('un altro dovuto aggiunto nel flusso {label} a cui non è stato inserito il codice fiscale')
-def step_create_flusso_data_with_one_row_wrong(context, label):
+@given('un dovuto {i_th} aggiunto nel flusso {label} a cui non è stato inserito il codice fiscale')
+def step_create_flusso_data_with_one_row_wrong(context, label, i_th):
     flusso = context.flusso[label]
-    i_th = flusso['num_dovuti'] + 1
     row = create_row_data(context=context, citizen='Maria', i_th=i_th)
     row = row.replace(f'{secrets.citizen_info.get("maria").fiscal_code}', '')
     flusso['rows'].append(row)
@@ -215,18 +214,19 @@ def step_check_latest_import_flusso(context, label, cause_ko):
                 f'Il nome del file [{context.flusso[label]["filename"]}.zip] deve iniziare col codice dell\'ente.')
 
 
-@given('il flusso {label} è presente nella lista con stato "{status}"')
-@then('il flusso {label} è presente nella lista con stato "{status}"')
-@then('il flusso {label} è presente nella lista con stato "{status}" a causa di "{cause_ko}"')
+@then('inizialmente il flusso {label} è in stato "{status}"')
+@then('poi il flusso {label} passa nello stato "{status}"')
+@then('il flusso {label} è in stato "{status}" a causa di "{cause_ko}"')
 def step_check_status_flusso(context, label, status, cause_ko=None):
     token = context.token[context.latest_user_authenticated]
-    cod_stato = status.upper()
+    cod_stato = status.upper().replace(' ', '_')
+
+    if status == 'flusso in caricamento':
+        cod_stato = 'LOAD_FLOW'
 
     nome_flusso = context.flusso[label]['nome']
-
-    flusso = retry_get_imported_flussi(token=token, ente_id=intermediato_2.id, nome_flusso=nome_flusso)
-
-    assert flusso['codStato'] == cod_stato
+    flusso = retry_get_imported_flussi(token=token, ente_id=intermediato_2.id, nome_flusso=nome_flusso,
+                                       field='codStato', expected_value=cod_stato)
 
     if cause_ko is not None:
         if cause_ko == 'versione tracciato \'1_45\' non supportata':
@@ -234,17 +234,18 @@ def step_check_status_flusso(context, label, status, cause_ko=None):
                     'non è supportata.' in flusso['codErrore'])
 
 
-@then('il flusso {label} è in stato "{status}" ma con {num_scarti} scarto a causa di "{cause_error}"')
+@then('il flusso {label} è in stato "{status}" con {num_scarti} scarto a causa del dovuto con "{cause_error}"')
 def step_check_flusso_scarti_error(context, label, status, num_scarti, cause_error):
     token = context.token[context.latest_user_authenticated]
     flusso = context.flusso[label]
 
-    flusso_info = retry_get_imported_flussi(token=token, ente_id=intermediato_2.id, nome_flusso=flusso['nome'])
-    assert flusso_info['codStato'] == status.upper()
+    flusso_info = retry_get_imported_flussi(token=token, ente_id=intermediato_2.id, nome_flusso=flusso['nome'],
+                                            field='codStato', expected_value=status.upper())
 
-    assert (flusso_info['numRigheTotali'] - flusso_info['numRigheImportateCorrettamente']) == num_scarti
+    assert (flusso_info['numRigheTotali'] - flusso_info['numRigheImportateCorrettamente']) == int(num_scarti)
 
-    res = download_file_flusso(token=token, ente_id=intermediato_2.id, file_name=flusso_info['path'],
+    file_path_scarti = f'{flusso_info["path"]}_SCARTI.zip'
+    res = download_file_flusso(token=token, ente_id=intermediato_2.id, file_name=file_path_scarti,
                                security_token=flusso_info['securityToken'],
                                download_type=download_type_import)
 
@@ -252,18 +253,22 @@ def step_check_flusso_scarti_error(context, label, status, num_scarti, cause_err
     assert res.headers.get('content-type') == 'application/octet-stream'
 
     zf = zipfile.ZipFile(io.BytesIO(res.content))
-    scarti_file_name = f'{flusso["filename"]}_SCARTI.zip'
-    dovuti_list = pandas.read_csv(zf.open(scarti_file_name), sep=';').to_dict(orient='records')
+    scarti_file_name = f'{flusso["filename"]}_SCARTI.csv'
+    dovuti_scartati_list = pandas.read_csv(zf.open(scarti_file_name), sep=';').to_dict(orient='records')
+    assert len(dovuti_scartati_list) == int(num_scarti)
+    dovuto_scartato = dovuti_scartati_list[0]
 
-    i_th_dovuto_wrong = context.dovuto[flusso['dovuto_wrong']]
+    dovuto_wrong = context.dovuto_flusso[flusso['dovuto_wrong']]
 
     if cause_error == 'codice fiscale non presente':
-        assert dovuti_list[i_th_dovuto_wrong]['cod_rifiuto'] == 'PAA_IMPORT_SINTASSI_CSV'
-        assert 'CODICE_IDENTIFICATIVO_UNIVOCO NON PRESENTE' in dovuti_list[i_th_dovuto_wrong]['de_rifiuto']
+        assert dovuto_scartato['IUD'] == dovuto_wrong['iud']
+        assert dovuto_scartato['cod_rifiuto'] == 'PAA_IMPORT_SINTASSI_CSV'
+        assert 'CODICE_IDENTIFICATIVO_UNIVOCO NON PRESENTE' in dovuto_scartato['de_rifiuto']
 
 
-@then('i dovuti inseriti tramite flusso {label} sono in stato "{status}"')
-def step_check_status_dovuti_import(context, label, status):
+@then('i {num_dovuti} dovuti inseriti tramite flusso {label} sono in stato "{status}"')
+@then('gli altri {num_dovuti} dovuti inseriti tramite flusso {label} sono in stato "{status}"')
+def step_check_status_dovuti_import(context, label, status, num_dovuti):
     token = context.token[context.latest_user_authenticated]
     status = status.upper()
 
@@ -277,7 +282,7 @@ def step_check_status_dovuti_import(context, label, status):
     assert res.status_code == 200
 
     dovuti = res.json()['list']
-    assert len(dovuti) == flusso_data['num_dovuti']
+    assert len(dovuti) == int(num_dovuti)
 
     for dovuto in dovuti:
         assert dovuto['stato'] == status
@@ -300,7 +305,7 @@ def step_check_dovuto_flusso_details(context, label, i_th):
     dovuto = res.json()['list'][0]
 
     assert dovuto['flgMultibeneficiario'] is True
-    assert dovuto['importo'] == (dovuto_flusso['importo'] + dovuto_flusso['importo_secondario'])
+    assert dovuto['importo'] == str(float(dovuto_flusso['importo'] + dovuto_flusso['importo_secondario']))
     assert dovuto['dovutoMultibeneficiario'] is not None
     assert dovuto['dovutoMultibeneficiario']['codiceIdentificativoUnivoco'] == intermediato_1.fiscal_code
 

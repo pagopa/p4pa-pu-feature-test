@@ -164,7 +164,8 @@ def retry_check_exists_processed_dovuto(token, ente_id, dovuto_iuv, tries=8, del
     return res.json()['list'][0]
 
 
-def retry_get_imported_flussi(token, ente_id, nome_flusso, tries=10, delay=3):
+def retry_get_imported_flussi(token, ente_id, nome_flusso, field, expected_value,
+                              tries=50, delay=3):
     count = 0
     date_from = (datetime.utcnow() - timedelta(days=1)).strftime('%Y/%m/%d')
     date_to = (datetime.utcnow() + timedelta(days=1)).strftime('%Y/%m/%d')
@@ -172,7 +173,11 @@ def retry_get_imported_flussi(token, ente_id, nome_flusso, tries=10, delay=3):
     res = get_imported_flussi(token=token, date_from=date_from, date_to=date_to,
                               ente_id=ente_id, nome_flusso=nome_flusso)
 
-    success = (res.status_code == 200 and len(res.json()['list']) == 1)
+    success = False
+    if res.status_code == 200 and len(res.json()['list']) == 1:
+        if res.json()['list'][0][field] == expected_value:
+            success = True
+
     while not success:
         count += 1
         if count == tries:
@@ -181,7 +186,9 @@ def retry_get_imported_flussi(token, ente_id, nome_flusso, tries=10, delay=3):
         res = get_imported_flussi(token=token, date_from=date_from, date_to=date_to,
                                   ente_id=ente_id, nome_flusso=nome_flusso)
 
-        success = (res.status_code == 200 and len(res.json()['list']) == 1)
+        if res.status_code == 200 and len(res.json()['list']) == 1:
+            if res.json()['list'][0][field] == expected_value:
+                success = True
     assert success
     return res.json()['list'][0]
 

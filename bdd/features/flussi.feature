@@ -6,8 +6,10 @@ Funzionalità: Gestione flussi
   Scenario: L'Operatore carica un flusso contenente nuovi dovuti
     Dato un nuovo flusso A con 3 dovuti di tipo Licenza di Test
     Quando l'Operatore carica il flusso A
-    Allora il flusso A è presente nella lista con stato "caricato"
-    E i dovuti inseriti tramite flusso A sono in stato "da pagare"
+    Allora inizialmente il flusso A è in stato "flusso in caricamento"
+    E i 3 dovuti inseriti tramite flusso A sono in stato "predisposto"
+    E poi il flusso A passa nello stato "caricato"
+    E i 3 dovuti inseriti tramite flusso A sono in stato "da pagare"
 
   @import
   @multibeneficiario
@@ -15,8 +17,10 @@ Funzionalità: Gestione flussi
     Dato un nuovo flusso B con 3 dovuti di tipo Licenza di Test e versione tracciato "1_4"
     E un dovuto 4 di tipo multibeneficiario aggiunto nel flusso B
     Quando l'Operatore carica il flusso B
-    Allora il flusso B è presente nella lista con stato "flusso in caricamento"
-    E i dovuti inseriti tramite flusso B sono in stato "predisposto"
+    Allora inizialmente il flusso B è in stato "flusso in caricamento"
+    E i 4 dovuti inseriti tramite flusso B sono in stato "predisposto"
+    E poi il flusso B passa nello stato "caricato"
+    E i 4 dovuti inseriti tramite flusso B sono in stato "da pagare"
     E il dovuto 4 del flusso B nel dettaglio presenta due beneficiari
 
   @export_rt
@@ -42,13 +46,14 @@ Funzionalità: Gestione flussi
   Scenario: L'Operatore prova a caricare un flusso con la 'versione tracciato' non valida
     Dato un nuovo flusso E con 4 dovuti di tipo Licenza di Test e versione tracciato "1_45"
     Quando l'Operatore carica il flusso E
-    Allora il flusso E è presente nella lista con stato "errore" a causa di "versione tracciato non supportata"
+    Allora il flusso E è in stato "errore caricamento" a causa di "versione tracciato non supportata"
 
   Scenario: L'Operatore carica un flusso contenente un dovuto senza codice fiscale
     Dato un nuovo flusso F con 3 dovuti di tipo Licenza di Test
-    E un altro dovuto aggiunto nel flusso F a cui non è stato inserito il codice fiscale
+    E un dovuto 4 aggiunto nel flusso F a cui non è stato inserito il codice fiscale
     Quando l'Operatore carica il flusso F
-    Allora il flusso F è in stato "caricato" ma con 1 scarto a causa di "codice fiscale non presente"
+    Allora il flusso F è in stato "caricato" con 1 scarto a causa del dovuto con "codice fiscale non presente"
+    E gli altri 3 dovuti inseriti tramite flusso F sono in stato "da pagare"
 
   Schema dello scenario: L'Operatore prova a prenotare l'export delle RT con un <dato errato> non corretto
     Dato il dovuto D di tipo Licenza di Test del valore di 61.50 euro per la cittadina Maria
