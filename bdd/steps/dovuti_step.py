@@ -26,10 +26,10 @@ from config.configuration import secrets
 from util.utility import get_tipo_dovuto_of_operator
 from util.utility import retry_check_exists_processed_dovuto
 
-cod_tipo_dovuto = 'LICENZA_FEATURE_TEST'
-ente_id = secrets.user_info.operator.ente_id
-ente_name = secrets.user_info.operator.ente_name
-ente_fiscal_code = secrets.user_info.operator.ente_fiscal_code
+cod_tipo_dovuto = secrets.ente.intermediato_2.tipo_dovuto.cod_tipo
+ente_id = secrets.ente.intermediato_2.id
+ente_name = secrets.ente.intermediato_2.name
+ente_fiscal_code = secrets.ente.intermediato_2.fiscal_code
 broker_fiscal_code = secrets.payment_info.broker_fiscal_code
 broker_station_id = secrets.payment_info.broker_station_id
 
@@ -67,7 +67,7 @@ def step_add_multibeneficiario_data(context, label, importo):
         'codiceIdentificativoUnivoco': ente_beneficiario.fiscal_code,
         'ibanAddebito': ente_beneficiario.iban,
         'importoSecondario': importo,
-        'datiSpecificiRiscossione': '9/' + ente_beneficiario.tipo_dovuto + '/'
+        'datiSpecificiRiscossione': ente_beneficiario.tipo_dovuto.cod_tassonomico
     }
 
     context.dovuto_data[label]['altro_beneficiario'] = altro_beneficiario
@@ -325,6 +325,13 @@ def step_pay_dovuto(context, citizen, label):
     res_parsed = xmltodict.parse(res_pa_send_rt.content.decode('utf-8'))
     res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paSendRTV2Response']
     assert res_body['outcome'] == 'OK'
+
+
+@given('il dovuto {label} inserito e pagato correttamente dalla cittadina {citizen}')
+def step_dovuto_paid_ok(context, citizen, label):
+    step_insert_dovuto(context=context, user='Operatore', label=label)
+    step_pay_dovuto(context=context, citizen=citizen, label=label)
+    step_check_processed_dovuto_status(context=context, label=label, status='pagato')
 
 
 @then('l\'{user} può scaricare la ricevuta di pagamento effettuato per il dovuto {label}')
