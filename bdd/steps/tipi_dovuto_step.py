@@ -17,6 +17,7 @@ from api.tipi_dovuto import get_deactivate_tipo_dovuto
 from api.tipi_dovuto import get_tipi_dovuto_list
 from api.tipi_dovuto import get_details_tipo_dovuto
 from api.tipi_dovuto import delete_tipo_dovuto
+from config.configuration import secrets
 from util.utility import get_cod_macro_area
 from util.utility import get_user_info
 from util.utility import get_cod_tipo_servizio
@@ -292,13 +293,14 @@ def step_check_tipo_dovuto_active_on_user(context, user, tipo_dovuto):
     step_user_authentication(context, 'Amministratore Globale')
     token = context.token['Amministratore Globale']
     user_info = get_user_info(user)
+    ente_id = secrets.ente.intermediato_2.id
 
     if tipo_dovuto == 'Licenza di Test':
-        res = get_details_tipo_dovuto(token=token, ente_id=user_info.ente_id, cod_tipo='LICENZA_FEATURE_TEST')
+        res = get_details_tipo_dovuto(token=token, ente_id=ente_id, cod_tipo='LICENZA_FEATURE_TEST')
         assert res.status_code == 200
         tipo_dovuto_id = res.json()['mygovEnteTipoDovutoId']
 
-        res = get_utenti_ente_tipo_dovuto(token=token, ente_id=user_info.ente_id, tipo_dovuto_id=tipo_dovuto_id)
+        res = get_utenti_ente_tipo_dovuto(token=token, ente_id=ente_id, tipo_dovuto_id=tipo_dovuto_id)
         assert res.status_code == 200
 
         utenti = res.json()
