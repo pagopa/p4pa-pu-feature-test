@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+      <Body>
+        <verifyPaymentNoticeReq xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://pagopa-api.pagopa.gov.it/node/nodeForPsp.xsd">
+          <idPSP xmlns="">{psp_id}</idPSP>
+          <idBrokerPSP xmlns="">{psp_id_broker}</idBrokerPSP>
+          <idChannel xmlns="">{psp_id_channel}</idChannel>
+          <password xmlns="">{psp_password}</password>
+          <qrCode xmlns="">
+            <fiscalCode>{ente_fiscal_code}</fiscalCode>
+            <noticeNumber>3{iuv}</noticeNumber>
+          </qrCode>
+        </verifyPaymentNoticeReq>
+      </Body>
+</Envelope>

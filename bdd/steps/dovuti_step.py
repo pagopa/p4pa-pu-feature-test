@@ -19,8 +19,10 @@ from api.dovuti import post_update_dovuto
 from api.dovuti import download_rt
 from api.dovuti import download_avviso
 from api.gpd import get_debt_position_by_iupd
-from api.soap.fesp import pa_get_payment_v2
-from api.soap.fesp import pa_send_rt_v2
+from api.soap.nodo import PSP
+from api.soap.nodo import verify_payment_notice
+from api.soap.nodo import activate_payment_notice
+from api.soap.nodo import send_payment_outcome
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import get_tipo_dovuto_of_operator
@@ -32,6 +34,7 @@ ente_name = secrets.ente.intermediato_2.name
 ente_fiscal_code = secrets.ente.intermediato_2.fiscal_code
 broker_fiscal_code = secrets.payment_info.broker_fiscal_code
 broker_station_id = secrets.payment_info.broker_station_id
+psp_info = secrets.payment_info.psp
 
 
 @given('il dovuto {label} di tipo Licenza di Test del valore di {importo} euro per la cittadina {citizen}')
@@ -290,47 +293,47 @@ def step_check_detail_of_debt_position(context, label, field, value):
                 assert float(payment_options[i]['amount'] / 100) == float(value.removesuffix(' euro'))
 
 
+def check_res_ok_and_get_body(response_content, tag_name):
+    res_parsed = xmltodict.parse(response_content.decode('utf-8'))
+    res_body = res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
+    assert res_body['outcome'] == 'OK'
+    return res_body
+
+
 @when('la cittadina {citizen} effettua il pagamento del dovuto {label}')
-def step_pay_dovuto(context, citizen, label):
+def step_pay_dovuto_with_nodo(context, citizen, label):
     dovuto_iuv = context.dovuto_data[label]['iuv']
     citizen_data = secrets.citizen_info.get(citizen.lower())
 
-    res_pa_get_payment = pa_get_payment_v2(ente_fiscal_code=ente_fiscal_code,
-                                           broker_fiscal_code=broker_fiscal_code,
-                                           broker_station_id=broker_station_id,
-                                           iuv=dovuto_iuv)
-    assert res_pa_get_payment.status_code == 200
-    res_parsed = xmltodict.parse(res_pa_get_payment.content.decode('utf-8'))
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paGetPaymentV2Response']
-    assert res_body['outcome'] == 'OK'
+    psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
-    receipt_id = ''.join(random.choices(string.ascii_letters, k=15))
-    context.dovuto_data[label]['receipt_id'] = receipt_id
+    res_verify_payment = verify_payment_notice(psp=psp, ente_fiscal_code=ente_fiscal_code, iuv=dovuto_iuv)
+    assert res_verify_payment.status_code == 200
+    res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
-    request_body = {
-        'ente_fiscal_code': ente_fiscal_code,
-        'ente_name': ente_name,
-        'broker_fiscal_code': broker_fiscal_code,
-        'broker_station_id': broker_station_id,
-        'iuv': dovuto_iuv,
-        'receipt_id': receipt_id,
-        'amount': context.dovuto_data[label]['importo'],
-        'citizen_fiscal_code': citizen_data.fiscal_code,
-        'citizen_name': citizen_data.name,
-        'citizen_email': citizen_data.email
-    }
+    amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
+    due_date = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["dueDate"]
 
-    res_pa_send_rt = pa_send_rt_v2(body=request_body)
-    assert res_pa_send_rt.status_code == 200
-    res_parsed = xmltodict.parse(res_pa_send_rt.content.decode('utf-8'))
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paSendRTV2Response']
-    assert res_body['outcome'] == 'OK'
+    res_activate_payment = activate_payment_notice(psp=psp, ente_fiscal_code=ente_fiscal_code, iuv=dovuto_iuv,
+                                                   amount=amount, due_date=due_date)
+    assert res_activate_payment.status_code == 200
+    res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
+                                                          tag_name='activatePaymentNoticeRes')
+
+    payment_token = res_activate_payment_body["paymentToken"]
+
+    res_send_outcome = send_payment_outcome(psp=psp, payment_token=payment_token,
+                                            citizen_fiscal_code=citizen_data.fiscal_code,
+                                            citizen_name=citizen_data.name,
+                                            citizen_email=citizen_data.email)
+    assert res_send_outcome.status_code == 200
+    check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeRes')
 
 
 @given('il dovuto {label} inserito e pagato correttamente dalla cittadina {citizen}')
 def step_dovuto_paid_ok(context, citizen, label):
     step_insert_dovuto(context=context, user='Operatore', label=label)
-    step_pay_dovuto(context=context, citizen=citizen, label=label)
+    step_pay_dovuto_with_nodo(context=context, citizen=citizen, label=label)
     step_check_processed_dovuto_status(context=context, label=label, status='pagato')
 
 
@@ -365,7 +368,6 @@ def check_data_on_pdf(page, dovuto: dict):
         data_dict.update(convert(data))
 
     assert data_dict['Id Univoco Dovuto'] == dovuto['iud']
-    assert data_dict['Id Univoco Riscossione'] == dovuto['receipt_id']
     assert data_dict['Importo pagato'] == '€ ' + dovuto['importo'].replace('.', ',')
     assert data_dict['Data pagamento'] == datetime.utcnow().strftime('%d/%m/%Y')
 
