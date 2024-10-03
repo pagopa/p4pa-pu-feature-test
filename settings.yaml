@@ -7,6 +7,7 @@ BROKER_ID_HEADER: "brokerId"
 api:
   base_path:
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
+    nodo_psp: "https://api.uat.platform.pagopa.it/nodo/node-for-psp/v1"
   path_root:
     payhub: "/payhub"
     public: "/payhub/public"

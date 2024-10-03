@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+      <Body>
+            <req:sendPaymentOutcomeReq xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:req="http://pagopa-api.pagopa.gov.it/node/nodeForPsp.xsd" xmlns="">
+			    <idPSP>{psp_id}</idPSP>
+                <idBrokerPSP>{psp_id_broker}</idBrokerPSP>
+                <idChannel>{psp_id_channel}</idChannel>
+                <password>{psp_password}</password>
+                <paymentToken>{payment_token}</paymentToken>
+                <outcome>OK</outcome>
+                <details>
+                    <paymentMethod>creditCard</paymentMethod>
+                    <fee>0.20</fee>
+                    <payer>
+                        <uniqueIdentifier>
+                            <entityUniqueIdentifierType>F</entityUniqueIdentifierType>
+                            <entityUniqueIdentifierValue>{citizen_fiscal_code}</entityUniqueIdentifierValue>
+                        </uniqueIdentifier>
+                        <fullName>{citizen_name}</fullName>
+                        <streetName>Via Test</streetName>
+                        <civicNumber>123</civicNumber>
+                        <postalCode>00000</postalCode>
+                        <city>Rome</city>
+                        <stateProvinceRegion>RM</stateProvinceRegion>
+                        <country>IT</country>
+                        <e-mail>{citizen_email}</e-mail>
+                    </payer>
+                    <applicationDate>{current_date}</applicationDate>
+                    <transferDate>{current_date}</transferDate>
+                </details>
+            </req:sendPaymentOutcomeReq>
+      </Body>
+</Envelope>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+	<Body>
+		<activatePaymentNoticeReq xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:req="http://pagopa-api.pagopa.gov.it/node/nodeForPsp.xsd" xmlns="">
+			<idPSP>{psp_id}</idPSP>
+            <idBrokerPSP>{psp_id_broker}</idBrokerPSP>
+            <idChannel>{psp_id_channel}</idChannel>
+            <password>{psp_password}</password>
+			<qrCode>
+                <fiscalCode>{ente_fiscal_code}</fiscalCode>
+                <noticeNumber>3{iuv}</noticeNumber>
+            </qrCode>
+			<expirationTime>300000</expirationTime>
+			<amount>{amount}</amount>
+			<dueDate>{due_date}</dueDate>
+		</activatePaymentNoticeReq>
+	</Body>
+</Envelope>
