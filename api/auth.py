@@ -9,7 +9,7 @@ def post_auth_password(user_id: str):
         url=f'{secrets.internal_base_url}/p4paauth/payhub/auth/token',
         params={
             'client_id': 'piattaforma-unitaria',
-            'grant_type': 'grant-type-fake',
+            'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
             'subject_token': user_id,
             'subject_token_type': 'FAKE-AUTH',
             'subject_issuer': 'issuer-fake',
