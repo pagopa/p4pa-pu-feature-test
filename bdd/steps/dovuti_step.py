@@ -393,7 +393,7 @@ def step_download_avviso(context, user, label):
         table = page.find_tables()[0]
         data_table = table.extract()[0]
         assert data_table[0] == 'ENTE CREDITORE Cod. Fiscale ' + ente_fiscal_code
-        assert data_table[1] == 'DESTINATARIO Cod. Fiscale ' + dovuto_data['cod_fiscale']
+        assert data_table[1] == 'DESTINATARIO AVVISO Cod. Fiscale ' + dovuto_data['cod_fiscale']
 
         text = page.get_text(sort=True)
         assert (dovuto_data['importo'].replace('.', ',') + ' Euro\nentro il\n' +
