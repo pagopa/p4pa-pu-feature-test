@@ -44,7 +44,6 @@ def activate_payment_notice(psp: PSP,
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, ente_fiscal_code=ente_fiscal_code, iuv=iuv,
                        amount=amount, due_date=due_date)
-    print(data)
     return requests.post(
         url=f'{settings.api.base_path.nodo_psp}',
         headers={
