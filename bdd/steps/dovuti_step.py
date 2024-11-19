@@ -26,6 +26,7 @@ from api.soap.nodo import send_payment_outcome
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import get_tipo_dovuto_of_operator
+from util.utility import get_user_info
 from util.utility import retry_check_exists_processed_dovuto
 
 cod_tipo_dovuto = secrets.ente.intermediato_2.tipo_dovuto.cod_tipo
@@ -146,7 +147,9 @@ def step_check_latest_delete_dovuto(context, cause_ko):
     # TODO it is correct that if there is an error then response return 200 as status code?
     if cause_ko == 'tipo dovuto non attivo per l\'operatore':
         assert context.latest_insert_dovuto.status_code == 200
-        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'EnteTipoDovuto non e\' attivo per l\'operatore.'
+        cod_fed_user_id = get_user_info(context.latest_user_authenticated).cod_fed_user_id
+        assert (f'The operator {cod_fed_user_id} is not authorized on the DebtPositionTypeOrg'
+                in context.latest_insert_dovuto.json()['invalidDesc'])
     elif cause_ko == 'codice fiscale obbligatorio':
         assert context.latest_insert_dovuto.status_code == 200
         assert 'Codice fiscale / Partita Iva: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
