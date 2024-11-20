@@ -1,28 +1,26 @@
 import io
-import random
-import string
 from datetime import datetime
 from datetime import timedelta
 
-import xmltodict
 import fitz
-from behave import when
-from behave import then
+import xmltodict
 from behave import given
+from behave import then
+from behave import when
 
-from api.dovuti import post_insert_dovuto
-from api.dovuti import get_dovuto_list
-from api.dovuti import get_dovuto_details
-from api.dovuti import get_debt_position_details_by_nav
 from api.dovuti import delete_dovuto
-from api.dovuti import post_update_dovuto
-from api.dovuti import download_rt
 from api.dovuti import download_avviso
+from api.dovuti import download_rt
+from api.dovuti import get_debt_position_details_by_nav
+from api.dovuti import get_dovuto_details
+from api.dovuti import get_dovuto_list
+from api.dovuti import post_insert_dovuto
+from api.dovuti import post_update_dovuto
 from api.gpd import get_debt_position_by_iupd
 from api.soap.nodo import PSP
-from api.soap.nodo import verify_payment_notice
 from api.soap.nodo import activate_payment_notice
 from api.soap.nodo import send_payment_outcome
+from api.soap.nodo import verify_payment_notice
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import get_tipo_dovuto_of_operator
@@ -312,6 +310,7 @@ def step_pay_dovuto_with_nodo(context, citizen, label):
 
     res_verify_payment = verify_payment_notice(psp=psp, ente_fiscal_code=ente_fiscal_code, iuv=dovuto_iuv)
     assert res_verify_payment.status_code == 200
+    print(res_verify_payment.content)
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
     amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
@@ -340,6 +339,17 @@ def step_dovuto_paid_ok(context, citizen, label):
     step_check_processed_dovuto_status(context=context, label=label, status='pagato')
 
 
+@given('un dovuto {label} pagato correttamente compresa la ricezione della RT')
+def step_dovuto_paid_ok_and_rt(context, label):
+    citizen = 'Maria'
+    user = 'Operatore'
+    step_create_dovuto_data(context=context, label=label, importo='45.50', citizen=citizen)
+    step_insert_dovuto(context=context, user=user, label=label)
+    step_pay_dovuto_with_nodo(context=context, citizen=citizen, label=label)
+    step_check_processed_dovuto_status(context=context, label=label, status='pagato')
+    step_download_rt(context=context, user=user, label=label)
+
+
 @then('l\'{user} può scaricare la ricevuta di pagamento effettuato per il dovuto {label}')
 def step_download_rt(context, user, label):
     step_user_authentication(context, user)
@@ -353,7 +363,9 @@ def step_download_rt(context, user, label):
 
     with fitz.open(stream=io.BytesIO(res.content)) as pdf:
         page = pdf[0]
-        check_data_on_pdf(page=page, dovuto=dovuto_data)
+        iur = check_data_on_pdf(page=page, dovuto=dovuto_data)
+
+    context.dovuto_data[label]['iur'] = iur
 
 
 def check_data_on_pdf(page, dovuto: dict):
@@ -373,11 +385,14 @@ def check_data_on_pdf(page, dovuto: dict):
     assert data_dict['Id Univoco Dovuto'] == dovuto['iud']
     assert data_dict['Importo pagato'] == '€ ' + dovuto['importo'].replace('.', ',')
     assert data_dict['Data pagamento'] == datetime.utcnow().strftime('%d/%m/%Y')
+    assert data_dict['Id Univoco Riscossione'] is not None
 
     # Assertion of other values in pdf
     text = page.get_text("text")
     assert 'CODICE UNIVOCO:\n' + dovuto['cod_fiscale'] in text
     assert ente_fiscal_code in text
+
+    return data_dict['Id Univoco Riscossione']
 
 
 @then('l\'{user} può scaricare l\'avviso di pagamento per il dovuto {label}')
