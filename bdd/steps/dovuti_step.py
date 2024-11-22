@@ -1,4 +1,5 @@
 import io
+import random
 from datetime import datetime
 from datetime import timedelta
 
@@ -310,7 +311,6 @@ def step_pay_dovuto_with_nodo(context, citizen, label):
 
     res_verify_payment = verify_payment_notice(psp=psp, ente_fiscal_code=ente_fiscal_code, iuv=dovuto_iuv)
     assert res_verify_payment.status_code == 200
-    print(res_verify_payment.content)
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
     amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
@@ -339,11 +339,12 @@ def step_dovuto_paid_ok(context, citizen, label):
     step_check_processed_dovuto_status(context=context, label=label, status='pagato')
 
 
-@given('un dovuto {label} pagato correttamente compresa la ricezione della RT')
+@given('il dovuto {label} pagato correttamente compresa la ricezione della RT')
 def step_dovuto_paid_ok_and_rt(context, label):
     citizen = 'Maria'
     user = 'Operatore'
-    step_create_dovuto_data(context=context, label=label, importo='45.50', citizen=citizen)
+    step_create_dovuto_data(context=context, label=label,
+                            importo=str(round(random.uniform(10.00, 100.00), 2)), citizen=citizen)
     step_insert_dovuto(context=context, user=user, label=label)
     step_pay_dovuto_with_nodo(context=context, citizen=citizen, label=label)
     step_check_processed_dovuto_status(context=context, label=label, status='pagato')

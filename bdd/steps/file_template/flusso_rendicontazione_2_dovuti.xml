@@ -21,10 +21,18 @@
     <numeroTotalePagamenti>{numero_totale_pagamenti}</numeroTotalePagamenti>
     <importoTotalePagamenti>{importo_totale_pagamenti}</importoTotalePagamenti>
     <datiSingoliPagamenti>
-        <identificativoUnivocoVersamento>{iuv}</identificativoUnivocoVersamento>
-        <identificativoUnivocoRiscossione>{iur}</identificativoUnivocoRiscossione>
-        <indiceDatiSingoloPagamento>{indice_dati_singolo_pagamento}</indiceDatiSingoloPagamento>
-        <singoloImportoPagato>{singolo_importo_pagato}</singoloImportoPagato>
+        <identificativoUnivocoVersamento>{iuv_1}</identificativoUnivocoVersamento>
+        <identificativoUnivocoRiscossione>{iur_1}</identificativoUnivocoRiscossione>
+        <indiceDatiSingoloPagamento>{indice_dati_singolo_pagamento_1}</indiceDatiSingoloPagamento>
+        <singoloImportoPagato>{singolo_importo_pagato_1}</singoloImportoPagato>
+        <codiceEsitoSingoloPagamento>{codice_esito_singolo_pagamento}</codiceEsitoSingoloPagamento>
+        <dataEsitoSingoloPagamento>{data_esito_singolo_pagamento}</dataEsitoSingoloPagamento>
+    </datiSingoliPagamenti>
+    <datiSingoliPagamenti>
+        <identificativoUnivocoVersamento>{iuv_2}</identificativoUnivocoVersamento>
+        <identificativoUnivocoRiscossione>{iur_2}</identificativoUnivocoRiscossione>
+        <indiceDatiSingoloPagamento>{indice_dati_singolo_pagamento_2}</indiceDatiSingoloPagamento>
+        <singoloImportoPagato>{singolo_importo_pagato_2}</singoloImportoPagato>
         <codiceEsitoSingoloPagamento>{codice_esito_singolo_pagamento}</codiceEsitoSingoloPagamento>
         <dataEsitoSingoloPagamento>{data_esito_singolo_pagamento}</dataEsitoSingoloPagamento>
     </datiSingoliPagamenti>

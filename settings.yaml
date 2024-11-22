@@ -10,6 +10,7 @@ api:
     nodo_psp: "https://api.uat.platform.pagopa.it/nodo/node-for-psp/v1"
   path_root:
     payhub: "/payhub"
+    payhub_pivot: "/payhubpivot"
     public: "/payhub/public"
     app_admin: "/payhub/appadmin"
     operatore: "/payhub/operatore"
