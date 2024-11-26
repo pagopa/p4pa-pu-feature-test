@@ -1,28 +1,28 @@
 from datetime import datetime
 from datetime import timezone
 
-from behave import when
-from behave import then
 from behave import given
+from behave import then
+from behave import when
 
-from api.generic import get_service_io
 from api.generic import delete_service_io
-from api.utenti import get_utenti_ente_tipo_dovuto
-from bdd.steps.authentication_step import step_user_authentication
-from api.tipi_dovuto import post_insert_tipo_dovuto
-from api.tipi_dovuto import get_tipo_dovuto_by_id
-from api.tipi_dovuto import post_update_tipo_dovuto
+from api.generic import get_service_io
+from api.tipi_dovuto import delete_tipo_dovuto
 from api.tipi_dovuto import get_activate_tipo_dovuto
 from api.tipi_dovuto import get_deactivate_tipo_dovuto
-from api.tipi_dovuto import get_tipi_dovuto_list
 from api.tipi_dovuto import get_details_tipo_dovuto
-from api.tipi_dovuto import delete_tipo_dovuto
+from api.tipi_dovuto import get_tipi_dovuto_list
+from api.tipi_dovuto import get_tipo_dovuto_by_id
+from api.tipi_dovuto import post_insert_tipo_dovuto
+from api.tipi_dovuto import post_update_tipo_dovuto
+from api.utenti import get_utenti_ente_tipo_dovuto
+from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import get_cod_macro_area
-from util.utility import get_user_info
-from util.utility import get_cod_tipo_servizio
 from util.utility import get_cod_motivo_riscossione
 from util.utility import get_cod_tassonomia
+from util.utility import get_cod_tipo_servizio
+from util.utility import get_user_info
 
 cod_tipo_dovuto_template = 'LICENZA_DI_TEST_{label}'
 

@@ -1,7 +1,7 @@
-from bdd.steps.enti_step import step_insert_ente
 from bdd.steps.enti_step import step_check_ente_status
-from config.configuration import settings
+from bdd.steps.enti_step import step_insert_ente
 from config.configuration import secrets
+from config.configuration import settings
 
 fiscal_code_ente = secrets.ente.fiscal_code
 status_ente = settings.ente.status
