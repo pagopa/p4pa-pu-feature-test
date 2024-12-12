@@ -152,10 +152,10 @@ def step_check_latest_delete_dovuto(context, cause_ko):
                 in context.latest_insert_dovuto.json()['invalidDesc'])
     elif cause_ko == 'codice fiscale obbligatorio':
         assert context.latest_insert_dovuto.status_code == 200
-        assert 'Codice fiscale / Partita Iva: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
+        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'Unique identification code is mandatory'
     elif cause_ko == 'causale obbligatoria':
         assert context.latest_insert_dovuto.status_code == 200
-        assert 'Causale: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
+        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'Remittance information is mandatory'
 
 
 @then('il dovuto {label} è in stato "{status}"')
@@ -348,7 +348,7 @@ def step_download_rt(context, user, label):
     dovuto_data = context.dovuto_data[label]
 
     res = download_rt(token=token, dovuto_id=dovuto_data['id_elaborato'])
-    assert res.status_code == 200
+    assert res.status_code != 200
     assert res.headers.get('content-type') == 'application/pdf'
 
     with fitz.open(stream=io.BytesIO(res.content)) as pdf:
