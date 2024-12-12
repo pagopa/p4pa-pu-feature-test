@@ -71,7 +71,8 @@ def step_add_multibeneficiario_data(context, label, importo):
         'codiceIdentificativoUnivoco': ente_beneficiario.fiscal_code,
         'ibanAddebito': ente_beneficiario.iban,
         'importoSecondario': importo,
-        'datiSpecificiRiscossione': ente_beneficiario.tipo_dovuto.cod_tassonomico
+        'datiSpecificiRiscossione': ente_beneficiario.tipo_dovuto.cod_tassonomico,
+        'causaleMB': 'Dovuto feature test secondo beneficiario'
     }
 
     context.dovuto_data[label]['altro_beneficiario'] = altro_beneficiario
@@ -152,10 +153,10 @@ def step_check_latest_delete_dovuto(context, cause_ko):
                 in context.latest_insert_dovuto.json()['invalidDesc'])
     elif cause_ko == 'codice fiscale obbligatorio':
         assert context.latest_insert_dovuto.status_code == 200
-        assert 'Codice fiscale / Partita Iva: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
+        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'Unique identification code is mandatory'
     elif cause_ko == 'causale obbligatoria':
         assert context.latest_insert_dovuto.status_code == 200
-        assert 'Causale: campo obbligatorio' in context.latest_insert_dovuto.json()['invalidDesc']
+        assert context.latest_insert_dovuto.json()['invalidDesc'] == 'Remittance information is mandatory'
 
 
 @then('il dovuto {label} è in stato "{status}"')
