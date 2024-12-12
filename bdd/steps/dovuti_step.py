@@ -71,7 +71,8 @@ def step_add_multibeneficiario_data(context, label, importo):
         'codiceIdentificativoUnivoco': ente_beneficiario.fiscal_code,
         'ibanAddebito': ente_beneficiario.iban,
         'importoSecondario': importo,
-        'datiSpecificiRiscossione': ente_beneficiario.tipo_dovuto.cod_tassonomico
+        'datiSpecificiRiscossione': ente_beneficiario.tipo_dovuto.cod_tassonomico,
+        'causaleMB': 'Dovuto feature test secondo beneficiario'
     }
 
     context.dovuto_data[label]['altro_beneficiario'] = altro_beneficiario
