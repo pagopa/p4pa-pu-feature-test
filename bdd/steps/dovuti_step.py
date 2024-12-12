@@ -349,7 +349,7 @@ def step_download_rt(context, user, label):
     dovuto_data = context.dovuto_data[label]
 
     res = download_rt(token=token, dovuto_id=dovuto_data['id_elaborato'])
-    assert res.status_code != 200
+    assert res.status_code == 200
     assert res.headers.get('content-type') == 'application/pdf'
 
     with fitz.open(stream=io.BytesIO(res.content)) as pdf:
