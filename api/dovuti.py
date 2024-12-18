@@ -38,7 +38,8 @@ def post_insert_dovuto(token,
             'causale': causale,
             'flgGenerateIuv': flag_generate_iuv,
             'flgMultibeneficiario': flag_multibeneficiario,
-            'dovutoMultibeneficiario': altro_beneficiario
+            'dovutoMultibeneficiario': altro_beneficiario,
+            'ignorePdnd': True
         },
         timeout=settings.default_timeout
     )
