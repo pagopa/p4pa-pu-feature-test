@@ -7,14 +7,14 @@ from datetime import datetime
 from datetime import timedelta
 
 import pandas
-from behave import when
-from behave import then
 from behave import given
+from behave import then
+from behave import when
 
 from api.dovuti import get_dovuto_list
-from api.flussi import post_import_flusso
-from api.flussi import get_insert_export_rt
 from api.flussi import download_file_flusso
+from api.flussi import get_insert_export_rt
+from api.flussi import post_import_flusso
 from bdd.steps.authentication_step import step_user_authentication
 from config.configuration import secrets
 from util.utility import retry_get_imported_flussi

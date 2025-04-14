@@ -2,23 +2,23 @@ import base64
 import io
 
 from PIL import Image
-from behave import when
-from behave import then
 from behave import given
+from behave import then
+from behave import when
 
-from api.enti import get_ente_details_public
-from api.enti import get_enti_list
-from api.enti import post_save_logo
-from api.enti import post_insert_ente
-from api.enti import get_ente_details
-from api.enti import post_update_ente
 from api.enti import get_activate_funzionalita
 from api.enti import get_deactivate_funzionalita
+from api.enti import get_ente_details
+from api.enti import get_ente_details_public
+from api.enti import get_enti_list
+from api.enti import post_insert_ente
+from api.enti import post_save_logo
+from api.enti import post_update_ente
 from bdd.steps.authentication_step import step_user_authentication
-from config.configuration import settings
 from config.configuration import secrets
-from util.utility import get_info_stato_ente
+from config.configuration import settings
 from util.utility import get_funzionalita_details
+from util.utility import get_info_stato_ente
 from util.utility import get_tipo_ente
 
 cod_ipa_ente_template = 'FEATURE_TEST_{label}'
