@@ -1,12 +1,11 @@
 import requests
 
 from config.configuration import settings
-from config.configuration import secrets
 
 
-def post_auth_password(user_id: str):
+def post_auth_token(user_id: str):
     return requests.post(
-        url=f'{secrets.internal_base_url}/p4paauth/payhub/auth/token',
+        url=f'{settings.api.base_path.pu}/auth/oauth/token',
         params={
             'client_id': 'piattaforma-unitaria',
             'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',

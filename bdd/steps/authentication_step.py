@@ -1,12 +1,9 @@
-from behave import given
-
-from api.auth import post_auth_password
+from api.auth import post_auth_token
 from util.utility import get_user_id
 
 
-@given('l\'{user} autenticato')
-def step_user_authentication(context, user):
-    res = post_auth_password(get_user_id(user))
+def get_token_org(context, user):
+    res = post_auth_token(get_user_id(user))
     assert res.status_code == 200
 
     try:
