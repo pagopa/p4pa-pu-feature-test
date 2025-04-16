@@ -8,38 +8,3 @@ api:
   base_path:
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
     nodo_psp: "https://api.uat.platform.pagopa.it/nodo/node-for-psp/v1"
-  path_root:
-    payhub: "/payhub"
-    public: "/payhub/public"
-    app_admin: "/payhub/appadmin"
-    operatore: "/payhub/operatore"
-    operatore_admin: "/payhub/operatore/admin"
-    io_notification: "/p4paionotification/ionotification"
-ente:
-  status:
-    inserito: 'INSERITO'
-    pre-esercizio: 'PRE-ESERCIZIO'
-    esercizio: 'ESERCIZIO'
-  tipo:
-    comune: 'COMUNE'
-    provincia: 'PROVINCIA'
-    regione: 'REGIONE'
-  funzionalita:
-    avviso_digitale: 'AVVISO_DIGITALE'
-    ente_pubblico: 'ENTE_PUBBLICO'
-    esito_push: 'INOLTRO_ESITO_PAGAMENTO_PUSH'
-    avviso_io: 'NOTIFICA_AVVISI_IO'
-    pagamento_spontaneo: 'PAGAMENTO_SPONTANEO'
-ente_data:
-  enteE:
-    cod_ipa: 'FEATURE_TEST_E'
-    name: 'Ente Feature Test E'
-    email: 'entefeaturetestE@email.it'
-    application_code: '0E'
-    tipo: 'Comune'
-  enteF:
-    cod_ipa: 'FEATURE_TEST_F'
-    name: 'Ente Feature Test F'
-    email: 'entefeaturetestF@email.it'
-    application_code: '0F'
-    tipo: 'Comune'
