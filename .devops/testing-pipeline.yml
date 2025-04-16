@@ -29,14 +29,6 @@ parameters:
     default: 'all'
     values:
       - all
-      - enti
-      - tipi_dovuto
-      - dovuti
-      - flussi
-      - gpd
-      - pagamento
-      - logo
-      - funzionalita
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
@@ -49,13 +41,7 @@ stages:
           maxParallel: 3
           matrix:
             gestione enti:
-              current_tag: 'enti'
-            gestione tipi dovuti:
-              current_tag: 'tipi_dovuto'
-            gestione dovuti:
-              current_tag: 'dovuti'
-            gestione flussi:
-              current_tag: 'flussi'
+              current_tag: 'debt_positions'
         steps:
           - checkout: self
           - template: template\test-run.yml
