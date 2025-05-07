@@ -29,6 +29,9 @@ parameters:
     default: 'all'
     values:
       - all
+      - aca
+      - gpd
+      - debt_positions
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
@@ -40,7 +43,7 @@ stages:
         strategy:
           maxParallel: 3
           matrix:
-            gestione enti:
+            debt positions:
               current_tag: 'debt_positions'
         steps:
           - checkout: self
