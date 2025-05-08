@@ -5,7 +5,6 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
-    print(workflow_type.value + "-" + str(entity_id))
     return workflow_type.value + "-" + str(entity_id)
 
 

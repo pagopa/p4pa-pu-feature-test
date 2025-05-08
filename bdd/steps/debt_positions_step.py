@@ -100,7 +100,6 @@ def validate_debt_position_created(context, response: dict):
         assert len(po_response['installments']) == len(po_request.installments)
 
         map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)
-        print(map_inst_request)
         for inst_response in po_response['installments']:
             inst_request = map_inst_request.get(inst_response['iud'])
             assert inst_response['status'] == Status.TO_SYNC.value
@@ -124,7 +123,7 @@ def validate_debt_position_created(context, response: dict):
 
             assert first_transfer['remittanceInformation'] == inst_request.remittance_information
             assert (first_transfer['amountCents'] ==
-                    calculate_amount_first_transfer(installment=Installment.from_dict(inst_response)))
+                    calculate_amount_first_transfer(installment=Installment.from_dict(inst_request)))
 
 
 @then("the debt position is in status {status}")
