@@ -1,0 +1,15 @@
+from enum import Enum
+
+
+class WorkflowStatus(Enum):
+    RUNNING = "WORKFLOW_EXECUTION_STATUS_RUNNING"
+    COMPLETED = "WORKFLOW_EXECUTION_STATUS_COMPLETED"
+    CANCELED = "WORKFLOW_EXECUTION_STATUS_CANCELED"
+    TERMINATED = "WORKFLOW_EXECUTION_STATUS_TERMINATED"
+    FAILED = "WORKFLOW_EXECUTION_STATUS_FAILED"
+
+
+class WorkflowType(Enum):
+    SYNC_ACA = "SynchronizeSyncAcaWF"
+    ASYNC_GPD = "SynchronizeAsyncGpdWF"
+    EXPIRATION_DP = "CheckDebtPositionExpirationWF"

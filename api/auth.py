@@ -1,11 +1,12 @@
 import requests
 
+from config.configuration import secrets
 from config.configuration import settings
 
 
 def post_auth_token(user_id: str):
     return requests.post(
-        url=f'{settings.api.base_path.pu}/auth/oauth/token',
+        url=f'{secrets.base_url}/pu/auth/oauth/token',
         params={
             'client_id': 'piattaforma-unitaria',
             'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
