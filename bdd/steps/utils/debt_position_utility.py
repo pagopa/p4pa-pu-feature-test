@@ -1,6 +1,16 @@
 from model.debt_position import DebtPosition, PaymentOption, Status, Installment
 
 
+def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_index: int, seq_num: int) -> Installment:
+    installment = None
+    for po in debt_position.payment_options:
+        if po.payment_option_index == po_index:
+            for inst in po.installments:
+                if inst.iud.startswith('FeatureTest_' + str(seq_num)):
+                    installment = inst
+    return installment
+
+
 def retrieve_iuv_list(debt_position: DebtPosition) -> list[str]:
     iuv_list = []
     for po in debt_position.payment_options:

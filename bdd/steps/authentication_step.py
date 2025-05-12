@@ -28,6 +28,7 @@ def get_token_org(context, pagopa_interaction):
             org_info.workflow_type = WorkflowType.ASYNC_GPD
 
     res = post_auth_token(user_id=user_id)
+
     assert res.status_code == 200
     assert res.json()['access_token'] is not None
 

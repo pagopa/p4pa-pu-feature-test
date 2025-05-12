@@ -10,3 +10,8 @@ Feature: An organization creates a debt position
     Then the debt position is in status unpaid
     And the notice is present in ACA archive in status valid
     And the check of debt position expiration is scheduled
+    When the citizen pays the installment of payment option 1
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And the check of debt position expiration is canceled
+    And the classification is RT_NO_IUF

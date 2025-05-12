@@ -13,3 +13,5 @@ class WorkflowType(Enum):
     SYNC_ACA = "SynchronizeSyncAcaWF"
     ASYNC_GPD = "SynchronizeAsyncGpdWF"
     EXPIRATION_DP = "CheckDebtPositionExpirationWF"
+    IUD_CLASSIFICATION = "IudClassificationWF"
+    TRANSFER_CLASSIFICATION = "TransferClassificationWF"
