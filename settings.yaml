@@ -14,3 +14,4 @@ api:
     workflow_hub: "/p4paworkflowhub/workflowhub/workflows"
     organization_crud: "/p4paorganization/crud/organizations/search"
     process_executions_crud: "/p4paprocessexecutions/crud/ingestion-flow-files/search"
+    classifications: "/p4paclassification"
