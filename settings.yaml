@@ -9,7 +9,9 @@ api:
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
     nodo_psp: "https://api.uat.platform.pagopa.it/nodo/node-for-psp/v1"
   ingress_path:
-    debt_positions: "/p4padebtpositions/debt-positions"
+    debt_positions: "/p4padebtpositions"
     debt_position_type_org_crud: "/p4padebtpositions/crud/debt-position-type-orgs/search"
     workflow_hub: "/p4paworkflowhub/workflowhub/workflows"
     organization_crud: "/p4paorganization/crud/organizations/search"
+    process_executions_crud: "/p4paprocessexecutions/crud/ingestion-flow-files/search"
+    classifications: "/p4paclassification"

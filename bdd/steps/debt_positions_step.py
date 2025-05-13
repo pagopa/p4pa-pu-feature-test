@@ -15,6 +15,7 @@ from model.debt_position import DebtPosition, Installment, Debtor, PaymentOption
 from model.workflow_hub import WorkflowStatus
 
 debt_position_type_org_code = 'FEATURE_TEST'
+iud_template = 'FeatureTest_{num}_' + datetime.now().strftime("%Y%m%d_%H%M%S%f")
 
 
 @given("a new debt position of type TEST")
@@ -53,7 +54,7 @@ def step_create_po_and_inst_entities(context, po_index, amount, expiration_days)
                               due_date=due_date,
                               debtor=Debtor(),
                               remittance_information='Feature test installment 1',
-                              iud='Feature_test_' + datetime.now().strftime("%Y%m%d_%H%M%S%f"))
+                              iud=iud_template.format(num=1))
 
     payment_option = PaymentOption(payment_option_index=po_index,
                                    payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT,
@@ -83,10 +84,10 @@ def step_create_dp(context):
 
 def validate_debt_position_created(context, response: dict):
     debt_position_request = context.debt_position
-    org = context.org_info
+    org_info = context.org_info
 
     assert response['status'] == Status.TO_SYNC.value
-    assert response['iupdOrg'].startswith(org.fiscal_code)
+    assert response['iupdOrg'].startswith(org_info.fiscal_code)
     assert response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
 
     assert len(response['paymentOptions']) == len(debt_position_request.payment_options)
@@ -105,7 +106,7 @@ def validate_debt_position_created(context, response: dict):
             assert inst_response['status'] == Status.TO_SYNC.value
             assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
             assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
-            assert inst_response['iupdPagopa'].startswith(org.fiscal_code)
+            assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
             assert len(inst_response['iuv']) == 17
             assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']
             assert inst_response['dueDate'] == inst_request.due_date
@@ -116,9 +117,9 @@ def validate_debt_position_created(context, response: dict):
             first_transfer = next(transfer for transfer in inst_response['transfers'] if transfer['transferIndex'] == 1)
 
             assert first_transfer is not None
-            assert first_transfer['orgFiscalCode'] == org.fiscal_code
-            assert first_transfer['orgName'] == org.name
-            assert first_transfer['iban'] == org.iban
+            assert first_transfer['orgFiscalCode'] == org_info.fiscal_code
+            assert first_transfer['orgName'] == org_info.name
+            assert first_transfer['iban'] == org_info.iban
             assert first_transfer['category'] is not None
 
             assert first_transfer['remittanceInformation'] == inst_request.remittance_information

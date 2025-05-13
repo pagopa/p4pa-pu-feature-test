@@ -1,0 +1,76 @@
+import xmltodict
+from behave import when, then
+
+from api.debt_positions import get_installment
+from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
+from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
+from bdd.steps.utils.utility import retry_get_process_file_status
+from config.configuration import secrets
+from model.file import FilePathName, FileStatus
+
+psp_info = secrets.payment_info.psp
+
+
+def check_res_ok_and_get_body(response_content, tag_name):
+    res_parsed = xmltodict.parse(response_content.decode('utf-8'))
+    res_body = res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
+    assert res_body['outcome'] == 'OK'
+    return res_body
+
+
+@when('the citizen pays the installment of payment option {po_index}')
+@when('the citizen pays the installment {seq_num} of payment option {po_index}')
+def step_pay_dovuto_with_nodo(context, po_index, seq_num='1'):
+    citizen_info = secrets.citizen_info
+    psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
+
+    org_info = context.org_info
+    debt_position = context.debt_position
+    installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
+                                                           po_index=int(po_index), seq_num=int(seq_num))
+
+    res_verify_payment = verify_payment_notice(psp=psp, ente_fiscal_code=org_info.fiscal_code, iuv=installment.iuv)
+    assert res_verify_payment.status_code == 200
+    res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
+
+    amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
+    due_date = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["dueDate"]
+
+    res_activate_payment = activate_payment_notice(psp=psp, ente_fiscal_code=org_info.fiscal_code, iuv=installment.iuv,
+                                                   amount=amount, due_date=due_date)
+    assert res_activate_payment.status_code == 200
+    res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
+                                                          tag_name='activatePaymentNoticeRes')
+
+    payment_token = res_activate_payment_body["paymentToken"]
+
+    res_send_outcome = send_payment_outcome(psp=psp, payment_token=payment_token,
+                                            citizen_fiscal_code=citizen_info.fiscal_code,
+                                            citizen_name=citizen_info.name,
+                                            citizen_email=citizen_info.email)
+    assert res_send_outcome.status_code == 200
+    check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeRes')
+
+    context.installment_paid = installment
+
+
+@then("the receipt is processed correctly")
+def step_check_receipt_processed(context):
+    installment_paid = context.installment_paid
+    organization_id = context.org_info.id
+
+    file_path_name = FilePathName.RECEIPT_PAGOPA
+    file_name = 'RT_' + installment_paid.nav + '.xml'
+
+    retry_get_process_file_status(token=context.token, organization_id=organization_id,
+                                  file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
+
+    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+
+    assert res.status_code == 200
+    assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
+
+    installment_paid.iur = res.json()['iur']
+    installment_paid.receiptId = res.json()['receiptId']
+
+
