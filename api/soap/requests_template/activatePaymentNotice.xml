@@ -7,7 +7,7 @@
             <idChannel>{psp_id_channel}</idChannel>
             <password>{psp_password}</password>
 			<qrCode>
-                <fiscalCode>{ente_fiscal_code}</fiscalCode>
+                <fiscalCode>{org_fiscal_code}</fiscalCode>
                 <noticeNumber>3{iuv}</noticeNumber>
             </qrCode>
 			<expirationTime>300000</expirationTime>

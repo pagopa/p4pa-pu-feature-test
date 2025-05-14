@@ -15,3 +15,4 @@ class WorkflowType(Enum):
     EXPIRATION_DP = "CheckDebtPositionExpirationWF"
     IUD_CLASSIFICATION = "IudClassificationWF"
     TRANSFER_CLASSIFICATION = "TransferClassificationWF"
+    PAYMENTS_REPORTING_INGESTION = "PaymentsReportingIngestionWF"
