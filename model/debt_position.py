@@ -85,6 +85,7 @@ class Installment:
     ingestion_flow_file_id: int | None = None
     ingestion_flow_file_line_number: int | None = None
     receipt_id: int | None = None
+    ingestion_flow_file_generate_advice: bool = False
     transfers: list[Transfer] = field(default_factory=list)
 
 

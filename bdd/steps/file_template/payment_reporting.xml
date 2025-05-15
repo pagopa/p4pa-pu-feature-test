@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FlussoRiversamento xmlns="http://www.digitpa.gov.it/schemas/2011/Pagamenti/">
+    <versioneOggetto>1.0</versioneOggetto>
+    <identificativoFlusso>{iuf}</identificativoFlusso>
+    <dataOraFlusso>{flow_date_time}</dataOraFlusso>
+    <identificativoUnivocoRegolamento>{regulation_unique_identifier}</identificativoUnivocoRegolamento>
+    <dataRegolamento>{regulation_date}</dataRegolamento>
+    <istitutoMittente>
+        <identificativoUnivocoMittente>
+            <tipoIdentificativoUnivoco>{sender_psp_type}</tipoIdentificativoUnivoco>
+            <codiceIdentificativoUnivoco>{sender_psp_code}</codiceIdentificativoUnivoco>
+        </identificativoUnivocoMittente>
+        <denominazioneMittente>{sender_psp_name}</denominazioneMittente>
+    </istitutoMittente>
+    <istitutoRicevente>
+        <identificativoUnivocoRicevente>
+            <tipoIdentificativoUnivoco>{receiver_organization_type}</tipoIdentificativoUnivoco>
+            <codiceIdentificativoUnivoco>{receiver_organization_code}</codiceIdentificativoUnivoco>
+        </identificativoUnivocoRicevente>
+        <denominazioneRicevente>{receiver_organization_name}</denominazioneRicevente>
+    </istitutoRicevente>
+    <numeroTotalePagamenti>{total_payments}</numeroTotalePagamenti>
+    <importoTotalePagamenti>{total_amount_cents}</importoTotalePagamenti>
+    <datiSingoliPagamenti>
+        <identificativoUnivocoVersamento>{iuv}</identificativoUnivocoVersamento>
+        <identificativoUnivocoRiscossione>{iur}</identificativoUnivocoRiscossione>
+        <indiceDatiSingoloPagamento>{transfer_index}</indiceDatiSingoloPagamento>
+        <singoloImportoPagato>{amount_paid_cents}</singoloImportoPagato>
+        <codiceEsitoSingoloPagamento>{payment_outcome_code}</codiceEsitoSingoloPagamento>
+        <dataEsitoSingoloPagamento>{payment_date}</dataEsitoSingoloPagamento>
+    </datiSingoliPagamenti>
+</FlussoRiversamento>

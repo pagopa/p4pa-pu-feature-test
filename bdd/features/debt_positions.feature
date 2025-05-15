@@ -14,4 +14,8 @@ Feature: An organization creates a debt position
     Then the receipt is processed correctly
     And the debt position is in status paid
     And the check of debt position expiration is canceled
-    And the classification is RT_NO_IUF
+    And the classification labels are RT_NO_IUF, RT_NO_IUD
+    When the organization uploads the payment reporting file about installment of payment option 1
+    Then the payment reporting is processed correctly
+    And the debt position is in status reported
+    And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD

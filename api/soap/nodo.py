@@ -15,12 +15,12 @@ class PSP:
 
 
 def verify_payment_notice(psp: PSP,
-                          ente_fiscal_code: str,
+                          org_fiscal_code: str,
                           iuv: str):
     with open('./api/soap/requests_template/verifyPaymentNotice.xml', 'r') as file:
         data = file.read()
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
-                       psp_password=psp.password, ente_fiscal_code=ente_fiscal_code, iuv=iuv)
+                       psp_password=psp.password, org_fiscal_code=org_fiscal_code, iuv=iuv)
 
     return requests.post(
         url=f'{settings.api.base_path.nodo_psp}',
@@ -35,14 +35,14 @@ def verify_payment_notice(psp: PSP,
 
 
 def activate_payment_notice(psp: PSP,
-                            ente_fiscal_code: str,
+                            org_fiscal_code: str,
                             iuv: str,
                             amount: str,
                             due_date: str):
     with open('./api/soap/requests_template/activatePaymentNotice.xml', 'r') as file:
         data = file.read()
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
-                       psp_password=psp.password, ente_fiscal_code=ente_fiscal_code, iuv=iuv,
+                       psp_password=psp.password, org_fiscal_code=org_fiscal_code, iuv=iuv,
                        amount=amount, due_date=due_date)
     return requests.post(
         url=f'{settings.api.base_path.nodo_psp}',

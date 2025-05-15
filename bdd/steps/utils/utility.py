@@ -29,7 +29,7 @@ def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, t
 
 
 def retry_get_process_file_status(token, organization_id: int, file_path_name: FilePathName,
-                                  file_name: str, status: FileStatus, tries=15, delay=3):
+                                  file_name: str, status: FileStatus, tries=15, delay=3) -> int:
     count = 0
 
     res = get_by_org_and_file_path_and_file_name(token=token, organization_id=organization_id,
@@ -47,3 +47,4 @@ def retry_get_process_file_status(token, organization_id: int, file_path_name: F
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
     assert success
+    return res.json()['ingestionFlowFileId']

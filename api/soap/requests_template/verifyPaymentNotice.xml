@@ -7,7 +7,7 @@
           <idChannel xmlns="">{psp_id_channel}</idChannel>
           <password xmlns="">{psp_password}</password>
           <qrCode xmlns="">
-            <fiscalCode>{ente_fiscal_code}</fiscalCode>
+            <fiscalCode>{org_fiscal_code}</fiscalCode>
             <noticeNumber>3{iuv}</noticeNumber>
           </qrCode>
         </verifyPaymentNoticeReq>
