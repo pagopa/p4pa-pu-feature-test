@@ -99,7 +99,13 @@ def step_check_payment_reporting_processed(context):
     check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
                           entity_id=payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
 
+    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                          entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
+                          status=WorkflowStatus.COMPLETED)
+
     res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iuf'] is not None
+
+    context.iuf = res.json()['iuf']

@@ -19,3 +19,7 @@ Feature: An organization creates a debt position
     Then the payment reporting is processed correctly
     And the debt position is in status reported
     And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD
+    When the organization uploads the treasury file with amount of 100 euros
+    Then the treasury is processed correctly
+    And the debt position is in status reported
+    And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD

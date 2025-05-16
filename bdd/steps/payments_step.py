@@ -71,6 +71,7 @@ def step_check_receipt_processed(context):
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
+    installment_paid.iur = res.json()['iur']
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                               entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + res.json()['iur'] + '-1',
