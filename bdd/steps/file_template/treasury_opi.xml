@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flusso_giornale_di_cassa>
+	<testata_messaggio>
+		<codice_ABI_BT>03030</codice_ABI_BT>
+		<data_ora_creazione_flusso>{flow_date_time}</data_ora_creazione_flusso>
+		<codice_ente>{org_code}</codice_ente>
+		<descrizione_ente>{org_name}</descrizione_ente>
+		<codice_istat_ente>{org_fiscal_code}</codice_istat_ente>
+		<codice_fiscale_ente>{org_fiscal_code}</codice_fiscale_ente>
+		<codice_tramite_ente>A2A-00000000</codice_tramite_ente>
+		<codice_tramite_BT>A2A-11111111</codice_tramite_BT>
+		<codice_ente_BT>1010123</codice_ente_BT>
+	</testata_messaggio>
+	<identificativo_flusso_BT>{bt_flow_id}</identificativo_flusso_BT>
+	<pagina>1</pagina>
+	<pagine_totali>1</pagine_totali>
+	<esercizio>{bill_year}</esercizio>
+	<data_riferimento_GdC>{date}</data_riferimento_GdC>
+	<informazioni_conto_evidenza>
+		<conto_evidenza>1234567</conto_evidenza>
+		<descrizione_conto_evidenza>BASE PRINCIPALE</descrizione_conto_evidenza>
+		<movimento_conto_evidenza>
+			<identificativo_flusso>{flow_account_id}</identificativo_flusso>
+			<numero_movimento>{account_movement_number}</numero_movimento>
+			<tipo_movimento>ENTRATA</tipo_movimento>
+			<tipo_documento>SOSPESO ENTRATA</tipo_documento>
+			<tipo_operazione>ESEGUITO</tipo_operazione>
+			<numero_documento>{document_code}</numero_documento>
+			<sospeso_da_regolarizzare>
+				<data_effettiva_sospeso>{actual_suspension_date}</data_effettiva_sospeso>
+				<codice_gestionale_provvisorio>{management_provisional_code}</codice_gestionale_provvisorio>
+			</sospeso_da_regolarizzare>
+			<numero_pagamento_funzionario_delegato>0000000</numero_pagamento_funzionario_delegato>
+			<progressivo_documento>0000000</progressivo_documento>
+			<importo>{bill_amount}</importo>
+			<numero_bolletta_quietanza>{bill_code}</numero_bolletta_quietanza>
+			<numero_bolletta_quietanza_storno>0000000</numero_bolletta_quietanza_storno>
+			<data_movimento>{bill_date}</data_movimento>
+			<data_movimento_siope>{bill_date}</data_movimento_siope>
+			<data_valuta_ente>{region_value_date}</data_valuta_ente>
+			<tipo_esecuzione>CASSA</tipo_esecuzione>
+			<end_to_end_id>{end_to_end_id}</end_to_end_id>
+			<codice_riferimento_interno>HUPBP1-0012345</codice_riferimento_interno>
+			<tipo_contabilita>FRUTTIFERO</tipo_contabilita>
+			<destinazione>LIBERA</destinazione>
+			<assoggettamento_bollo>ESENTE BOLLO</assoggettamento_bollo>
+			<assoggettamento_spese>ESENTE SPESE</assoggettamento_spese>
+			<cliente>
+				<anagrafica_cliente>{psp_last_name}</anagrafica_cliente>
+				<indirizzo_cliente>Via del test, 1</indirizzo_cliente>
+				<cap_cliente>00100</cap_cliente>
+			</cliente>
+			<causale>{remittance_description}</causale>
+			<dati_a_disposizione_BT>
+				<codice_causale>018</codice_causale>
+				<cro>A000000000000000000000004200IT</cro>
+				<identificativo_end_to_end>.PUR.LGPE-RIVERSAMENTO.URI.2025-05-</identificativo_end_to_end>
+			</dati_a_disposizione_BT>
+		</movimento_conto_evidenza>
+		<saldo_precedente_conto_evidenza>0.00</saldo_precedente_conto_evidenza>
+		<totale_entrate_conto_evidenza>0.00</totale_entrate_conto_evidenza>
+		<totale_uscite_conto_evidenza>0.00</totale_uscite_conto_evidenza>
+		<saldo_finale_conto_evidenza>0.00</saldo_finale_conto_evidenza>
+	</informazioni_conto_evidenza>
+	<saldo_complessivo_precedente>0.00</saldo_complessivo_precedente>
+	<totale_complessivo_entrate>0.00</totale_complessivo_entrate>
+	<totale_complessivo_uscite>0.00</totale_complessivo_uscite>
+	<saldo_complessivo_finale>0.00</saldo_complessivo_finale>
+	<totali_esercizio>
+		<fondo_di_cassa>0.00</fondo_di_cassa>
+		<totale_reversali_riscosse>0.00</totale_reversali_riscosse>
+		<totale_sospesi_entrata>0.00</totale_sospesi_entrata>
+		<totale_entrate>0.00</totale_entrate>
+		<deficit_di_cassa>0.00</deficit_di_cassa>
+		<totale_mandati_pagati>0.00</totale_mandati_pagati>
+		<totale_sospesi_uscita>0.00</totale_sospesi_uscita>
+		<totale_uscite>0.00</totale_uscite>
+		<saldo_esercizio>0.00</saldo_esercizio>
+	</totali_esercizio>
+	<totali_disponibilita_liquide>
+		<saldo_conti_correnti>0.00</saldo_conti_correnti>
+		<totale_conti>0.00</totale_conti>
+		<vincoli_conti_correnti>0.00</vincoli_conti_correnti>
+		<totale_vincoli>0.00</totale_vincoli>
+		<svincoli_conti_correnti>0.00</svincoli_conti_correnti>
+		<totale_svincoli>0.00</totale_svincoli>
+		<anticipazione_accordata>0.00</anticipazione_accordata>
+		<anticipazione_utilizzata>0.00</anticipazione_utilizzata>
+		<totale_somme_bloccate_riservate>0.00</totale_somme_bloccate_riservate>
+		<disponibilita>0.00</disponibilita>
+	</totali_disponibilita_liquide>
+	<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm=""/>
+			<ds:SignatureMethod Algorithm=""/>
+			<ds:Reference Type="">
+				<ds:Transforms>
+					<ds:Transform Algorithm=""/>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm=""/>
+				<ds:DigestValue>TEST</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>TEST</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>TEST</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="test">
+				<xades:SignedProperties>
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2025-05-16T12:52:43+02:00</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod Algorithm=""/>
+									<ds:DigestValue>TEST</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>TEST</ds:X509IssuerName>
+									<ds:X509SerialNumber>01234</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+					</xades:SignedSignatureProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</flusso_giornale_di_cassa>

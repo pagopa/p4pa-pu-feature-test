@@ -3,7 +3,6 @@ TARGET_ENV: "dev"
 default_timeout: 5000
 API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 SOAP_ACTION_HEADER: "SOAPAction"
-BROKER_ID_HEADER: "brokerId"
 api:
   base_path:
     gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
