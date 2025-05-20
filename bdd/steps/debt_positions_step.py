@@ -58,9 +58,9 @@ def step_create_po_and_inst_entities(context, po_index, amount, expiration_days)
                               remittance_information='Feature test installment 1',
                               iud=iud_template.format(num=1))
 
-    payment_option = PaymentOption(payment_option_index=po_index,
+    payment_option = PaymentOption(payment_option_index=int(po_index),
                                    payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT,
-                                   description='Feature test payment option ' + po_index)
+                                   description='Feature test payment option ' + str(po_index))
 
     payment_option.installments.append(installment)
 
@@ -97,7 +97,7 @@ def validate_debt_position_created(context, response: dict):
 
     map_po_request = dict((po.payment_option_index, po) for po in debt_position_request.payment_options)
     for po_response in response['paymentOptions']:
-        po_request = map_po_request.get(str(po_response['paymentOptionIndex']))
+        po_request = map_po_request.get(po_response['paymentOptionIndex'])
         assert po_response['status'] == Status.TO_SYNC.value
         assert po_response['paymentOptionType'] == po_request.payment_option_type.value
         assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
