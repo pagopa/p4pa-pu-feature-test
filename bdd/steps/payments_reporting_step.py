@@ -36,8 +36,8 @@ def step_upload_payment_reporting_file(context, po_index, seq_num=1):
     with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
         ingestion_flow_file = file.read()
 
-    date = datetime.utcnow().strftime('%Y-%m-%d')
-    date_time = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
+    date = datetime.now().strftime('%Y-%m-%d')
+    date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
 

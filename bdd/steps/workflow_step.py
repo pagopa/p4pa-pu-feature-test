@@ -14,7 +14,7 @@ def check_workflow_status(context, workflow_type: WorkflowType, entity_id: int, 
 
 @then("the check of debt position expiration is {status}")
 def step_workflow_check_expiration_scheduled(context, status):
-    workflow_status = None
+    workflow_status = WorkflowStatus.COMPLETED
     if status == 'scheduled':
         workflow_status = WorkflowStatus.RUNNING
     elif status == 'canceled':

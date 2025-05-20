@@ -32,6 +32,7 @@ parameters:
       - aca
       - gpd
       - debt_positions
+      - classification
 stages:
   - stage: Feature_tests
     dependsOn: [ ]

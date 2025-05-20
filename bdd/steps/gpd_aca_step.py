@@ -1,9 +1,8 @@
 from behave import then
 
 from api.gpd_aca import get_debt_position_on_aca
-from bdd.steps.utils.debt_position_utility import retrieve_iuv_list, calculate_amount_first_transfer
+from bdd.steps.utils.debt_position_utility import retrieve_iuv_list
 from config.configuration import secrets
-from model.debt_position import Transfer, Installment
 
 
 @then("the notice is present in ACA archive in status {status}")

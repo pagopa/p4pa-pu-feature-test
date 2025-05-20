@@ -7,7 +7,7 @@ from api.classifications import get_classification
 
 @then("the classification labels are {labels}")
 def step_check_classification(context, labels: str):
-    date_now = datetime.utcnow().strftime('%Y-%m-%d')
+    date_now = datetime.now().strftime('%Y-%m-%d')
 
     labels = labels.split(sep=', ')
 
