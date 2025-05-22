@@ -30,9 +30,9 @@ def step_upload_payment_reporting_file(context, amount):
     except AttributeError:
         iuf = 'IUF_NOT_FOUND'
 
-    date = datetime.utcnow().strftime('%Y-%m-%d')
-    date_time = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
-    year = datetime.utcnow().year
+    date = datetime.now().strftime('%Y-%m-%d')
+    date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    year = datetime.now().year
     remittance_description = '/PUR/LGPE-RIVERSAMENTO/URI/' + iuf + ' .PUR.LGPE-RIVERSAMENTO.URI.2025-05- TRXID: ' + ''.join(
         random.choices(string.digits, k=17))
 
@@ -60,7 +60,7 @@ def step_upload_payment_reporting_file(context, amount):
                                                      end_to_end_id='RF' + ''.join(random.choices(string.digits, k=24))
                                                      )
 
-    now = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+    now = datetime.now().strftime('%Y%m%dT%H%M%S')
     xml_file_path = f'GDC-{now}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
