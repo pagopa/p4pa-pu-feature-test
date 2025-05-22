@@ -46,6 +46,8 @@ stages:
           matrix:
             debt positions:
               current_tag: 'debt_positions'
+            classification:
+              current_tag: 'classification'
         steps:
           - checkout: self
           - template: template\test-run.yml
