@@ -74,7 +74,6 @@ def step_create_dp(context):
 
     res = post_create_debt_position(token=token, debt_position=debt_position.to_json())
 
-    print(res.json())
     assert res.status_code == 200
 
     validate_debt_position_created(context, res.json())
