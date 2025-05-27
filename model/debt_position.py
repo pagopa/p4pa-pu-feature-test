@@ -85,7 +85,6 @@ class Installment:
     ingestion_flow_file_id: int | None = None
     ingestion_flow_file_line_number: int | None = None
     receipt_id: int | None = None
-    ingestion_flow_file_generate_advice: bool = False
     transfers: list[Transfer] = field(default_factory=list)
 
 
@@ -127,5 +126,5 @@ class DebtPosition:
     validity_date: str | None = None
     multi_debtor: bool = False
     flag_iuv_volatile: bool = False
-    flag_pago_pa_payment: bool = True
+    flag_pu_pago_pa_payment: bool = True
     payment_options: list[PaymentOption] = field(default_factory=list)
