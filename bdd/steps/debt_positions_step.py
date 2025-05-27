@@ -48,7 +48,7 @@ def step_create_dp_entity(context):
 
 @given(
     "payment option {po_index} with single installment of {amount} euros with due date set in {expiration_days} days")
-def step_create_po_and_inst_entities(context, po_index, amount, expiration_days):
+def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days):
     due_date = (datetime.now() + timedelta(days=int(expiration_days))).strftime('%Y-%m-%d')
 
     amount_cents = int(amount) * 100
@@ -112,7 +112,7 @@ def step_check_dp_status(context, status):
 def step_create_simple_debt_position(context, pagopa_interaction):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
-    step_create_po_and_inst_entities(context=context, po_index=1, amount=100, expiration_days=3)
+    step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
 
