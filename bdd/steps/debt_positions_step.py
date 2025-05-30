@@ -1,5 +1,6 @@
 import json
 import random
+import uuid
 from datetime import datetime
 from datetime import timedelta
 
@@ -127,7 +128,7 @@ def create_installment(amount_cents, due_date, index):
                               due_date=due_date,
                               debtor=Debtor(),
                               remittance_information=f'Feature test installment {index}',
-                              iud=f'FeatureTest_{index}_{datetime.now().strftime("%Y%m%d_%H%M%S%f")}')
+                              iud=f'FeatureTest_{index}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}')
     return installment
 
 
