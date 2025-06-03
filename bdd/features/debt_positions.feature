@@ -20,8 +20,9 @@ Feature: An organization creates a debt position
     And payment option 2 with 2 installments with due date set in 2 days
     When the organization creates the debt position
     Then the debt position is in status unpaid
-    And the notice is present in ACA archive in status valid
+    And the notices are present in ACA archive in status valid
     And the check of debt position expiration is scheduled
+
 
   @gpd
   Scenario: Organization interacting with GPD creates a simple debt position
