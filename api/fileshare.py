@@ -5,7 +5,7 @@ from model.file import IngestionFlowFileType, FileOrigin
 
 
 def post_upload_file(token, organization_id: int, ingestion_flow_file_type: IngestionFlowFileType,
-                     file_origin: FileOrigin, file_name: str, file):
+                     file_origin: FileOrigin, file_name: str):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.fileshare}/organization/{organization_id}/ingestionflowfiles',
         headers={
