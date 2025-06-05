@@ -33,6 +33,7 @@ parameters:
       - gpd
       - debt_positions
       - classification
+      - send
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
@@ -48,6 +49,8 @@ stages:
               current_tag: 'debt_positions'
             classification:
               current_tag: 'classification'
+            send:
+              current_tag: 'send'
         steps:
           - checkout: self
           - template: template\test-run.yml
