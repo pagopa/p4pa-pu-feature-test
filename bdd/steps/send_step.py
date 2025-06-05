@@ -6,7 +6,8 @@ from behave import given, when, then
 
 from api.auth import post_send_auth_token
 from api.debt_positions import get_installment
-from api.send import post_create_send_notification, post_upload_send_file, get_send_notification_status
+from api.send import post_create_send_notification, post_upload_send_file, get_send_notification_status, \
+    get_send_notification_fee
 from bdd.steps.authentication_step import PagoPaInteractionModel
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
 from bdd.steps.utils.utility import retry_get_workflow_status
@@ -144,17 +145,16 @@ def step_upload_notification_file(context):
     assert res_status.json()['status'] == SendStatus.COMPLETE.value
     assert res_status.json().get('iun') is None
 
-    retry_get_workflow_status(token=send_token, workflow_id=res_payment_file.json()['workflowId'],
+    retry_get_workflow_status(token=context.token, workflow_id=res_payment_file.json()['workflowId'],
                               status=WorkflowStatus.COMPLETED,
                               tries=12, delay=30)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")
 def step_impl(context, status):
-    send_token = context.send_token
     notification_id = context.send_notification_id
 
-    res_status = get_send_notification_status(token=send_token, notification_id=notification_id)
+    res_status = get_send_notification_status(token=context.send_token, notification_id=notification_id)
 
     assert res_status.status_code == 200
     assert res_status.json()['status'] == SendStatus.ACCEPTED.value
@@ -167,3 +167,26 @@ def step_impl(context, status):
 
     check_workflow_status(context=context, workflow_type=WorkflowType.SEND_NOTIFICATION_DATE_RETRIEVE,
                           entity_id=notification_id, status=WorkflowStatus.RUNNING)
+
+
+@then("SEND has set a notification fee")
+def step_check_notification_fee(context):
+    res_fee = get_send_notification_fee(token=context.send_token, nav=context.installment.nav, org_id=context.org_info.id)
+
+    assert res_fee.status_code == 200
+    assert res_fee.json()['totalPrice'] is not None
+
+    context.notification_fee = res_fee.json()['totalPrice']
+
+
+@then("the amount of installment is increased by the notification fee")
+def step_check_installment_amount_with_fee(context):
+    previous_amount = context.installment.amount_cents
+
+    expected_amount = previous_amount + context.notification_fee
+
+    res = get_installment(token=context.token, installment_id=context.installment.installment_id)
+
+    assert res.status_code == 200
+    assert res.json()['notificationFeeCents'] == context.notification_fee
+    assert res.json()['amountCents'] == expected_amount
