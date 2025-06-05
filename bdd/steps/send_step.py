@@ -28,12 +28,12 @@ notification_pdf_digest = "YSxsCpvZHvwL8IIosWJBUDjgUwa01sBHu6Cj4laQRLA="
 payment_pdf_digest = "45Iba3tn9Dfm7TX+AbtWDR1csMuHgEbrHi/zZr6DjHU="
 
 
-def step_send_token(pagopa_interaction: PagoPaInteractionModel = PagoPaInteractionModel.GPD) -> str:
+def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
     client = None
     match pagopa_interaction:
-        case PagoPaInteractionModel.ACA:
+        case PagoPaInteractionModel.ACA.value:
             client = secrets.send_info.aca
-        case PagoPaInteractionModel.GPD:
+        case PagoPaInteractionModel.GPD.value:
             client = secrets.send_info.gpd
 
     res = post_send_auth_token(client_id=client.client_id, client_secret=client.client_secret)
@@ -51,8 +51,18 @@ def step_create_send_notification(context, seq_num, po_index):
                                                            po_index=int(po_index), seq_num=int(seq_num))
     context.installment = installment
 
+    org_info = context.org_info
+
+    pagopa_int_mode = None
+    match org_info.pagopa_interaction:
+        case PagoPaInteractionModel.GPD.value:
+            pagopa_int_mode = 'ASYNC'
+        case PagoPaInteractionModel.ACA.value:
+            pagopa_int_mode = 'SYNC'
+
+
     payload = {
-        "organizationId": context.org_info.id,
+        "organizationId": org_info.id,
         "paProtocolNumber": "Prot_001",
         "recipient": {
             "recipientType": "PF",
@@ -67,7 +77,7 @@ def step_create_send_notification(context, seq_num, po_index):
             "payments": [{
                 "pagoPa": {
                     "noticeCode": installment.nav,
-                    "creditorTaxId": context.org_info.fiscal_code,
+                    "creditorTaxId": org_info.fiscal_code,
                     "applyCost": True,
                     "attachment": {
                         "fileName": "payment.pdf",
@@ -91,10 +101,10 @@ def step_create_send_notification(context, seq_num, po_index):
         "taxonomyCode": "010101P",
         "paFee": 100,
         "vat": 22,
-        "pagoPaIntMode": "NONE"
+        "pagoPaIntMode": pagopa_int_mode
     }
 
-    send_token = step_send_token()
+    send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction)
     context.send_token = send_token
 
     res = post_create_send_notification(token=send_token, payload=payload)
@@ -104,20 +114,6 @@ def step_create_send_notification(context, seq_num, po_index):
     assert res.json()['status'] == SendStatus.WAITING.value
 
     context.send_notification_id = res.json()['sendNotificationId']
-
-
-def check_status_during_upload(send_token, notification_id):
-    res_status = get_send_notification_status(token=send_token, notification_id=notification_id)
-
-    assert res_status.status_code == 409
-    assert SendStatus.SENDING.value in res_status.json()['message']
-
-    res_status = get_send_notification_status(token=send_token, notification_id=notification_id)
-
-    assert res_status.status_code == 409
-    assert SendStatus.REGISTERED.value in res_status.json()['message']
-
-
 
 
 @when("the organization requires the notification to be uploaded to SEND")
@@ -150,7 +146,7 @@ def step_upload_notification_file(context):
 
     retry_get_workflow_status(token=send_token, workflow_id=res_payment_file.json()['workflowId'],
                               status=WorkflowStatus.COMPLETED,
-                              tries=5, delay=15, delay_multiplier=2)
+                              tries=12, delay=30)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")

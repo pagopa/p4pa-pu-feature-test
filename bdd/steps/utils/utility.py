@@ -11,20 +11,18 @@ def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
 
 
-def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, tries=15, delay=3, delay_multiplier=1):
+def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, tries=15, delay=3):
     count = 0
 
     res = get_workflow_status(token=token, workflow_id=workflow_id)
 
     success = (res.status_code == 200 and res.json()['status'] == status.value)
 
-    delay_exponential = delay
     while not success:
-        delay_exponential *= delay_multiplier
         count += 1
         if count == tries:
             break
-        time.sleep(delay_exponential)
+        time.sleep(delay)
         res = get_workflow_status(token=token, workflow_id=workflow_id)
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
