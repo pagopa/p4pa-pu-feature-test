@@ -18,3 +18,5 @@ class WorkflowType(Enum):
     TRANSFER_CLASSIFICATION = "TransferClassificationWF"
     PAYMENTS_REPORTING_INGESTION = "PaymentsReportingIngestionWF"
     TREASURY_OPI_INGESTION = "TreasuryOpiIngestionWF"
+    SEND_NOTIFICATION_PROCESS = "SendNotificationProcessWF"
+    SEND_NOTIFICATION_DATE_RETRIEVE = "SendNotificationDateRetrieveWF"

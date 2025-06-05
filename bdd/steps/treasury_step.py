@@ -71,8 +71,7 @@ def step_upload_payment_reporting_file(context, amount):
 
     res = post_upload_file(token=token, organization_id=org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
-                           file_origin=FileOrigin.PORTAL, file_name=zip_file_path,
-                           file=zip_file)
+                           file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     context.treasury_file_name = zip_file_path
     context.iuf = iuf

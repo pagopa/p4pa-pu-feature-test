@@ -11,7 +11,6 @@ Feature: An organization creates a debt position
     And the notice is present in ACA archive in status valid
     And the check of debt position expiration is scheduled
 
-
   @aca
   Scenario: Organization interacting with ACA creates a complex debt position
     Given organization interacting with ACA
@@ -22,7 +21,6 @@ Feature: An organization creates a debt position
     Then the debt position is in status unpaid
     And the notices are present in ACA archive in status valid
     And the check of debt position expiration is scheduled
-
 
   @gpd
   Scenario: Organization interacting with GPD creates a simple debt position
