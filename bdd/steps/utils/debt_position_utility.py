@@ -11,6 +11,14 @@ def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_ind
     return installment
 
 
+def find_payment_option_by_po_index(debt_position: DebtPosition, po_index: int) -> PaymentOption:
+    payment_option = None
+    for po in debt_position.payment_options:
+        if po.payment_option_index == po_index:
+            payment_option = po
+    return payment_option
+
+
 def retrieve_iuv_list(debt_position: DebtPosition) -> list[str]:
     iuv_list = []
     for po in debt_position.payment_options:

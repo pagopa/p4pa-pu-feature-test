@@ -22,7 +22,7 @@ psp_info = secrets.payment_info.psp
 
 @when("the organization uploads the payment reporting file about installment of payment option {po_index}")
 @when("the organization uploads the payment reporting file about installment {seq_num} of payment option {po_index}")
-def step_upload_payment_reporting_file(context, po_index, seq_num=1):
+def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
     token = context.token
     org_info = context.org_info
 
