@@ -12,7 +12,12 @@ from api.debt_position_type import get_debt_position_type_org_by_code
 from api.debt_positions import post_create_debt_position, get_debt_position
 from api.organization import get_org_by_ipa_code
 from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
+from bdd.steps.classification_step import step_check_classification
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
+from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
+from bdd.steps.treasury_step import step_upload_payment_reporting_file as step_upload_treasury_file
+from bdd.steps.treasury_step import step_check_payment_reporting_processed as step_check_treasury_processed
+from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_installment_by_seq_num_and_po_index, find_payment_option_by_po_index
 from bdd.steps.workflow_step import check_workflow_status, step_workflow_check_expiration_scheduled
@@ -168,6 +173,28 @@ def step_create_simple_debt_position(context, po_size, pagopa_interaction):
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
 
     step_workflow_check_expiration_scheduled(context=context, status="scheduled")
+
+
+@given(
+    "the previous payment of installment {seq_num} of payment option {po_index}")
+def step_pay_installment_and_verify(context, seq_num, po_index):
+    step_installment_payment(context=context, po_index=po_index, seq_num=seq_num)
+
+    step_check_receipt_processed(context=context)
+    invalid_po_indexes = [po.payment_option_index for po in context.debt_position.payment_options if po.payment_option_index != int(po_index)]
+    for i in invalid_po_indexes:
+        step_check_po_status(context=context, po_index=str(i), status=Status.INVALID.value)
+
+    step_upload_payment_reporting_file(context=context, po_index=po_index, seq_num=seq_num)
+    step_check_payment_reporting_processed(context=context)
+    step_check_installment_status(context=context, installment_seq_num=seq_num, po_index=po_index, status=Status.REPORTED.value)
+
+    step_upload_treasury_file(context=context, po_index=po_index, installment_seq_num=seq_num)
+    step_check_treasury_processed(context=context)
+
+    step_check_po_status(context=context, po_index=po_index, status=Status.PARTIALLY_PAID.value)
+    step_check_dp_status(context=context, status=Status.PARTIALLY_PAID.value)
+    step_check_classification(context=context, labels='RT_NO_IUD, RT_IUF, RT_IUF_TES')
 
 
 def create_installment(amount_cents, due_date, index):
