@@ -38,7 +38,7 @@ Feature: Classification process starting from an installment payment
 
 
   @gpd
-  Scenario: As a positive result of payment, payment reporting and treasury a debt position on GPD is reported
+  Scenario: As a positive result of payment, payment reporting and treasury of an installment a partially paid debt position on GPD is reported
     Given a complex debt position with 2 payment options created by organization interacting with GPD
     When the citizen pays the installment 1 of payment option 1
     Then the receipt is processed correctly
