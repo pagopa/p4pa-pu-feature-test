@@ -13,7 +13,8 @@ from api.debt_positions import post_create_debt_position, get_debt_position
 from api.organization import get_org_by_ipa_code
 from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
-from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer
+from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
+    find_installment_by_seq_num_and_po_index, find_payment_option_by_po_index
 from bdd.steps.workflow_step import check_workflow_status, step_workflow_check_expiration_scheduled
 from model.debt_position import DebtPosition, Installment, Debtor, PaymentOption, PaymentOptionType, Status
 from model.workflow_hub import WorkflowStatus
@@ -109,11 +110,57 @@ def step_check_dp_status(context, status):
     assert res.json()['status'] == status.upper()
 
 
+@then("the payment option {po_index} is in status {status}")
+def step_check_po_status(context, po_index, status):
+    token = context.token
+    debt_position_id = context.debt_position.debt_position_id
+
+    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    assert res.status_code == 200
+
+    debt_position = DebtPosition.from_dict(res.json())
+
+    payment_option = find_payment_option_by_po_index(debt_position=debt_position, po_index=int(po_index))
+
+    assert payment_option.status.value == status.upper()
+
+
+@then("the installment {installment_seq_num} of payment option {po_index} is in status {status}")
+def step_check_installment_status(context, installment_seq_num, po_index, status):
+    token = context.token
+    debt_position_id = context.debt_position.debt_position_id
+
+    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+
+    assert res.status_code == 200
+
+    debt_position = DebtPosition.from_dict(res.json())
+
+    installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=int(po_index), seq_num=installment_seq_num)
+
+    assert installment.status.value == status.upper()
+
 @given("a simple debt position created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position(context, pagopa_interaction):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3)
+    step_create_dp(context=context)
+    step_check_dp_status(context=context, status=Status.UNPAID.value)
+
+    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
+        step_verify_presence_debt_position_in_aca(context=context, status="valid")
+
+    step_workflow_check_expiration_scheduled(context=context, status="scheduled")
+
+
+@given(
+    "a complex debt position with {po_size} payment options created by organization interacting with {pagopa_interaction}")
+def step_create_simple_debt_position(context, po_size, pagopa_interaction):
+    get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+    step_create_dp_entity(context=context)
+    for i in range(int(po_size)):
+        step_create_po_and_inst_entities(context=context, po_index=i+1, installments_size=2, expiration_days=3)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
 
