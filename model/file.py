@@ -30,3 +30,9 @@ class FileOrigin(Enum):
     PAGOPA = 'PAGOPA'
     SIL = 'SIL'
     PORTAL = 'PORTAL'
+
+
+class ReceiptOriginType(Enum):
+    RECEIPT_PAGOPA='RECEIPT_PAGOPA'
+    RECEIPT_FILE='RECEIPT_FILE'
+    PAYMENTS_REPORTING='PAYMENTS_REPORTING'
