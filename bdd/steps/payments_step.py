@@ -93,9 +93,14 @@ def step_check_receipt_created(context):
     assert res.status_code == 200
     assert len(res.json()['content']) == 1
     receipt = res.json()['content'][0]
-    assert receipt['receiptId'] is not None
     assert receipt['receiptOrigin'] == ReceiptOriginType.PAYMENTS_REPORTING.value
     assert installment_paid.iuv == receipt['iuv']
+
+    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+
+    assert res.status_code == 200
+    assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()['receiptId']
+    installment_paid.iur = res.json()['iur']
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',

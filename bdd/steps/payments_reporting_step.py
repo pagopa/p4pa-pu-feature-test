@@ -88,6 +88,7 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
 
 
 @then("the payment reporting is processed correctly")
+@then("the payment reporting with outcome code 9 is processed correctly")
 def step_check_payment_reporting_processed(context):
     installment_paid = context.installment_paid
     organization_id = context.org_info.id
@@ -112,30 +113,3 @@ def step_check_payment_reporting_processed(context):
     assert res.json()['iuf'] is not None
 
     context.iuf = (res.json()['iuf'])
-
-
-@then("the payment reporting with outcome code 9 is processed correctly")
-def step_check_payment_reporting_outcome_code9_processed(context):
-    installment_paid = context.installment_paid
-    organization_id = context.org_info.id
-
-    file_path_name = FilePathName.PAYMENTS_REPORTING
-    file_name = context.payment_reporting_file_name
-
-    payment_reporting_file_id = retry_get_process_file_status(token=context.token, organization_id=organization_id,
-                                                              file_path_name=file_path_name, file_name=file_name,
-                                                              status=FileStatus.COMPLETED)
-
-    check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
-                          entity_id=payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
-
-    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                          entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
-                          status=WorkflowStatus.COMPLETED)
-
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
-
-    assert res.status_code == 200
-    assert res.json()['iuf'] is not None
-
-    context.iuf = res.json()['iuf']

@@ -19,7 +19,6 @@ Feature: Classification process starting from an installment payment
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
 
 
-  @test
   @gpd
   Scenario: As a positive result of payment, payment reporting and treasury a simple debt position, created on GPD, is reported
     Given a simple debt position created by organization interacting with GPD
