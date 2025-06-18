@@ -1,5 +1,6 @@
 import time
 
+from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification_status
 from api.workflow_hub import get_workflow_status
@@ -68,3 +69,12 @@ def retry_get_status_send_notification(token, notification_id, status, tries=15,
         success = (res.status_code == 200 and status in res.json())
 
     assert success
+
+def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
+    res_org = get_org_by_ipa_code(token=token, ipa_code=ipa_code)
+
+    assert res_org.status_code == 200
+    organization_id = res_org.json()['organizationId']
+    assert organization_id is not None
+
+    return organization_id

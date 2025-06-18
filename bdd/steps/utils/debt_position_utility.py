@@ -1,4 +1,9 @@
-from model.debt_position import DebtPosition, PaymentOption, Status, Installment
+import random
+import uuid
+from datetime import datetime, timedelta
+
+from api.debt_position_type import get_debt_position_type_org_by_code
+from model.debt_position import DebtPosition, PaymentOption, Status, Installment, Debtor, PaymentOptionType
 
 
 def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_index: int, seq_num: int) -> Installment:
@@ -38,3 +43,48 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
                                  if transfer.transfer_index != 1)
 
     return installment.amount_cents - other_transfers_amount
+
+
+def create_installment(amount_cents: int, due_date: str, seq_num: int) -> Installment:
+    installment = Installment(amount_cents=amount_cents,
+                              due_date=due_date,
+                              debtor=Debtor(),
+                              remittance_information=f'Feature test installment {seq_num}',
+                              iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}')
+    return installment
+
+
+def create_payment_option(po_index: int, installments_size: int, expiration_days: int, amount_cents: int = None) -> PaymentOption:
+    due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
+
+    payment_option_type = PaymentOptionType.INSTALLMENTS
+    if installments_size == 1:
+        payment_option_type = PaymentOptionType.SINGLE_INSTALLMENT
+
+    payment_option = PaymentOption(payment_option_index=int(po_index),
+                                   payment_option_type=payment_option_type,
+                                   description=f'Feature test payment option {po_index}')
+
+    for i in range(int(installments_size)):
+        amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
+        installment = create_installment(amount_cents, due_date, i + 1)
+        payment_option.installments.append(installment)
+
+    return payment_option
+
+
+def create_debt_position(token, organization_id: int, debt_position_type_org_code: str,
+                         iupd_org: str = None, identifier: str = '') -> DebtPosition:
+    res_dp_type_org = get_debt_position_type_org_by_code(token=token, organization_id=organization_id,
+                                                         code=debt_position_type_org_code)
+
+    assert res_dp_type_org.status_code == 200
+    debt_position_type_org_id = res_dp_type_org.json()['debtPositionTypeOrgId']
+    assert debt_position_type_org_id is not None
+
+    debt_position = DebtPosition(organization_id=organization_id,
+                                 debt_position_type_org_id=debt_position_type_org_id,
+                                 iupd_org=iupd_org,
+                                 description='Feature test debt position ' + identifier)
+
+    return debt_position

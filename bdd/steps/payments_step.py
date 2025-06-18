@@ -74,8 +74,8 @@ def step_check_receipt_processed(context):
     installment_paid.iur = res.json()['iur']
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                              entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + res.json()['iur'] + '-1',
-                              status=WorkflowStatus.COMPLETED)
+                          entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + res.json()['iur'] + '-1',
+                          status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
-                              entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
+                          entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
