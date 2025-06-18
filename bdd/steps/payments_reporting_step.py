@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import uuid
 import zipfile
 from datetime import datetime
 from zipfile import ZipFile
@@ -22,7 +23,8 @@ psp_info = secrets.payment_info.psp
 
 @when("the organization uploads the payment reporting file about installment of payment option {po_index}")
 @when("the organization uploads the payment reporting file about installment {seq_num} of payment option {po_index}")
-def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
+@when("the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
+def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_code='0'):
     token = context.token
     org_info = context.org_info
 
@@ -32,6 +34,7 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
 
     installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
                                                            po_index=int(po_index), seq_num=int(seq_num))
+    installment.iur = installment.iur if int(outcome_code) != 9 else uuid.uuid4().hex
 
     with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
         ingestion_flow_file = file.read()
@@ -59,7 +62,7 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
                                                      iur=installment.iur,
                                                      transfer_index=1,
                                                      amount_paid_cents=amount,
-                                                     payment_outcome_code=0,
+                                                     payment_outcome_code=int(outcome_code),
                                                      payment_date=date)
 
     xml_file_path = f'{iuf}.xml'
@@ -75,6 +78,7 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     context.payment_reporting_file_name = zip_file_path
+    context.installment_paid = installment
 
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
@@ -84,6 +88,7 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1'):
 
 
 @then("the payment reporting is processed correctly")
+@then("the payment reporting with outcome code 9 is processed correctly")
 def step_check_payment_reporting_processed(context):
     installment_paid = context.installment_paid
     organization_id = context.org_info.id
@@ -107,4 +112,4 @@ def step_check_payment_reporting_processed(context):
     assert res.status_code == 200
     assert res.json()['iuf'] is not None
 
-    context.iuf = res.json()['iuf']
+    context.iuf = (res.json()['iuf'])

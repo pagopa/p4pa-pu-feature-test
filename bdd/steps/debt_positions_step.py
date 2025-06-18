@@ -130,8 +130,9 @@ def step_check_po_status(context, po_index, status):
     assert payment_option.status.value == status.upper()
 
 
+@then("the installment of payment option {po_index} is in status {status}")
 @then("the installment {installment_seq_num} of payment option {po_index} is in status {status}")
-def step_check_installment_status(context, installment_seq_num, po_index, status):
+def step_check_installment_status(context, po_index, status, installment_seq_num='1'):
     token = context.token
     debt_position_id = context.debt_position.debt_position_id
 
