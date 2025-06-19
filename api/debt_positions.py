@@ -48,3 +48,18 @@ def get_debt_positions_by_ingestion_flow_id(token, ingestion_flow_id: int):
         },
         timeout=settings.default_timeout
     )
+
+
+def get_receipt(token, organization_id, receipt_origin, iuv, iur):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.bff}/organization/{organization_id}/receipts',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        params={
+            'receiptOrigin': receipt_origin,
+            'iuv': iuv,
+            'iur': iur
+        },
+        timeout=settings.default_timeout
+    )

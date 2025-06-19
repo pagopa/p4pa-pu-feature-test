@@ -1,13 +1,13 @@
 import xmltodict
 from behave import when, then
 
-from api.debt_positions import get_installment
+from api.debt_positions import get_installment, get_receipt
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
-from model.file import FilePathName, FileStatus
+from model.file import FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
@@ -75,6 +75,35 @@ def step_check_receipt_processed(context):
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + res.json()['iur'] + '-1',
+                          status=WorkflowStatus.COMPLETED)
+
+    check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
+                          entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
+
+
+@then("the receipt is created correctly")
+def step_check_receipt_created(context):
+    installment_paid = context.installment_paid
+    org_info = context.org_info
+
+    res = get_receipt(token=context.token, organization_id=org_info.id,
+                      receipt_origin=ReceiptOriginType.PAYMENTS_REPORTING.value, iuv=installment_paid.iuv,
+                      iur=installment_paid.iur)
+
+    assert res.status_code == 200
+    assert len(res.json()['content']) == 1
+    receipt = res.json()['content'][0]
+    assert receipt['receiptOrigin'] == ReceiptOriginType.PAYMENTS_REPORTING.value
+    assert installment_paid.iuv == receipt['iuv']
+
+    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+
+    assert res.status_code == 200
+    assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()['receiptId']
+    installment_paid.iur = res.json()['iur']
+
+    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                          entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
                           status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
