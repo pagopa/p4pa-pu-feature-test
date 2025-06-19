@@ -93,6 +93,8 @@ def step_upload_payment_reporting_file_with_amount(context, amount):
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 
+    context.treasury_file_id = res.json()['ingestionFlowFileId']
+
     os.remove(zip_file_path)
     os.remove(xml_file_path)
 
