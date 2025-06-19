@@ -45,30 +45,24 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
     return installment.amount_cents - other_transfers_amount
 
 
-def create_installment(amount_cents: int, due_date: str, seq_num: int) -> Installment:
+def create_installment(expiration_days: int, seq_num: int, amount_cents: int = None,
+                       ingestion_flow_file_action: str = None) -> Installment:
+    due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
+    amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
+
     installment = Installment(amount_cents=amount_cents,
                               due_date=due_date,
                               debtor=Debtor(),
                               remittance_information=f'Feature test installment {seq_num}',
-                              iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}')
+                              iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}',
+                              ingestion_flow_file_action=ingestion_flow_file_action)
     return installment
 
 
-def create_payment_option(po_index: int, installments_size: int, expiration_days: int, amount_cents: int = None) -> PaymentOption:
-    due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
-
-    payment_option_type = PaymentOptionType.INSTALLMENTS
-    if installments_size == 1:
-        payment_option_type = PaymentOptionType.SINGLE_INSTALLMENT
-
+def create_payment_option(po_index: int, payment_option_type: PaymentOptionType) -> PaymentOption:
     payment_option = PaymentOption(payment_option_index=int(po_index),
                                    payment_option_type=payment_option_type,
                                    description=f'Feature test payment option {po_index}')
-
-    for i in range(int(installments_size)):
-        amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
-        installment = create_installment(amount_cents, due_date, i + 1)
-        payment_option.installments.append(installment)
 
     return payment_option
 

@@ -13,12 +13,21 @@ def check_workflow_status(context, workflow_type: WorkflowType, entity_id: int, 
 
 
 @then("the check of debt position expiration is {status}")
-def step_workflow_check_expiration_scheduled(context, status):
-    workflow_status = WorkflowStatus.COMPLETED
-    if status == 'scheduled':
-        workflow_status = WorkflowStatus.RUNNING
-    elif status == 'canceled':
-        workflow_status = WorkflowStatus.CANCELED
+def step_debt_position_workflow_check_expiration(context, status):
+    debt_position = context.debt_position
+
+    workflow_status = WorkflowStatus(status.upper()) if status != 'scheduled' else WorkflowStatus.RUNNING
 
     check_workflow_status(context=context, workflow_type=WorkflowType.EXPIRATION_DP,
-                          entity_id=context.debt_position.debt_position_id, status=workflow_status)
+                          entity_id=debt_position.debt_position_id, status=workflow_status)
+
+
+@then("the checks of debt positions expiration are {status}")
+def step_debt_positions_workflow_check_expiration(context, status):
+    debt_positions = context.debt_positions_created
+
+    workflow_status = WorkflowStatus(status.upper()) if status != 'scheduled' else WorkflowStatus.RUNNING
+
+    for debt_position in debt_positions:
+        check_workflow_status(context=context, workflow_type=WorkflowType.EXPIRATION_DP,
+                              entity_id=debt_position.debt_position_id, status=workflow_status)

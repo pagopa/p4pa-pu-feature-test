@@ -10,16 +10,17 @@ from bdd.steps.classification_step import step_check_classification
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
 from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
-from bdd.steps.treasury_step import step_check_payment_reporting_processed as step_check_treasury_processed
-from bdd.steps.treasury_step import step_upload_payment_reporting_file as step_upload_treasury_file
+from bdd.steps.treasury_step import step_check_treasury_processed
+from bdd.steps.treasury_step import step_upload_treasury_file
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_installment_by_seq_num_and_po_index, find_payment_option_by_po_index, create_debt_position, \
-    create_payment_option
+    create_payment_option, create_installment
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
-from bdd.steps.workflow_step import check_workflow_status, step_workflow_check_expiration_scheduled
+from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
-from model.debt_position import DebtPosition, Installment, Status
+from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
 from model.workflow_hub import WorkflowStatus
+
 
 @given("a new debt position of type TEST")
 def step_create_dp_entity(context):
@@ -37,8 +38,12 @@ def step_create_dp_entity(context):
 @given(
     "payment option {po_index} with single installment of {amount} euros with due date set in {expiration_days} days")
 def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days):
-    payment_option = create_payment_option(po_index=int(po_index), installments_size=1, amount_cents=int(amount) * 100,
-                                           expiration_days=int(expiration_days))
+    payment_option = create_payment_option(po_index=int(po_index),
+                                           payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
+
+    amount_cents = int(amount) * 100
+    installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1)
+    payment_option.installments.append(installment)
 
     context.debt_position.payment_options.append(payment_option)
 
@@ -46,8 +51,11 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
 @given(
     "payment option {po_index} with {installments_size} installments with due date set in {expiration_days} days")
 def step_create_po_and_inst_entities(context, po_index, installments_size, expiration_days):
-    payment_option = create_payment_option(po_index=int(po_index), installments_size=int(installments_size),
-                                           expiration_days=int(expiration_days))
+    payment_option = create_payment_option(po_index=int(po_index), payment_option_type=PaymentOptionType.INSTALLMENTS)
+
+    for i in range(int(installments_size)):
+        installment = create_installment(expiration_days=int(expiration_days), seq_num=i + 1)
+        payment_option.installments.append(installment)
 
     context.debt_position.payment_options.append(payment_option)
 
@@ -61,7 +69,8 @@ def step_create_dp(context):
 
     assert res.status_code == 200
 
-    validate_debt_position_created(context, res.json())
+    validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position, debt_position_response=res.json(),
+                                   status=Status.TO_SYNC)
 
     context.debt_position = DebtPosition.from_dict(res.json())
 
@@ -123,7 +132,7 @@ def step_create_simple_debt_position(context, pagopa_interaction):
     if pagopa_interaction == PagoPaInteractionModel.ACA.value:
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
 
-    step_workflow_check_expiration_scheduled(context=context, status="scheduled")
+    step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
 
 @given(
@@ -139,7 +148,7 @@ def step_create_simple_debt_position(context, po_size, pagopa_interaction):
     if pagopa_interaction == PagoPaInteractionModel.ACA.value:
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
 
-    step_workflow_check_expiration_scheduled(context=context, status="scheduled")
+    step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
 
 @given(
@@ -166,20 +175,20 @@ def step_pay_installment_and_verify(context, seq_num, po_index):
     step_check_classification(context=context, labels='RT_NO_IUD, RT_IUF, RT_IUF_TES')
 
 
-def validate_debt_position_created(context, response: dict):
-    debt_position_request = context.debt_position
-    org_info = context.org_info
+def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):
+    assert debt_position_response['status'] == status.value
+    assert debt_position_response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
+    if debt_position_request.iupd_org is None:
+        assert debt_position_response['iupdOrg'].startswith(org_info.fiscal_code)
+    else:
+        assert debt_position_response['iupdOrg'] == debt_position_request.iupd_org
 
-    assert response['status'] == Status.TO_SYNC.value
-    assert response['iupdOrg'].startswith(org_info.fiscal_code)
-    assert response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
-
-    assert len(response['paymentOptions']) == len(debt_position_request.payment_options)
+    assert len(debt_position_response['paymentOptions']) == len(debt_position_request.payment_options)
 
     map_po_request = dict((po.payment_option_index, po) for po in debt_position_request.payment_options)
-    for po_response in response['paymentOptions']:
+    for po_response in debt_position_response['paymentOptions']:
         po_request = map_po_request.get(po_response['paymentOptionIndex'])
-        assert po_response['status'] == Status.TO_SYNC.value
+        assert po_response['status'] == status.value
         assert po_response['paymentOptionType'] == po_request.payment_option_type.value
         assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
         assert len(po_response['installments']) == len(po_request.installments)
@@ -187,9 +196,10 @@ def validate_debt_position_created(context, response: dict):
         map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)
         for inst_response in po_response['installments']:
             inst_request = map_inst_request.get(inst_response['iud'])
-            assert inst_response['status'] == Status.TO_SYNC.value
-            assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
-            assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
+            assert inst_response['status'] == status.value
+            if status == Status.TO_SYNC:
+                assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
+                assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
             assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
             assert len(inst_response['iuv']) == 17
             assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']

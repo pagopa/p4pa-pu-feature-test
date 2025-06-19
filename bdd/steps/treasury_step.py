@@ -97,7 +97,7 @@ def step_upload_payment_reporting_file_with_amount(context, amount):
     os.remove(xml_file_path)
 
 @when("the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
-def step_upload_payment_reporting_file(context, po_index, installment_seq_num):
+def step_upload_treasury_file(context, po_index, installment_seq_num):
     token = context.token
     org_info = context.org_info
     amount = int(context.installment_paid.amount_cents / 100)
@@ -116,24 +116,26 @@ def step_upload_payment_reporting_file(context, po_index, installment_seq_num):
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 
+    context.treasury_file_id = res.json()['ingestionFlowFileId']
+
     os.remove(zip_file_path)
     os.remove(xml_file_path)
 
 
 @then("the treasury is processed correctly")
-def step_check_payment_reporting_processed(context):
+def step_check_treasury_processed(context):
     organization_id = context.org_info.id
     installment_paid = context.installment_paid
 
     file_path_name = FilePathName.TREASURY_OPI
     file_name = context.treasury_file_name
 
-    treasury_file_id = retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    retry_get_process_file_status(token=context.token, organization_id=organization_id,
                                                      file_path_name=file_path_name, file_name=file_name,
                                                      status=FileStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TREASURY_OPI_INGESTION,
-                          entity_id=treasury_file_id, status=WorkflowStatus.COMPLETED)
+                          entity_id=context.treasury_file_id, status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
