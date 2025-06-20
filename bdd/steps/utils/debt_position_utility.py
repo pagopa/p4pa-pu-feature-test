@@ -1,9 +1,11 @@
 import random
+import string
 import uuid
 from datetime import datetime, timedelta
 
 from api.debt_position_type import get_debt_position_type_org_by_code
-from model.debt_position import DebtPosition, PaymentOption, Status, Installment, Debtor, PaymentOptionType
+from model.debt_position import DebtPosition, PaymentOption, Status, Installment
+from model.debt_position import Debtor, PaymentOptionType
 
 
 def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_index: int, seq_num: int) -> Installment:
@@ -82,3 +84,7 @@ def create_debt_position(token, organization_id: int, debt_position_type_org_cod
                                  description='Feature test debt position ' + identifier)
 
     return debt_position
+
+
+def generate_iuv() -> str:
+    return f"0199{''.join(random.choices(string.digits, k=13))}"

@@ -4,7 +4,8 @@ from behave import given
 from behave import then
 from behave import when
 
-from api.debt_positions import post_create_debt_position, get_debt_position
+from api.debt_positions import post_create_debt_position, get_debt_position, \
+    get_debt_position_by_organization_id_and_installment_nav
 from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
 from bdd.steps.classification_step import step_check_classification
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
@@ -13,12 +14,13 @@ from bdd.steps.payments_step import step_installment_payment, step_check_receipt
 from bdd.steps.treasury_step import step_check_treasury_processed
 from bdd.steps.treasury_step import step_upload_treasury_file
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
-    find_installment_by_seq_num_and_po_index, find_payment_option_by_po_index, create_debt_position, \
-    create_payment_option, create_installment
+    find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
+    create_payment_option
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
+from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
 
@@ -117,7 +119,22 @@ def step_check_installment_status(context, po_index, status, installment_seq_num
     debt_position = DebtPosition.from_dict(res.json())
 
     installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=int(po_index),
-                                                           seq_num=installment_seq_num)
+                                                           seq_num=int(installment_seq_num))
+
+    assert installment.status.value == status.upper()
+
+
+@then("the installment of the created debt position is in status {status}")
+def step_check_outcome9_installment_status(context, status):
+    token = context.token
+    debt_position_id = context.debt_position.debt_position_id
+
+    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+
+    assert res.status_code == 200
+
+    debt_position = DebtPosition.from_dict(res.json())
+    installment = debt_position.payment_options[0].installments[0]
 
     assert installment.status.value == status.upper()
 
@@ -174,6 +191,33 @@ def step_pay_installment_and_verify(context, seq_num, po_index):
     step_check_po_status(context=context, po_index=po_index, status=Status.PARTIALLY_PAID.value)
     step_check_dp_status(context=context, status=Status.PARTIALLY_PAID.value)
     step_check_classification(context=context, labels='RT_NO_IUD, RT_IUF, RT_IUF_TES')
+
+
+@then("the debt position is created correctly")
+def step_check_debt_position_created(context):
+    token = context.token
+    org_info = context.org_info
+
+    nav = '3' + context.iuv
+    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id, installment_nav=nav)
+
+    assert res.status_code == 200
+    assert res.json()['debtPositionId'] is not None
+    debt_position_id = res.json()['debtPositionId']
+
+    res = get_debt_position(token, debt_position_id)
+
+    assert res.status_code == 200
+
+    debt_position = DebtPosition.from_dict(res.json())
+    assert DebtPositionOrigin.REPORTING_PAGOPA == debt_position.debt_position_origin
+
+    installment = debt_position.payment_options[0].installments[0]
+    assert context.iuv == installment.iuv
+    assert 'ANONIMO' == installment.debtor.fiscal_code
+
+    context.debt_position = debt_position
+    context.installment_paid = installment
 
 
 def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):

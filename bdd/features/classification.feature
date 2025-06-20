@@ -83,6 +83,7 @@ Feature: Classification process starting from an installment payment
     And the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES
 
 
+  @outcome9
   @gpd
   Scenario: As a positive result of payment reporting of a paid debt position without receipt, created with GPD, a receipt is created and the debt position is reported
     Given a simple debt position created by organization interacting with GPD
@@ -90,5 +91,18 @@ Feature: Classification process starting from an installment payment
     Then the payment reporting with outcome code 9 is processed correctly
     And the receipt is created correctly
     And the installment of payment option 1 is in status reported
+    And the debt position is in status reported
+    And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
+
+
+  @outcome9
+  @gpd
+  Scenario: As a positive result of payment reporting of a missing debt position, a receipt is created and the debt position is reported
+    Given organization interacting with GPD
+    When the organization uploads the payment reporting file about a missing debt position with outcome code 9
+    Then the payment reporting with outcome code 9 is processed correctly
+    And the debt position is created correctly
+    And the receipt is created correctly
+    And the installment of the created debt position is in status reported
     And the debt position is in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
