@@ -1,3 +1,6 @@
+import string
+import random
+
 from model.debt_position import DebtPosition, PaymentOption, Status, Installment
 
 
@@ -38,3 +41,7 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
                                  if transfer.transfer_index != 1)
 
     return installment.amount_cents - other_transfers_amount
+
+
+def generate_iuv() -> str:
+    return f"0199{''.join(random.choices(string.digits, k=13))}"

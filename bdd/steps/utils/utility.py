@@ -1,10 +1,19 @@
 import time
 
+from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification_status
 from api.workflow_hub import get_workflow_status
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
+
+def get_organization_id(token, org_ipa_code) -> int:
+    res_org = get_org_by_ipa_code(token=token, ipa_code=org_ipa_code)
+
+    assert res_org.status_code == 200
+    assert res_org.json()['organizationId'] is not None
+
+    return res_org.json()['organizationId']
 
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:

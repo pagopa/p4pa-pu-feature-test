@@ -53,21 +53,21 @@ class Transfer:
     installment_id: int
     transfer_index: int
     org_fiscal_code: str
-    org_name: str
     amount_cents: int
     remittance_information: str
-    iban: str
     category: str
+    iban: str = None
+    org_name: str = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Installment:
-    due_date: str
     amount_cents: int
     debtor: Debtor
     remittance_information: str
     iud: str
+    due_date: str = None
     installment_id: int = None
     payment_option_id: int = None
     status: Status = Status.UNPAID.value
@@ -108,9 +108,13 @@ class PaymentOption:
 
 
 class DebtPositionOrigin(Enum):
-    ORDINARY = "ORDINARY"
-    ORDINARY_SIL = "ORDINARY_SIL"
-    SPONTANEOUS = "SPONTANEOUS"
+    ORDINARY = 'ORDINARY'
+    ORDINARY_SIL = 'ORDINARY_SIL'
+    SPONTANEOUS = 'SPONTANEOUS'
+    SECONDARY_ORG = 'SECONDARY_ORG'
+    RECEIPT_FILE = 'RECEIPT_FILE'
+    RECEIPT_PAGOPA = 'RECEIPT_PAGOPA'
+    REPORTING_PAGOPA = 'REPORTING_PAGOPA'
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
