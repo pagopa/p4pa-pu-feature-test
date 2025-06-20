@@ -11,11 +11,11 @@ from behave import when, then
 from api.debt_positions import get_debt_position, get_installment
 from api.fileshare import post_upload_file
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, generate_iuv
-from bdd.steps.utils.utility import retry_get_process_file_status, get_organization_id
+from bdd.steps.utils.utility import retry_get_process_file_status, retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from model.debt_position import DebtPosition
-from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus
+from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
@@ -79,9 +79,13 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
 
     context.payment_reporting_file_name = zip_file_path
     context.installment_paid = installment
+    context.iuv = installment.iuv
+    context.iur = installment.iur
 
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
+
+    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
 
     os.remove(zip_file_path)
     os.remove(xml_file_path)
@@ -130,7 +134,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
-    context.org_info['id'] = get_organization_id(token, org_info.ipa_code)
+    context.org_info['id'] = retrieve_org_id_by_ipa_code(token, org_info.ipa_code)
 
     res = post_upload_file(token=token, organization_id=org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
@@ -142,6 +146,8 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
 
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
+
+    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
 
     os.remove(zip_file_path)
     os.remove(xml_file_path)
@@ -155,12 +161,12 @@ def step_check_payment_reporting_processed(context):
     file_path_name = FilePathName.PAYMENTS_REPORTING
     file_name = context.payment_reporting_file_name
 
-    payment_reporting_file_id = retry_get_process_file_status(token=context.token, organization_id=organization_id,
-                                                              file_path_name=file_path_name, file_name=file_name,
-                                                              status=FileStatus.COMPLETED)
+    retry_get_process_file_status(token=context.token, organization_id=organization_id,
+                                  file_path_name=file_path_name, file_name=file_name,
+                                  status=FileStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
-                          entity_id=payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
+                          entity_id=context.payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
@@ -181,12 +187,12 @@ def step_check_payment_reporting_outcome9_processed(context):
     file_path_name = FilePathName.PAYMENTS_REPORTING
     file_name = context.payment_reporting_file_name
 
-    payment_reporting_file_id = retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    retry_get_process_file_status(token=context.token, organization_id=organization_id,
                                                               file_path_name=file_path_name, file_name=file_name,
                                                               status=FileStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
-                          entity_id=payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
+                          entity_id=context.payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
 
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,

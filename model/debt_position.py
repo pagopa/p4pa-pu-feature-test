@@ -84,6 +84,7 @@ class Installment:
     legacy_payment_metadata: str | None = None
     ingestion_flow_file_id: int | None = None
     ingestion_flow_file_line_number: int | None = None
+    ingestion_flow_file_action: str | None = None
     receipt_id: int | None = None
     transfers: list[Transfer] = field(default_factory=list)
 

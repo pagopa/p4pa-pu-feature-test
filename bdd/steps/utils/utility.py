@@ -7,14 +7,6 @@ from api.workflow_hub import get_workflow_status
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
-def get_organization_id(token, org_ipa_code) -> int:
-    res_org = get_org_by_ipa_code(token=token, ipa_code=org_ipa_code)
-
-    assert res_org.status_code == 200
-    assert res_org.json()['organizationId'] is not None
-
-    return res_org.json()['organizationId']
-
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
@@ -39,7 +31,7 @@ def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, t
 
 
 def retry_get_process_file_status(token, organization_id: int, file_path_name: FilePathName,
-                                  file_name: str, status: FileStatus, tries=15, delay=3) -> int:
+                                  file_name: str, status: FileStatus, tries=15, delay=3) -> dict:
     count = 0
 
     res = get_by_org_and_file_path_and_file_name(token=token, organization_id=organization_id,
@@ -57,7 +49,7 @@ def retry_get_process_file_status(token, organization_id: int, file_path_name: F
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
     assert success
-    return res.json()['ingestionFlowFileId']
+    return res.json()
 
 
 def retry_get_status_send_notification(token, notification_id, status, tries=15, delay=3):
@@ -77,3 +69,12 @@ def retry_get_status_send_notification(token, notification_id, status, tries=15,
         success = (res.status_code == 200 and status in res.json())
 
     assert success
+
+def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
+    res_org = get_org_by_ipa_code(token=token, ipa_code=ipa_code)
+
+    assert res_org.status_code == 200
+    organization_id = res_org.json()['organizationId']
+    assert organization_id is not None
+
+    return organization_id

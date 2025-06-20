@@ -95,7 +95,6 @@ Feature: Classification process starting from an installment payment
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
 
 
-  @wip
   @outcome9
   @gpd
   Scenario: As a positive result of payment reporting of a missing debt position, a receipt is created and the debt position is reported
