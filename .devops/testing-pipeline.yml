@@ -36,7 +36,6 @@ parameters:
       - send
       - outcome9
       - file
-      - file.*.it
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
