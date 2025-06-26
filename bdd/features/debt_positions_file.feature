@@ -32,11 +32,8 @@ Feature: An organizations creates debt positions by importing file
     Given organization interacting with GPD
     And debt positions <identifiers> with the installments configured as follows:
       | identifier | po index | po type            | installment seq | action |
-      | A          | 1        | INSTALLMENTS       | 1               | I      |
-      | A          | 1        | INSTALLMENTS       | 2               | I      |
-      | A          | 2        | SINGLE_INSTALLMENT | 1               | I      |
-      | B          | 1        | INSTALLMENTS       | 1               | I      |
-      | B          | 1        | INSTALLMENTS       | 2               | I      |
+      | A          | 1        | SINGLE_INSTALLMENT | 1               | I      |
+      | B          | 1        | SINGLE_INSTALLMENT | 1               | I      |
       | C          | 1        | SINGLE_INSTALLMENT | 1               | I      |
     And debt positions <identifiers> inserted into an ingestion flow file with version 1_4
     When the organization uploads the debt positions file

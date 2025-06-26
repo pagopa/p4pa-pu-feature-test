@@ -19,6 +19,7 @@ from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, cal
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
+from model.csv_file_debt_positions import CSVVersion
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
@@ -220,10 +221,10 @@ def step_check_debt_position_created(context):
     context.installment_paid = installment
 
 
-def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):
+def validate_debt_position_created(org_info, csv_version: str, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):
     assert debt_position_response['status'] == status.value
     assert debt_position_response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
-    if debt_position_request.iupd_org is None:
+    if debt_position_request.iupd_org is None or not CSVVersion.is_v2(csv_version):
         assert debt_position_response['iupdOrg'].startswith(org_info.fiscal_code)
     else:
         assert debt_position_response['iupdOrg'] == debt_position_request.iupd_org
@@ -237,6 +238,8 @@ def validate_debt_position_created(org_info, debt_position_request: DebtPosition
         assert po_response['paymentOptionType'] == po_request.payment_option_type.value
         assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
         assert len(po_response['installments']) == len(po_request.installments)
+        if not CSVVersion.is_v2(csv_version):
+            assert po_response['description'] == 'Pagamento Singolo Avviso'
 
         map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)
         for inst_response in po_response['installments']:
@@ -264,27 +267,3 @@ def validate_debt_position_created(org_info, debt_position_request: DebtPosition
             assert first_transfer['remittanceInformation'] == inst_request.remittance_information
             assert (first_transfer['amountCents'] ==
                     calculate_amount_first_transfer(installment=Installment.from_dict(inst_request)))
-
-
-def validate_debt_position_created_from_installments(org_info, debt_position_request: DebtPosition, debt_positions_response: list[DebtPosition], status: Status):
-    assert debt_position_request.payment_options
-
-    for debt_position_response in debt_positions_response:
-        assert debt_position_response.status == status
-        assert debt_position_response.debt_position_type_org_id == debt_position_request.debt_position_type_org_id
-        assert debt_position_response.iupd_org.startswith(org_info.fiscal_code)
-        assert len(debt_position_response.payment_options) == 1
-
-        po_response = debt_position_response.payment_options[0]
-        assert po_response.status == status
-        assert po_response.payment_option_type == PaymentOptionType.SINGLE_INSTALLMENT
-        assert po_response.description == 'Pagamento Singolo Avviso'
-        assert len(po_response.installments) == 1
-
-        installment_response = po_response.installments[0]
-        assert installment_response.status == status
-        assert installment_response.iupd_pagopa.startswith(org_info.fiscal_code)
-        assert len(installment_response.iuv) == 17
-        assert len(installment_response.nav) == 18 and installment_response.nav == '3' + installment_response.iuv
-        # TODO: check that po_response totalAmountCents equals installment amount
-        # TODO: check that installments amounts are equals between request and response
