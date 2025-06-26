@@ -221,7 +221,7 @@ def step_check_debt_position_created(context):
     context.installment_paid = installment
 
 
-def validate_debt_position_created(org_info, csv_version: str, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):
+def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status, csv_version: str = None):
     assert debt_position_response['status'] == status.value
     assert debt_position_response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
     if debt_position_request.iupd_org is None or not CSVVersion.is_v2(csv_version):
@@ -238,7 +238,7 @@ def validate_debt_position_created(org_info, csv_version: str, debt_position_req
         assert po_response['paymentOptionType'] == po_request.payment_option_type.value
         assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
         assert len(po_response['installments']) == len(po_request.installments)
-        if not CSVVersion.is_v2(csv_version):
+        if csv_version is not None and not CSVVersion.is_v2(csv_version):
             assert po_response['description'] == 'Pagamento Singolo Avviso'
 
         map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)

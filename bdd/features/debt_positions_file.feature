@@ -25,7 +25,6 @@ Feature: An organizations creates debt positions by importing file
       | A B C       |
 
 
-  @wip
   @file.v1_4.it
   @gpd
   Scenario Outline: Organization interacting with GPD creates 3 debt positions by ingestion flow file (v1.4)

@@ -195,24 +195,3 @@ def check_debt_positions_created_v2(context, identifiers, status, debt_position_
         debt_positions_created.append(DebtPosition.from_dict(debt_position_response))
 
     return debt_positions_created
-
-
-def check_debt_positions_created_v1(context, identifiers, status, debt_position_by_ingestion_flow_id) -> list[DebtPosition]:
-    assert len(context.installments_rows) == debt_position_by_ingestion_flow_id['totalElements']
-
-    debt_positions_response = debt_position_by_ingestion_flow_id['content']
-
-    debt_positions_created = []
-
-    for identifier in identifiers:
-        debt_position_request = context.debt_positions.get(identifier)
-
-        debt_position_response = search_dp_by_iupd_org(list_debt_positions=debt_positions_response,
-                                                       iupd_org=debt_position_request.iupd_org)
-
-        validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position_request,
-                                       debt_position_response=debt_position_response, status=Status(status))
-
-        debt_positions_created.append(DebtPosition.from_dict(debt_position_response))
-
-    return debt_positions_created
