@@ -35,6 +35,7 @@ parameters:
       - classification
       - send
       - outcome9
+      - file
 stages:
   - stage: Feature_tests
     dependsOn: [ ]

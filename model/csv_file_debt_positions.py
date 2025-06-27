@@ -14,6 +14,10 @@ class CSVVersion(Enum):
     V2_0 = "2_0"
     V2_0_ENG = "2_0-eng"
 
+    @classmethod
+    def is_v2(cls, csv_version):
+        return csv_version == cls.V2_0_ENG.value or csv_version == cls.V2_0.value
+
 
 class Action(Enum):
     I = "I"

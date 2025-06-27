@@ -12,7 +12,7 @@ from bdd.steps.utils.debt_position_utility import create_debt_position, create_p
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code, retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import settings
-from model.csv_file_debt_positions import CSVRow, to_csv_lines
+from model.csv_file_debt_positions import CSVRow, to_csv_lines, CSVVersion
 from model.debt_position import Status, PaymentOptionType, DebtPosition
 from model.file import FileOrigin, IngestionFlowFileType, FilePathName, FileStatus
 from model.workflow_hub import WorkflowType, WorkflowStatus
@@ -76,6 +76,7 @@ def step_create_ingestion_flow_file(context, identifiers, csv_version):
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
 
     context.debt_positions_file_name = zip_file_path
+    context.csv_version = csv_version
 
 
 def create_installments_rows(identifiers: list, debt_positions: dict) -> list:
@@ -153,6 +154,10 @@ def search_dp_by_iupd_org(list_debt_positions: list[dict], iupd_org: str) -> dic
     return dict(next(dp for dp in list_debt_positions if dp['iupdOrg'] == iupd_org))
 
 
+def search_dp_by_inst_iud(list_debt_positions: list[dict], inst_iud: str) -> dict:
+    return dict(next(dp for dp in list_debt_positions if dp['paymentOptions'][0]['installments'][0]['iud'] == inst_iud))
+
+
 @then("the debt positions {identifiers} are created in status {status}")
 def step_check_debt_positions_created(context, identifiers, status):
     identifiers = identifiers.split()
@@ -160,21 +165,33 @@ def step_check_debt_positions_created(context, identifiers, status):
     res = get_debt_positions_by_ingestion_flow_id(token=context.token, ingestion_flow_id=context.debt_positions_file_id)
 
     assert res.status_code == 200
-    assert res.json()['totalElements'] == len(identifiers)
 
-    debt_positions_response = res.json()['content']
+    debt_positions_created = check_debt_positions_created_v2(context=context, identifiers=identifiers, status=status, debt_position_by_ingestion_flow_id=res.json())
+
+    context.debt_positions_created = debt_positions_created
+
+
+def check_debt_positions_created_v2(context, identifiers, status, debt_position_by_ingestion_flow_id) -> list[DebtPosition]:
+    assert len(identifiers) == debt_position_by_ingestion_flow_id['totalElements']
+
+    debt_positions_response = debt_position_by_ingestion_flow_id['content']
 
     debt_positions_created = []
 
     for identifier in identifiers:
         debt_position_request = context.debt_positions.get(identifier)
 
-        debt_position_response = search_dp_by_iupd_org(list_debt_positions=debt_positions_response,
-                                                      iupd_org= debt_position_request.iupd_org)
+        if CSVVersion.is_v2(csv_version=context.csv_version):
+            debt_position_response = search_dp_by_iupd_org(list_debt_positions=debt_positions_response,
+                                                           iupd_org=debt_position_request.iupd_org)
+        else:
+            installment_iud = debt_position_request.payment_options[0].installments[0].iud
+            debt_position_response = search_dp_by_inst_iud(list_debt_positions=debt_positions_response,
+                                                           inst_iud=installment_iud)
 
-        validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position_request,
+        validate_debt_position_created(org_info=context.org_info, csv_version=context.csv_version, debt_position_request=debt_position_request,
                                        debt_position_response=debt_position_response, status=Status(status))
 
         debt_positions_created.append(DebtPosition.from_dict(debt_position_response))
 
-    context.debt_positions_created = debt_positions_created
+    return debt_positions_created

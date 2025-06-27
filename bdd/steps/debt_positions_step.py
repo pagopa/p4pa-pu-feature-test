@@ -19,6 +19,7 @@ from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, cal
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
+from model.csv_file_debt_positions import CSVVersion
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
@@ -220,10 +221,10 @@ def step_check_debt_position_created(context):
     context.installment_paid = installment
 
 
-def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status):
+def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status, csv_version: str = None):
     assert debt_position_response['status'] == status.value
     assert debt_position_response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
-    if debt_position_request.iupd_org is None:
+    if debt_position_request.iupd_org is None or not CSVVersion.is_v2(csv_version):
         assert debt_position_response['iupdOrg'].startswith(org_info.fiscal_code)
     else:
         assert debt_position_response['iupdOrg'] == debt_position_request.iupd_org
@@ -237,6 +238,8 @@ def validate_debt_position_created(org_info, debt_position_request: DebtPosition
         assert po_response['paymentOptionType'] == po_request.payment_option_type.value
         assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
         assert len(po_response['installments']) == len(po_request.installments)
+        if csv_version is not None and not CSVVersion.is_v2(csv_version):
+            assert po_response['description'] == 'Pagamento Singolo Avviso'
 
         map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)
         for inst_response in po_response['installments']:
