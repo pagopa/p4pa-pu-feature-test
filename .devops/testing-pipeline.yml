@@ -34,8 +34,6 @@ parameters:
       - debt_positions
       - classification
       - debt_positions_file
-      - debt_positions_file,it
-      - debt_positions_file,eng
       - send
       - outcome9
 stages:
@@ -53,6 +51,8 @@ stages:
               current_tag: 'debt_positions'
             classification:
               current_tag: 'classification'
+            debt_positions_file:
+              current_tag: 'debt_positions_file'
             send:
               current_tag: 'send'
         steps:
