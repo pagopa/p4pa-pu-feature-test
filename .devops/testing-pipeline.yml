@@ -33,9 +33,11 @@ parameters:
       - gpd
       - debt_positions
       - classification
+      - debt_positions_file
+      - debt_positions_file,it
+      - debt_positions_file,eng
       - send
       - outcome9
-      - file
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
