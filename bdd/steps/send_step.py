@@ -61,11 +61,10 @@ def step_create_send_notification(context, seq_num, po_index):
         case PagoPaInteractionModel.ACA.value:
             pagopa_int_mode = 'SYNC'
 
-
     payload = {
         "organizationId": org_info.id,
         "paProtocolNumber": "Prot_001",
-        "recipient": {
+        "recipients": [{
             "recipientType": "PF",
             "taxId": secrets.send_info.citizen.fiscal_code,
             "denomination": "Michelangelo Buonarroti",
@@ -87,7 +86,7 @@ def step_create_send_notification(context, seq_num, po_index):
                     }
                 }
             }]
-        },
+        }],
         "documents": [{
             "fileName": "notification.pdf",
             "contentType": "application/pdf",
@@ -171,7 +170,8 @@ def step_impl(context, status):
 
 @then("SEND has set a notification fee")
 def step_check_notification_fee(context):
-    res_fee = get_send_notification_fee(token=context.send_token, nav=context.installment.nav, org_id=context.org_info.id)
+    res_fee = get_send_notification_fee(token=context.send_token, nav=context.installment.nav,
+                                        org_id=context.org_info.id)
 
     assert res_fee.status_code == 200
     assert res_fee.json()['totalPrice'] is not None
