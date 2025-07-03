@@ -45,3 +45,4 @@ Feature: An organizations creates debt positions by importing file
       | identifiers | csv_version |
       | A B C       | 1_4         |
       | A B C       | 1_3         |
+      | A B C       | 1_2         |
