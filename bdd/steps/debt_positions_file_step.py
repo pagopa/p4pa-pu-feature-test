@@ -166,12 +166,12 @@ def step_check_debt_positions_created(context, identifiers, status):
 
     assert res.status_code == 200
 
-    debt_positions_created = check_debt_positions_created_v2(context=context, identifiers=identifiers, status=status, debt_position_by_ingestion_flow_id=res.json())
+    debt_positions_created = check_debt_positions_created(context=context, identifiers=identifiers, status=status, debt_position_by_ingestion_flow_id=res.json())
 
     context.debt_positions_created = debt_positions_created
 
 
-def check_debt_positions_created_v2(context, identifiers, status, debt_position_by_ingestion_flow_id) -> list[DebtPosition]:
+def check_debt_positions_created(context, identifiers, status, debt_position_by_ingestion_flow_id) -> list[DebtPosition]:
     assert len(identifiers) == debt_position_by_ingestion_flow_id['totalElements']
 
     debt_positions_response = debt_position_by_ingestion_flow_id['content']

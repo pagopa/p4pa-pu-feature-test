@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum
+from functools import total_ordering
 from typing import List
 
 from config.configuration import settings
 
-
+@total_ordering
 class CSVVersion(Enum):
     V1_0 = "1_0"
     V1_1 = "1_1"
@@ -14,9 +15,32 @@ class CSVVersion(Enum):
     V2_0 = "2_0"
     V2_0_ENG = "2_0-eng"
 
+    def _compare_key(self):
+        if self is CSVVersion.V2_0 or self is CSVVersion.V2_0_ENG:
+            return CSVVersion.V2_0.value
+        return self.value
+
+    def __eq__(self, other):
+        if isinstance(other, CSVVersion):
+            return self._compare_key() == other._compare_key()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self._compare_key())
+
+    def __lt__(self, other):
+        if isinstance(other, CSVVersion):
+            return self._compare_key() < other._compare_key()
+        return NotImplemented
+
     @classmethod
     def is_v2(cls, csv_version):
-        return csv_version == cls.V2_0_ENG.value or csv_version == cls.V2_0.value
+        if isinstance(csv_version, str):
+            try:
+                csv_version = CSVVersion(csv_version)
+            except ValueError:
+                return False
+        return csv_version in {cls.V2_0, cls.V2_0_ENG}
 
 
 class Action(Enum):
