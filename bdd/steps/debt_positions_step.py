@@ -222,48 +222,80 @@ def step_check_debt_position_created(context):
 
 
 def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status, csv_version: str = None):
-    assert debt_position_response['status'] == status.value
-    assert debt_position_response['debtPositionTypeOrgId'] == debt_position_request.debt_position_type_org_id
-    if debt_position_request.iupd_org is None or not CSVVersion.is_v2(csv_version):
-        assert debt_position_response['iupdOrg'].startswith(org_info.fiscal_code)
+    _validate_debt_position_fields(org_info, debt_position_request, debt_position_response, status, csv_version)
+    _validate_payment_options(org_info, debt_position_request, debt_position_response['paymentOptions'], status, csv_version)
+
+
+def _validate_debt_position_fields(org_info, request, response, status, csv_version):
+    assert response['status'] == status.value
+    assert response['debtPositionTypeOrgId'] == request.debt_position_type_org_id
+
+    if request.iupd_org is None or not CSVVersion.is_v2(csv_version):
+        assert response['iupdOrg'].startswith(org_info.fiscal_code)
     else:
-        assert debt_position_response['iupdOrg'] == debt_position_request.iupd_org
+        assert response['iupdOrg'] == request.iupd_org
 
-    assert len(debt_position_response['paymentOptions']) == len(debt_position_request.payment_options)
+    if csv_version:
+        csv_version = CSVVersion(csv_version)
+        if not CSVVersion.is_v2(csv_version):
+            assert f"DebtPosition with code {settings.debt_position_type_org_code} was created" in response['description']
+        if csv_version <= CSVVersion.V1_4:
+            assert len(response['paymentOptions']) == 1
+            assert len(response['paymentOptions'][0]['installments']) == 1
+        if csv_version <= CSVVersion.V1_2:
+            assert response['flagPuPagoPaPayment'] == True
 
-    map_po_request = dict((po.payment_option_index, po) for po in debt_position_request.payment_options)
-    for po_response in debt_position_response['paymentOptions']:
+def _validate_payment_options(org_info, request, response_options, status, csv_version):
+    assert len(response_options) == len(request.payment_options)
+
+    map_po_request = {po.payment_option_index: po for po in request.payment_options}
+    for po_response in response_options:
+        if csv_version and CSVVersion(csv_version) < CSVVersion.V1_4:
+            assert po_response['paymentOptionIndex'] == 1
+
         po_request = map_po_request.get(po_response['paymentOptionIndex'])
-        assert po_response['status'] == status.value
-        assert po_response['paymentOptionType'] == po_request.payment_option_type.value
-        assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
-        assert len(po_response['installments']) == len(po_request.installments)
-        if csv_version is not None and not CSVVersion.is_v2(csv_version):
-            assert po_response['description'] == 'Pagamento Singolo Avviso'
+        _validate_payment_option(po_response, po_request, status, csv_version)
 
-        map_inst_request = dict((inst.iud, inst) for inst in po_request.installments)
-        for inst_response in po_response['installments']:
-            inst_request = map_inst_request.get(inst_response['iud'])
-            assert inst_response['status'] == status.value
-            if status == Status.TO_SYNC:
-                assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
-                assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
-            assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
-            assert len(inst_response['iuv']) == 17
-            assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']
-            assert inst_response['dueDate'] == inst_request.due_date
-            assert inst_response['amountCents'] == inst_request.amount_cents
-            assert inst_response['debtor'] == json.loads(inst_request.debtor.to_json())
-            assert len(inst_response['transfers']) == len(inst_request.transfers) + 1
+        map_inst_request = {inst.iud: inst for inst in po_request.installments}
+        _validate_installments(org_info, map_inst_request, po_response['installments'], status)
 
-            first_transfer = next(transfer for transfer in inst_response['transfers'] if transfer['transferIndex'] == 1)
 
-            assert first_transfer is not None
-            assert first_transfer['orgFiscalCode'] == org_info.fiscal_code
-            assert first_transfer['orgName'] == org_info.name
-            assert first_transfer['iban'] == org_info.iban
-            assert first_transfer['category'] is not None
+def _validate_payment_option(po_response, po_request, status, csv_version):
+    assert po_response['status'] == status.value
+    assert po_response['paymentOptionType'] == po_request.payment_option_type.value
+    assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
+    assert len(po_response['installments']) == len(po_request.installments)
 
-            assert first_transfer['remittanceInformation'] == inst_request.remittance_information
-            assert (first_transfer['amountCents'] ==
-                    calculate_amount_first_transfer(installment=Installment.from_dict(inst_request)))
+    if csv_version and not CSVVersion.is_v2(csv_version):
+        assert po_response['description'] == 'Pagamento Singolo Avviso'
+
+
+def _validate_installments(org_info, inst_request_map, inst_responses, status):
+    for inst_response in inst_responses:
+        inst_request = inst_request_map.get(inst_response['iud'])
+
+        assert inst_response['status'] == status.value
+        if status == Status.TO_SYNC:
+            assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
+            assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
+
+        assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
+        assert len(inst_response['iuv']) == 17
+        assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']
+        assert inst_response['dueDate'] == inst_request.due_date
+        assert inst_response['amountCents'] == inst_request.amount_cents
+        assert inst_response['debtor'] == json.loads(inst_request.debtor.to_json())
+        assert len(inst_response['transfers']) == len(inst_request.transfers) + 1
+
+        _validate_first_transfer(org_info, inst_response, inst_request)
+
+
+def _validate_first_transfer(org_info, inst_response, inst_request):
+    first_transfer = next(transfer for transfer in inst_response['transfers'] if transfer['transferIndex'] == 1)
+
+    assert first_transfer['orgFiscalCode'] == org_info.fiscal_code
+    assert first_transfer['orgName'] == org_info.name
+    assert first_transfer['iban'] == org_info.iban
+    assert first_transfer['category'] is not None
+    assert first_transfer['remittanceInformation'] == inst_request.remittance_information
+    assert first_transfer['amountCents'] == calculate_amount_first_transfer(installment=Installment.from_dict(inst_request))
