@@ -46,3 +46,4 @@ Feature: An organizations creates debt positions by importing file
       | A B C       | 1_4         |
       | A B C       | 1_3         |
       | A B C       | 1_2         |
+      | A B C       | 1_1         |
