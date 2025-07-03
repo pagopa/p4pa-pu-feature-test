@@ -33,9 +33,9 @@ parameters:
       - gpd
       - debt_positions
       - classification
+      - debt_positions_file
       - send
       - outcome9
-      - file
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
@@ -51,6 +51,8 @@ stages:
               current_tag: 'debt_positions'
             classification:
               current_tag: 'classification'
+            debt_positions_file:
+              current_tag: 'debt_positions_file'
             send:
               current_tag: 'send'
         steps:
