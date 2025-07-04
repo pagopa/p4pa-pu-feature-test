@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-behave = "==1.2.6"
-behave-html-pretty-formatter = "==1.11.1"
+behave = "==1.2.7.dev6"
+behave-html-pretty-formatter = "==1.14.1"
 certifi = "==2024.8.30"
 charset-normalizer = "==3.3.2"
 dataclasses-json = "==0.6.7"
@@ -32,6 +32,15 @@ tzdata = "==2024.1"
 urllib3 = "==2.5.0"
 virtualenv = "==20.26.6"
 xmltodict = "==0.13.0"
+colorama = "==0.4.6"
+cucumber-expressions = "==18.0.1"
+cucumber-tag-expressions = "==6.2.0"
+marshmallow = "==3.26.1"
+mypy-extensions = "==1.1.0"
+packaging = "==25.0"
+tomli = "==2.2.1"
+typing-inspect = "==0.9.0"
+typing-extensions = "==4.14.0"
 
 [dev-packages]
 

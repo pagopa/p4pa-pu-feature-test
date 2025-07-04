@@ -18,7 +18,7 @@ from model.file import FileOrigin, IngestionFlowFileType, FilePathName, FileStat
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
-@given("debt positions {identifiers} with the installments configured as follows")
+@given("debt positions {identifiers} with the installments configured as follows:")
 def step_configure_debt_positions_for_file(context, identifiers):
     token = context.token
 
@@ -63,6 +63,7 @@ def step_configure_debt_positions_for_file(context, identifiers):
 def step_create_ingestion_flow_file(context, identifiers, csv_version):
     debt_positions = context.debt_positions
     identifiers = identifiers.split()
+
 
     installments_rows = create_installments_rows(identifiers=identifiers, debt_positions=debt_positions)
 
