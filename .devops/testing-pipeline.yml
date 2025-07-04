@@ -35,7 +35,7 @@ parameters:
       - classification
       - debt_positions_file
       - send
-      - outcome9
+      - classification_outcome9
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
