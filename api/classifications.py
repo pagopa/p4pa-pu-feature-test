@@ -13,7 +13,8 @@ def get_classification(token, organization_id: int, iuv: str,
         params={
             'lastClassificationDateFrom': last_classification_date_from,
             'lastClassificationDateTo': last_classification_date_to,
-            'iuv': iuv
+            'iuv': iuv,
+            'debtPositionTypeOrgCodes': [settings.debt_position_type_org_code, 'UNKNOWN']
         },
         timeout=settings.default_timeout
     )
