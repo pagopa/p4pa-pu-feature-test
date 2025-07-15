@@ -1,4 +1,4 @@
-@assessment
+@assessments
 Feature: Storing assessments starting from an installment payment
 
   @gpd
