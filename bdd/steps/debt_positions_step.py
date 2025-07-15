@@ -47,9 +47,9 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
                                            payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
 
     amount_cents = int(amount) * 100
-    section_code = '102083'
-    office_code = 'FTO01'
-    assessment_code = 'FTA01'
+    section_code = 'FT_CAPITOLO_01'
+    office_code = 'FT_UFFICIO_01'
+    assessment_code = 'FT_ACCERTAMENTO_01'
     balance_str = None
     if balance:
         balance_template = Path('./bdd/steps/file_template/balance.xml').read_text();

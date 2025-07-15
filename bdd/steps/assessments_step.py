@@ -2,11 +2,13 @@ from behave import then
 
 from api.classifications import get_assessment, get_assessment_details
 from api.debt_positions import get_installment
+from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import settings
+from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
-@then("the assessment is created correctly")
-def step_check_assessment(context):
+@then("the assessment is in status {status}")
+def step_check_assessment(context, status: str):
     org_info = context.org_info
     installment_paid = context.installment_paid
 
@@ -21,9 +23,12 @@ def step_check_assessment(context):
 
     assert res.status_code == 200
     assert res.json()["assessmentId"] is not None
-    assert res.json()["status"] == "ACTIVE"
+    assert res.json()["status"] == status.upper()
 
     context.assessment_id = int(res.json()["assessmentId"])
+
+    check_workflow_status(context=context, workflow_type=WorkflowType.CREATE_ASSESSMENT,
+                          entity_id=context.assessment_id, status=WorkflowStatus.COMPLETED)
 
 
 @then("the assessment detail is created correctly")
