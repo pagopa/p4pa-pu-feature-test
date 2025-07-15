@@ -28,7 +28,7 @@ def step_check_assessment(context, status: str):
     context.assessment_id = int(res.json()["assessmentId"])
 
     check_workflow_status(context=context, workflow_type=WorkflowType.CREATE_ASSESSMENT,
-                          entity_id=context.assessment_id, status=WorkflowStatus.COMPLETED)
+                          entity_id=installment_paid.receipt_id, status=WorkflowStatus.COMPLETED)
 
 
 @then("the assessment detail is created correctly")
