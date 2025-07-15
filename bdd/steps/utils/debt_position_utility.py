@@ -48,7 +48,7 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
 
 
 def create_installment(expiration_days: int, seq_num: int, amount_cents: int = None,
-                       ingestion_flow_file_action: str = None) -> Installment:
+                       ingestion_flow_file_action: str = None, balance: str = None) -> Installment:
     due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
     amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
 
@@ -57,7 +57,8 @@ def create_installment(expiration_days: int, seq_num: int, amount_cents: int = N
                               debtor=Debtor(),
                               remittance_information=f'Feature test installment {seq_num}',
                               iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}',
-                              ingestion_flow_file_action=ingestion_flow_file_action)
+                              ingestion_flow_file_action=ingestion_flow_file_action,
+                              balance=balance)
     return installment
 
 

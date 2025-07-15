@@ -1,4 +1,6 @@
 import json
+import textwrap
+from pathlib import Path
 
 from behave import given
 from behave import then
@@ -40,14 +42,28 @@ def step_create_dp_entity(context):
 
 @given(
     "payment option {po_index} with single installment of {amount} euros with due date set in {expiration_days} days")
-def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days):
+def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days, balance=False):
     payment_option = create_payment_option(po_index=int(po_index),
                                            payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
 
     amount_cents = int(amount) * 100
-    installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1)
+    section_code = 'FT_CAPITOLO_01'
+    office_code = 'FT_UFFICIO_01'
+    assessment_code = 'FT_ACCERTAMENTO_01'
+    balance_str = None
+    if balance:
+        balance_template = Path('./bdd/steps/file_template/balance.xml').read_text();
+        balance_str = (balance_template.format(section_code=section_code, office_code=office_code,
+                                              assessment_code=assessment_code, amount="{:.2f}".format(int(amount)))
+                       .replace('\n', '')).replace(' ', '')
+
+    installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1,
+                                     balance=balance_str)
     payment_option.installments.append(installment)
 
+    context.balance_section_code = section_code
+    context.balance_office_code = office_code
+    context.balance_assessment_code = assessment_code
     context.debt_position.payment_options.append(payment_option)
 
 
@@ -145,6 +161,20 @@ def step_create_simple_debt_position(context, pagopa_interaction):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3)
+    step_create_dp(context=context)
+    step_check_dp_status(context=context, status=Status.UNPAID.value)
+
+    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
+        step_verify_presence_debt_position_in_aca(context=context, status="valid")
+
+    step_debt_position_workflow_check_expiration(context=context, status="scheduled")
+
+
+@given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
+def step_create_simple_debt_position(context, pagopa_interaction):
+    get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+    step_create_dp_entity(context=context)
+    step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, balance=True)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
 

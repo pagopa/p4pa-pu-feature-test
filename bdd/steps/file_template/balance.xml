@@ -1,0 +1,10 @@
+<bilancio>
+    <capitolo>
+        <codCapitolo>{section_code}</codCapitolo>
+        <codUfficio>{office_code}</codUfficio>
+        <accertamento>
+            <codAccertamento>{assessment_code}</codAccertamento>
+            <importo>{amount}</importo>
+        </accertamento>
+    </capitolo>
+</bilancio>

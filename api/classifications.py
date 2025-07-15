@@ -18,3 +18,34 @@ def get_classification(token, organization_id: int, iuv: str,
         },
         timeout=settings.default_timeout
     )
+
+
+def get_assessment(token, organization_id: int, debt_position_type_org_code: str,
+                       assessment_name: str):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments/search/findByOrganizationIdAndDebtPositionTypeOrgCodeAndAssessmentName',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        params={
+            'organizationId': organization_id,
+            'debtPositionTypeOrgCode': debt_position_type_org_code,
+            'assessmentName': assessment_name
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def get_assessment_details(token, assessment_id: int, iud: str, iuv: str):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments-details/search/findAssessmentsRowsDetail',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        params={
+            'assessmentId': assessment_id,
+            'iud': iud,
+            'iuv': iuv
+        },
+        timeout=settings.default_timeout
+    )
