@@ -57,11 +57,11 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
                                                      receiver_organization_code=org_info.fiscal_code,
                                                      receiver_organization_name=org_info.name,
                                                      total_payments=1,
-                                                     total_amount_cents=amount,
+                                                     total_amount=amount,
                                                      iuv=installment.iuv,
                                                      iur=installment.iur,
                                                      transfer_index=1,
-                                                     amount_paid_cents=amount,
+                                                     amount_paid=amount,
                                                      payment_outcome_code=int(outcome_code),
                                                      payment_date=date)
 
@@ -103,7 +103,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
-    amount = random.randint(1, 200) * 100
+    amount = random.randint(1, 200)
     iuv = generate_iuv()
     iur = uuid.uuid4().hex
 
@@ -118,11 +118,11 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
                                                      receiver_organization_code=org_info.fiscal_code,
                                                      receiver_organization_name=org_info.name,
                                                      total_payments=1,
-                                                     total_amount_cents=amount,
+                                                     total_amount=amount,
                                                      iuv=iuv,
                                                      iur=iur,
                                                      transfer_index=1,
-                                                     amount_paid_cents=amount,
+                                                     amount_paid=amount,
                                                      payment_outcome_code=int(outcome_code),
                                                      payment_date=date)
 

@@ -20,12 +20,12 @@
         <denominazioneRicevente>{receiver_organization_name}</denominazioneRicevente>
     </istitutoRicevente>
     <numeroTotalePagamenti>{total_payments}</numeroTotalePagamenti>
-    <importoTotalePagamenti>{total_amount_cents}</importoTotalePagamenti>
+    <importoTotalePagamenti>{total_amount}</importoTotalePagamenti>
     <datiSingoliPagamenti>
         <identificativoUnivocoVersamento>{iuv}</identificativoUnivocoVersamento>
         <identificativoUnivocoRiscossione>{iur}</identificativoUnivocoRiscossione>
         <indiceDatiSingoloPagamento>{transfer_index}</indiceDatiSingoloPagamento>
-        <singoloImportoPagato>{amount_paid_cents}</singoloImportoPagato>
+        <singoloImportoPagato>{amount_paid}</singoloImportoPagato>
         <codiceEsitoSingoloPagamento>{payment_outcome_code}</codiceEsitoSingoloPagamento>
         <dataEsitoSingoloPagamento>{payment_date}</dataEsitoSingoloPagamento>
     </datiSingoliPagamenti>
