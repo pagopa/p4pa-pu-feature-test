@@ -2,12 +2,12 @@ import json
 import textwrap
 from pathlib import Path
 
-from behave import given
+from behave import given, use_step_matcher
 from behave import then
 from behave import when
 
 from api.debt_positions import post_create_debt_position, get_debt_position, \
-    get_debt_position_by_organization_id_and_installment_nav
+    get_debt_position_by_organization_id_and_installment_nav, get_installment
 from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
 from bdd.steps.classification_step import step_check_classification
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
@@ -245,10 +245,24 @@ def step_check_debt_position_created(context):
 
     installment = debt_position.payment_options[0].installments[0]
     assert context.iuv == installment.iuv
+    assert 'CODE_9_PAYMENTS_REPORTING' == installment.remittance_information
     assert 'ANONIMO' == installment.debtor.fiscal_code
 
     context.debt_position = debt_position
     context.installment_paid = installment
+
+
+# use_step_matcher("re")
+
+@then("the installment has {installment_fields} fields populated")
+def step_check_installment_fields(context, installment_fields: str):
+    installment = context.debt_position.payment_options[0].installments[0]
+
+    res = get_installment(token=context.token, installment_id=installment.installment_id)
+
+    assert res.status_code == 200
+    for field in installment_fields.split(', '):
+        assert field in res.json()
 
 
 def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status, csv_version: str = None):

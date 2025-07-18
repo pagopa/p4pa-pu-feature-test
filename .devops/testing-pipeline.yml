@@ -56,6 +56,8 @@ stages:
               current_tag: 'debt_positions_file'
             send:
               current_tag: 'send'
+            assessments:
+              current_tag: 'assessments'
         steps:
           - checkout: self
           - template: template\test-run.yml
