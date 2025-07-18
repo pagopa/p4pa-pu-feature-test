@@ -13,7 +13,7 @@ Feature: Storing assessments starting from an installment payment
 
 
   @gpd
-  Scenario: As a positive result of payment, the assessment detail, about installment without balance information, is created
+  Scenario: As a positive result of payment, the assessment detail, about installment with balance information from debt position type org, is created
     Given a simple debt position created by organization interacting with GPD
     Then the installment has balance fields populated
     When the citizen pays the installment of payment option 1
