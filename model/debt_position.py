@@ -35,9 +35,9 @@ class EntityType(Enum):
 @dataclass
 class Debtor:
     entity_type: EntityType = EntityType.F.value
-    fiscal_code: str = secrets.citizen_info.fiscal_code
-    full_name: str = secrets.citizen_info.name
-    email: str = secrets.citizen_info.email
+    fiscal_code: str = secrets.citizen_info.X.fiscal_code
+    full_name: str = secrets.citizen_info.X.name
+    email: str = secrets.citizen_info.X.email
     address: str = "Via del Corso"
     civic: str = "1"
     postal_code: str = "00186"
@@ -113,6 +113,7 @@ class DebtPositionOrigin(Enum):
     ORDINARY = 'ORDINARY'
     ORDINARY_SIL = 'ORDINARY_SIL'
     SPONTANEOUS = 'SPONTANEOUS'
+    SPONTANEOUS_SIL = 'SPONTANEOUS_SIL'
     SECONDARY_ORG = 'SECONDARY_ORG'
     RECEIPT_FILE = 'RECEIPT_FILE'
     RECEIPT_PAGOPA = 'RECEIPT_PAGOPA'

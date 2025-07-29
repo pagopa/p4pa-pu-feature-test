@@ -22,8 +22,9 @@ def check_res_ok_and_get_body(response_content, tag_name):
 
 @when('the citizen pays the installment of payment option {po_index}')
 @when('the citizen pays the installment {seq_num} of payment option {po_index}')
-def step_installment_payment(context, po_index, seq_num='1'):
-    citizen_info = secrets.citizen_info
+@when('the citizen pays the installment')
+def step_installment_payment(context, po_index='1', seq_num='1'):
+    citizen_info = secrets.citizen_info.X
     psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
     org_info = context.org_info

@@ -10,7 +10,7 @@ from api.debt_positions import post_create_debt_position, get_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
 from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
 from bdd.steps.classification_step import step_check_classification
-from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca
+from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca, step_verify_presence_debt_position_in_gpd
 from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_check_treasury_processed
@@ -42,7 +42,8 @@ def step_create_dp_entity(context):
 
 @given(
     "payment option {po_index} with single installment of {amount} euros with due date set in {expiration_days} days")
-def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days, balance=False):
+def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days, balance=False,
+                                            citizen_identifier=None):
     payment_option = create_payment_option(po_index=int(po_index),
                                            payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
 
@@ -52,13 +53,13 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
     assessment_code = 'FTACC_01'
     balance_str = None
     if balance:
-        balance_template = Path('./bdd/steps/file_template/balance.xml').read_text();
+        balance_template = Path('./bdd/steps/file_template/balance.xml').read_text()
         balance_str = (balance_template.format(section_code=section_code, office_code=office_code,
                                               assessment_code=assessment_code, amount="{:.2f}".format(int(amount)))
                        .replace('\n', '')).replace(' ', '')
 
     installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1,
-                                     balance=balance_str)
+                                     balance=balance_str, citizen_identifier=citizen_identifier)
     payment_option.installments.append(installment)
 
     context.balance_section_code = section_code
@@ -157,17 +158,27 @@ def step_check_outcome9_installment_status(context, status):
 
 
 @given("a simple debt position created by organization interacting with {pagopa_interaction}")
-def step_create_simple_debt_position(context, pagopa_interaction):
+@given("a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}")
+def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=None, citizen_identifier=None):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
-    step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3)
+    step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100,
+                                            expiration_days=3, citizen_identifier=citizen_identifier)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
 
     if pagopa_interaction == PagoPaInteractionModel.ACA.value:
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
+    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
+        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
+
+    if dp_identifier is not None:
+        try:
+            context.debt_positions[dp_identifier] = context.debt_position
+        except AttributeError:
+            context.debt_positions = {dp_identifier: context.debt_position}
 
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
@@ -180,6 +191,8 @@ def step_create_simple_debt_position(context, pagopa_interaction):
 
     if pagopa_interaction == PagoPaInteractionModel.ACA.value:
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
+    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
+        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
@@ -196,6 +209,8 @@ def step_create_simple_debt_position(context, po_size, pagopa_interaction):
 
     if pagopa_interaction == PagoPaInteractionModel.ACA.value:
         step_verify_presence_debt_position_in_aca(context=context, status="valid")
+    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
+        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
@@ -251,8 +266,6 @@ def step_check_debt_position_created(context):
     context.debt_position = debt_position
     context.installment_paid = installment
 
-
-# use_step_matcher("re")
 
 @then("the installment has {installment_fields} fields populated")
 def step_check_installment_fields(context, installment_fields: str):

@@ -1,6 +1,4 @@
 import time
-from dataclasses import dataclass
-from enum import Enum
 
 from behave import given, when, then
 
@@ -13,20 +11,9 @@ from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_an
 from bdd.steps.utils.utility import retry_get_workflow_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
+from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
+    Document
 from model.workflow_hub import WorkflowStatus, WorkflowType
-
-
-@dataclass
-class SendStatus(Enum):
-    WAITING = 'WAITING_FILE'
-    SENDING = 'SENDING'
-    REGISTERED = 'REGISTERED'
-    COMPLETE = 'COMPLETE'
-    ACCEPTED = 'ACCEPTED'
-
-
-notification_pdf_digest = "YSxsCpvZHvwL8IIosWJBUDjgUwa01sBHu6Cj4laQRLA="
-payment_pdf_digest = "45Iba3tn9Dfm7TX+AbtWDR1csMuHgEbrHi/zZr6DjHU="
 
 
 def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
@@ -45,13 +32,9 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
     return res.json()['access_token']
 
 
-@given("a notification created for the installment {seq_num} of payment option {po_index}")
-def step_create_send_notification(context, seq_num, po_index):
-    debt_position = context.debt_position
-    installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
-                                                           po_index=int(po_index), seq_num=int(seq_num))
-    context.installment = installment
-
+@given("a notification created for the single installment of debt position {dp_identifiers}")
+@given("a notification created for the single installment of debt positions {dp_identifiers}")
+def step_create_send_notification(context, dp_identifiers):
     org_info = context.org_info
 
     pagopa_int_mode = None
@@ -61,59 +44,49 @@ def step_create_send_notification(context, seq_num, po_index):
         case PagoPaInteractionModel.ACA.value:
             pagopa_int_mode = 'SYNC'
 
-    payload = {
-        "organizationId": org_info.id,
-        "paProtocolNumber": "Prot_001",
-        "recipients": [{
-            "recipientType": "PF",
-            "taxId": secrets.send_info.citizen.fiscal_code,
-            "denomination": "Michelangelo Buonarroti",
-            "physicalAddress": {
-                "address": "Via Larga 10",
-                "zip": "00186",
-                "municipality": "Roma",
-                "province": "RM"
-            },
-            "payments": [{
-                "pagoPa": {
-                    "noticeCode": installment.nav,
-                    "creditorTaxId": org_info.fiscal_code,
-                    "applyCost": True,
-                    "attachment": {
-                        "fileName": "payment.pdf",
-                        "contentType": "application/pdf",
-                        "digest": payment_pdf_digest
-                    }
-                }
-            }]
-        }],
-        "documents": [{
-            "fileName": "notification.pdf",
-            "contentType": "application/pdf",
-            "digest": notification_pdf_digest
-        }],
-        "notificationFeePolicy": "DELIVERY_MODE",
-        "physicalCommunicationType": "AR_REGISTERED_LETTER",
-        "senderDenomination": "Ente Intermediario 2",
-        "senderTaxId": "00000000018",
-        "amount": 0,
-        "paymentExpirationDate": str(installment.due_date),
-        "taxonomyCode": "010101P",
-        "paFee": 100,
-        "vat": 22,
-        "pagoPaIntMode": pagopa_int_mode
-    }
+    installments_notified = []
+
+    dp_identifiers = dp_identifiers.split()
+    for dp_identifier in dp_identifiers:
+        installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_positions[dp_identifier],
+                                                               po_index=1, seq_num=1)
+        installments_notified.append(installment)
+
+    recipients = []
+    i = 1
+    for installment in installments_notified:
+        document = Document(file_name=f'payment_{i}.pdf', content_type='application/pdf',
+                            digest=SendPdfDigest.payment_pdf_digest)
+        payment_data = PaymentData(notice_code=installment.nav, creditor_tax_id=org_info.fiscal_code, attachment=document)
+        payment = Payment(pago_pa=payment_data)
+
+        recipient = next((recipient for recipient in recipients if recipient.tax_id == installment.debtor.fiscal_code),
+                         None)
+        if recipient is None:
+            recipient = Recipient(tax_id=installment.debtor.fiscal_code, denomination=installment.debtor.full_name,
+                                  payments=[payment])
+            recipients.append(recipient)
+        else:
+            recipient.payments.append(payment)
+
+        i += 1
+
+    notification_request = NotificationRequest(organization_id=org_info.id, pago_pa_int_mode=pagopa_int_mode,
+                                               sender_denomination=org_info.name, recipients=recipients)
 
     send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction)
     context.send_token = send_token
 
-    res = post_create_send_notification(token=send_token, payload=payload)
+    res = post_create_send_notification(token=send_token, payload=notification_request.to_json())
 
+    print(notification_request.to_json())
+    print(res.json())
     assert res.status_code == 200
     assert res.json()['sendNotificationId'] is not None
     assert res.json()['status'] == SendStatus.WAITING.value
 
     context.send_notification_id = res.json()['sendNotificationId']
+    context.installments_notified = installments_notified
 
 
 @when("the organization requires the notification to be uploaded to SEND")
@@ -121,21 +94,30 @@ def step_upload_notification_file(context):
     send_token = context.send_token
     org_id = context.org_info.id
     notification_id = context.send_notification_id
+    installments_notified = context.installments_notified
 
     notification_file_path = './bdd/steps/file_template/notification.pdf'
 
     res_notification_file = post_upload_send_file(token=send_token, org_id=org_id, notification_id=notification_id,
-                                                  file_path=notification_file_path, digest=notification_pdf_digest)
+                                                  file_path=notification_file_path,
+                                                  digest=SendPdfDigest.notification_pdf_digest)
 
     assert res_notification_file.status_code == 202
 
-    payment_file_path = './bdd/steps/file_template/payment.pdf'
 
-    res_payment_file = post_upload_send_file(token=send_token, org_id=org_id, notification_id=notification_id,
-                                             file_path=payment_file_path, digest=payment_pdf_digest)
 
-    assert res_payment_file.status_code == 200
-    assert res_payment_file.json()['workflowId'] is not None
+    workflow_id = ''
+    for i in range(1, len(installments_notified) + 1):
+        payment_file_path = f'./bdd/steps/file_template/payment_{i}.pdf'
+        res_payment_file = post_upload_send_file(token=send_token, org_id=org_id, notification_id=notification_id,
+                                                 file_path=payment_file_path, digest=SendPdfDigest.payment_pdf_digest)
+
+        if i == len(installments_notified):
+            assert res_payment_file.status_code == 200
+            assert res_payment_file.json()['workflowId'] is not None
+            workflow_id = res_payment_file.json()['workflowId']
+        else:
+            assert res_payment_file.status_code == 202
 
     time.sleep(5)
     res_status = get_send_notification_status(token=send_token, notification_id=notification_id)
@@ -144,25 +126,28 @@ def step_upload_notification_file(context):
     assert res_status.json()['status'] == SendStatus.COMPLETE.value
     assert res_status.json().get('iun') is None
 
-    retry_get_workflow_status(token=context.token, workflow_id=res_payment_file.json()['workflowId'],
+    retry_get_workflow_status(token=context.token, workflow_id=workflow_id,
                               status=WorkflowStatus.COMPLETED,
-                              tries=12, delay=30)
+                              tries=16, delay=30)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")
-def step_impl(context, status):
+@then("the notification is in status {status} and the IUN is assigned to all installments")
+def step_check_iun(context, status):
     notification_id = context.send_notification_id
+    installments_notified = context.installments_notified
 
     res_status = get_send_notification_status(token=context.send_token, notification_id=notification_id)
 
     assert res_status.status_code == 200
-    assert res_status.json()['status'] == SendStatus.ACCEPTED.value
+    assert res_status.json()['status'] == status.upper()
     assert res_status.json()['iun'] is not None
 
-    res = get_installment(token=context.token, installment_id=context.installment.installment_id)
+    for installment in installments_notified:
+        res = get_installment(token=context.token, installment_id=installment.installment_id)
 
-    assert res.status_code == 200
-    assert res.json()['iun'] == res_status.json()['iun']
+        assert res.status_code == 200
+        assert res.json()['iun'] == res_status.json()['iun']
 
     check_workflow_status(context=context, workflow_type=WorkflowType.SEND_NOTIFICATION_DATE_RETRIEVE,
                           entity_id=notification_id, status=WorkflowStatus.RUNNING)
@@ -170,7 +155,9 @@ def step_impl(context, status):
 
 @then("SEND has set a notification fee")
 def step_check_notification_fee(context):
-    res_fee = get_send_notification_fee(token=context.send_token, nav=context.installment.nav,
+    installments_notified = context.installments_notified
+
+    res_fee = get_send_notification_fee(token=context.send_token, nav=installments_notified[0].nav,
                                         org_id=context.org_info.id)
 
     assert res_fee.status_code == 200
@@ -181,12 +168,16 @@ def step_check_notification_fee(context):
 
 @then("the amount of installment is increased by the notification fee")
 def step_check_installment_amount_with_fee(context):
-    previous_amount = context.installment.amount_cents
+    installments_notified = context.installments_notified
+    installment_paid = context.installment_paid
 
-    expected_amount = previous_amount + context.notification_fee
+    for installment in installments_notified:
+        if installment_paid.installment_id == installment.installment_id:
+            previous_amount = installment.amount_cents
+            expected_amount = previous_amount + context.notification_fee
 
-    res = get_installment(token=context.token, installment_id=context.installment.installment_id)
+            res = get_installment(token=context.token, installment_id=installment.installment_id)
 
-    assert res.status_code == 200
-    assert res.json()['notificationFeeCents'] == context.notification_fee
-    assert res.json()['amountCents'] == expected_amount
+            assert res.status_code == 200
+            assert res.json()['notificationFeeCents'] == context.notification_fee
+            assert res.json()['amountCents'] == expected_amount

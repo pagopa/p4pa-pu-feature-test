@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from api.debt_position_type import get_debt_position_type_org_by_code
+from config.configuration import secrets
 from model.debt_position import DebtPosition, PaymentOption, Status, Installment
 from model.debt_position import Debtor, PaymentOptionType
 
@@ -48,13 +49,15 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
 
 
 def create_installment(expiration_days: int, seq_num: int, amount_cents: int = None,
-                       ingestion_flow_file_action: str = None, balance: str = None) -> Installment:
+                       ingestion_flow_file_action: str = None, balance: str = None, citizen_identifier: str = None) -> Installment:
     due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
     amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
+    citizen = secrets.citizen_info.get(citizen_identifier)
+    debtor = Debtor(fiscal_code=citizen.fiscal_code, full_name=citizen.name, email=citizen.email) if citizen is not None else Debtor()
 
     installment = Installment(amount_cents=amount_cents,
                               due_date=due_date,
-                              debtor=Debtor(),
+                              debtor=debtor,
                               remittance_information=f'Feature test installment {seq_num}',
                               iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}',
                               ingestion_flow_file_action=ingestion_flow_file_action,
