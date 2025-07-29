@@ -1,8 +1,7 @@
-@rt_file
+@receipts_file
 Feature: An organizations creates debt positions by importing receipts file
 
 
-  @wip
   @gpd
   Scenario: Organization interacting with GPD creates debt position by receipt file
     Given organization interacting with GPD

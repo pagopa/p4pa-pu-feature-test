@@ -34,6 +34,7 @@ parameters:
       - debt_positions
       - classification
       - debt_positions_file
+      - receipts_file
       - send
       - classification_outcome9
       - assessments
@@ -54,6 +55,8 @@ stages:
               current_tag: 'classification'
             debt_positions_file:
               current_tag: 'debt_positions_file'
+            receipts_file:
+              current_tag: 'receipts_file'
             send:
               current_tag: 'send'
             assessments:
