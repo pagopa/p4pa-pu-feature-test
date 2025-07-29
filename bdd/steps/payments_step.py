@@ -85,19 +85,28 @@ def step_check_receipt_processed(context):
                           entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
 
 
+@then("the receipts are created correctly")
+@then("the receipts are created correctly with origin {receipt_origin}")
+def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
+    for i in range(context.receipts_rows_len):
+        step_check_receipt_created(context=context, receipt_origin=receipt_origin, installment_paid=context.installments_paid[i])
+
+
 @then("the receipt is created correctly")
-def step_check_receipt_created(context):
-    installment_paid = context.installment_paid
+@then("the receipt is created correctly with origin {receipt_origin}")
+def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value, installment_paid = None):
+    installment_paid = installment_paid if installment_paid else context.installment_paid
+    receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
 
     res = get_receipt(token=context.token, organization_id=org_info.id,
-                      receipt_origin=ReceiptOriginType.PAYMENTS_REPORTING.value, iuv=installment_paid.iuv,
+                      receipt_origin=receipt_origin, iuv=installment_paid.iuv,
                       iur=installment_paid.iur)
 
     assert res.status_code == 200
     assert len(res.json()['content']) == 1
     receipt = res.json()['content'][0]
-    assert receipt['receiptOrigin'] == ReceiptOriginType.PAYMENTS_REPORTING.value
+    assert receipt['receiptOrigin'] == receipt_origin
     assert installment_paid.iuv == receipt['iuv']
 
     res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
