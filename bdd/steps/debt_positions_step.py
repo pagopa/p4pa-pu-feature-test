@@ -224,29 +224,45 @@ def step_pay_installment_and_verify(context, seq_num, po_index):
     step_check_classification(context=context, labels='RT_NO_IUD, RT_IUF, RT_IUF_TES')
 
 
+@then("the debt positions are created correctly")
+@then("the debt positions are created correctly with origin {debt_position_origin}")
+def step_check_debt_positions_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value):
+    context.installments_paid = []
+    for i in range(context.receipts_rows_len):
+        step_check_debt_position_created(context=context, debt_position_origin=debt_position_origin, iuv=context.iuvs[i])
+        context.installments_paid.append(context.installment_paid)
+
+
 @then("the debt position is created correctly")
-def step_check_debt_position_created(context):
+@then("the debt position are created correctly with origin {debt_position_origin}")
+def step_check_debt_position_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value, iuv: str = None):
     token = context.token
     org_info = context.org_info
+    iuv = iuv if iuv else context.iuv
 
-    nav = '3' + context.iuv
+    nav = '3' + iuv
     res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id, installment_nav=nav)
 
     assert res.status_code == 200
-    assert res.json()['debtPositionId'] is not None
-    debt_position_id = res.json()['debtPositionId']
+    assert len(res.json()['_embedded']['debtPositions']) == 1
 
-    res = get_debt_position(token, debt_position_id)
+    res_debt_position = res.json()['_embedded']['debtPositions'][0]
+    assert res_debt_position['debtPositionId'] is not None
+
+    res = get_debt_position(token, res_debt_position['debtPositionId'])
 
     assert res.status_code == 200
 
     debt_position = DebtPosition.from_dict(res.json())
-    assert DebtPositionOrigin.REPORTING_PAGOPA == debt_position.debt_position_origin
+    assert DebtPositionOrigin[debt_position_origin.upper()] == debt_position.debt_position_origin
+    if DebtPositionOrigin.RECEIPT_FILE.value == debt_position_origin.upper():
+        assert Status.PAID == debt_position.status
 
     installment = debt_position.payment_options[0].installments[0]
-    assert context.iuv == installment.iuv
-    assert 'CODE_9_PAYMENTS_REPORTING' == installment.remittance_information
-    assert 'ANONIMO' == installment.debtor.fiscal_code
+    assert iuv == installment.iuv
+    if DebtPositionOrigin.REPORTING_PAGOPA.value == debt_position_origin.upper():
+        assert 'CODE_9_PAYMENTS_REPORTING' == installment.remittance_information
+        assert 'ANONIMO' == installment.debtor.fiscal_code
 
     context.debt_position = debt_position
     context.installment_paid = installment
