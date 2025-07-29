@@ -236,7 +236,7 @@ class CSVRow:
     feeCents: str = None
     receiptAttachmentTypeCode: str = None
     mbdAttachment: str = None
-    balance: str = None
+    balance: str | None = None
     companyName: str = None
 
     @property

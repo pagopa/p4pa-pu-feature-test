@@ -161,7 +161,6 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position=None) ->
         row.feeCents = "1"
         row.receiptAttachmentTypeCode = "100"
         row.mbdAttachment = "<xml></xml>"
-        row.balance = "<xml></xml>"
         row.fiscalCodePA = org_info.fiscal_code
         row.companyName = org_info.name
         row.transferCategory = "9/0301109AP/"
