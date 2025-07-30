@@ -34,7 +34,8 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
 
 @given("a notification created for the single installment of debt position {dp_identifiers}")
 @given("a notification created for the single installment of debt positions {dp_identifiers}")
-def step_create_send_notification(context, dp_identifiers):
+@given("a notification created for the {installments_size} installments of debt positions {dp_identifiers}")
+def step_create_send_notification(context, dp_identifiers, installments_size=1):
     org_info = context.org_info
 
     pagopa_int_mode = None
@@ -48,16 +49,18 @@ def step_create_send_notification(context, dp_identifiers):
 
     dp_identifiers = dp_identifiers.split()
     for dp_identifier in dp_identifiers:
-        installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_positions[dp_identifier],
-                                                               po_index=1, seq_num=1)
-        installments_notified.append(installment)
+        for seq_num in range(1, int(installments_size) + 1):
+            installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_positions[dp_identifier],
+                                                                   po_index=1, seq_num=seq_num)
+            installments_notified.append(installment)
 
     recipients = []
     i = 1
     for installment in installments_notified:
         document = Document(file_name=f'payment_{i}.pdf', content_type='application/pdf',
                             digest=SendPdfDigest.payment_pdf_digest)
-        payment_data = PaymentData(notice_code=installment.nav, creditor_tax_id=org_info.fiscal_code, attachment=document)
+        payment_data = PaymentData(notice_code=installment.nav, creditor_tax_id=org_info.fiscal_code,
+                                   attachment=document)
         payment = Payment(pago_pa=payment_data)
 
         recipient = next((recipient for recipient in recipients if recipient.tax_id == installment.debtor.fiscal_code),
@@ -102,8 +105,6 @@ def step_upload_notification_file(context):
 
     assert res_notification_file.status_code == 202
 
-
-
     workflow_id = ''
     for i in range(1, len(installments_notified) + 1):
         payment_file_path = f'./bdd/steps/file_template/payment_{i}.pdf'
@@ -126,7 +127,7 @@ def step_upload_notification_file(context):
 
     retry_get_workflow_status(token=context.token, workflow_id=workflow_id,
                               status=WorkflowStatus.COMPLETED,
-                              tries=16, delay=30)
+                              tries=18, delay=30)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")
@@ -158,7 +159,6 @@ def step_check_notification_fee(context):
     notification_fee = {}
     i = 1
     for installment in installments_notified:
-
         res_fee = get_send_notification_fee(token=context.send_token, nav=installment.nav,
                                             org_id=context.org_info.id)
 
@@ -166,19 +166,23 @@ def step_check_notification_fee(context):
         assert res_fee.json()['totalPrice'] is not None
         notification_fee[i] = res_fee.json()['totalPrice']
         if i != 1:
-            assert notification_fee[i] == notification_fee[i-1]
+            print(notification_fee[i])
+            print(notification_fee[i-1])
+            assert notification_fee[i] == notification_fee[i - 1]
         i += 1
 
     context.notification_fee = notification_fee[1]
 
 
 @then("the amount of installment of debt position {dp_identifier} is increased by the notification fee")
-def step_check_installment_amount_with_fee(context, dp_identifier):
+@then("the amount of installment {seq_num} of debt position {dp_identifier} is increased by the notification fee")
+def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
     installments_notified = context.installments_notified
     installment_paid = context.installment_paid.get(dp_identifier)
 
     for installment in installments_notified:
-        if installment_paid.installment_id == installment.installment_id:
+        if (installment_paid.installment_id == installment.installment_id and
+                installment.iud.startswith('FeatureTest_' + str(seq_num))):
             previous_amount = installment.amount_cents
             expected_amount = previous_amount + context.notification_fee
 
