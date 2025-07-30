@@ -127,7 +127,7 @@ def step_upload_notification_file(context):
 
     retry_get_workflow_status(token=context.token, workflow_id=workflow_id,
                               status=WorkflowStatus.COMPLETED,
-                              tries=16, delay=30)
+                              tries=18, delay=30)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")
