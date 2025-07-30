@@ -79,8 +79,6 @@ def step_create_send_notification(context, dp_identifiers):
 
     res = post_create_send_notification(token=send_token, payload=notification_request.to_json())
 
-    print(notification_request.to_json())
-    print(res.json())
     assert res.status_code == 200
     assert res.json()['sendNotificationId'] is not None
     assert res.json()['status'] == SendStatus.WAITING.value
