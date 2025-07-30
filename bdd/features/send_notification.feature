@@ -28,7 +28,7 @@ Feature: Management of debt position notified by SEND
     And the amount of installment of debt position B is increased by the notification fee
 
   @gpd
-  Scenario: A debt position with 2 installments is notified by SEND and when it is paid the amount is updated only for first installment
+  Scenario: A debt position with 2 installments is notified by SEND and when it is paid the amount is updated for all installments
     Given a debt position A with 1 payment option and 2 installments created by organization interacting with GPD
     And a notification created for the 2 installments of debt positions A
     When the organization requires the notification to be uploaded to SEND
