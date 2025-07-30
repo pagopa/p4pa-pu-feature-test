@@ -1,16 +1,15 @@
 import json
-import textwrap
 from pathlib import Path
 
-from behave import given, use_step_matcher
+from behave import given
 from behave import then
 from behave import when
 
 from api.debt_positions import post_create_debt_position, get_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
-from bdd.steps.authentication_step import get_token_org, PagoPaInteractionModel
+from bdd.steps.authentication_step import get_token_org
 from bdd.steps.classification_step import step_check_classification
-from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_aca, step_verify_presence_debt_position_in_gpd
+from bdd.steps.gpd_aca_step import check_aca_or_gpd_notice_presence
 from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_check_treasury_processed
@@ -55,7 +54,7 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
     if balance:
         balance_template = Path('./bdd/steps/file_template/balance.xml').read_text()
         balance_str = (balance_template.format(section_code=section_code, office_code=office_code,
-                                              assessment_code=assessment_code, amount="{:.2f}".format(int(amount)))
+                                               assessment_code=assessment_code, amount="{:.2f}".format(int(amount)))
                        .replace('\n', '')).replace(' ', '')
 
     installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1,
@@ -89,7 +88,8 @@ def step_create_dp(context):
 
     assert res.status_code == 200
 
-    validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position, debt_position_response=res.json(),
+    validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position,
+                                   debt_position_response=res.json(),
                                    status=Status.TO_SYNC)
 
     context.debt_position = DebtPosition.from_dict(res.json())
@@ -158,7 +158,8 @@ def step_check_outcome9_installment_status(context, status):
 
 
 @given("a simple debt position created by organization interacting with {pagopa_interaction}")
-@given("a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}")
+@given(
+    "a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=None, citizen_identifier=None):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
@@ -166,11 +167,7 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
                                             expiration_days=3, citizen_identifier=citizen_identifier)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-
-    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
-        step_verify_presence_debt_position_in_aca(context=context, status="valid")
-    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
-        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
+    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
@@ -188,31 +185,31 @@ def step_create_simple_debt_position(context, pagopa_interaction):
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, balance=True)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-
-    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
-        step_verify_presence_debt_position_in_aca(context=context, status="valid")
-    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
-        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
+    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
 
 @given(
     "a complex debt position with {po_size} payment options created by organization interacting with {pagopa_interaction}")
-def step_create_simple_debt_position(context, po_size, pagopa_interaction):
+@given(
+    "a debt position {dp_identifier} with {po_size} payment option and {installments_size} installments created by organization interacting with {pagopa_interaction}")
+def step_create_simple_debt_position(context, po_size, pagopa_interaction, dp_identifier=None, installments_size=2):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     for i in range(int(po_size)):
-        step_create_po_and_inst_entities(context=context, po_index=i + 1, installments_size=2, expiration_days=3)
+        step_create_po_and_inst_entities(context=context, po_index=i + 1, installments_size=installments_size, expiration_days=3)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-
-    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
-        step_verify_presence_debt_position_in_aca(context=context, status="valid")
-    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
-        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
+    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
+
+    if dp_identifier is not None:
+        try:
+            context.debt_positions[dp_identifier] = context.debt_position
+        except AttributeError:
+            context.debt_positions = {dp_identifier: context.debt_position}
 
 
 @given(
@@ -244,19 +241,22 @@ def step_pay_installment_and_verify(context, seq_num, po_index):
 def step_check_debt_positions_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value):
     context.installments_paid = []
     for i in range(context.receipts_rows_len):
-        step_check_debt_position_created(context=context, debt_position_origin=debt_position_origin, iuv=context.iuvs[i])
+        step_check_debt_position_created(context=context, debt_position_origin=debt_position_origin,
+                                         iuv=context.iuvs[i])
         context.installments_paid.append(context.installment_paid)
 
 
 @then("the debt position is created correctly")
 @then("the debt position are created correctly with origin {debt_position_origin}")
-def step_check_debt_position_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value, iuv: str = None):
+def step_check_debt_position_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value,
+                                     iuv: str = None):
     token = context.token
     org_info = context.org_info
     iuv = iuv if iuv else context.iuv
 
     nav = '3' + iuv
-    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id, installment_nav=nav)
+    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id,
+                                                                   installment_nav=nav)
 
     assert res.status_code == 200
     assert len(res.json()['_embedded']['debtPositions']) == 1
@@ -294,9 +294,11 @@ def step_check_installment_fields(context, installment_fields: str):
         assert field in res.json()
 
 
-def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict, status: Status, csv_version: str = None):
+def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict,
+                                   status: Status, csv_version: str = None):
     _validate_debt_position_fields(org_info, debt_position_request, debt_position_response, status, csv_version)
-    _validate_payment_options(org_info, debt_position_request, debt_position_response['paymentOptions'], status, csv_version)
+    _validate_payment_options(org_info, debt_position_request, debt_position_response['paymentOptions'], status,
+                              csv_version)
 
 
 def _validate_debt_position_fields(org_info, request, response, status, csv_version):
@@ -311,12 +313,14 @@ def _validate_debt_position_fields(org_info, request, response, status, csv_vers
     if csv_version:
         csv_version = CSVVersion(csv_version)
         if not CSVVersion.is_v2(csv_version):
-            assert f"DebtPosition with code {settings.debt_position_type_org_code} was created" in response['description']
+            assert f"DebtPosition with code {settings.debt_position_type_org_code} was created" in response[
+                'description']
         if csv_version <= CSVVersion.V1_4:
             assert len(response['paymentOptions']) == 1
             assert len(response['paymentOptions'][0]['installments']) == 1
         if csv_version <= CSVVersion.V1_2:
             assert response['flagPuPagoPaPayment'] == True
+
 
 def _validate_payment_options(org_info, request, response_options, status, csv_version):
     assert len(response_options) == len(request.payment_options)
@@ -371,4 +375,5 @@ def _validate_first_transfer(org_info, inst_response, inst_request):
     assert first_transfer['iban'] == org_info.iban
     assert first_transfer['category'] is not None
     assert first_transfer['remittanceInformation'] == inst_request.remittance_information
-    assert first_transfer['amountCents'] == calculate_amount_first_transfer(installment=Installment.from_dict(inst_request))
+    assert first_transfer['amountCents'] == calculate_amount_first_transfer(
+        installment=Installment.from_dict(inst_request))

@@ -1,6 +1,7 @@
 from behave import then
 
 from api.gpd_aca import get_debt_position_on_aca, get_debt_position_on_gpd
+from bdd.steps.authentication_step import PagoPaInteractionModel
 from bdd.steps.utils.debt_position_utility import retrieve_iuv_list
 from config.configuration import secrets
 
@@ -44,3 +45,10 @@ def step_verify_presence_debt_positions_in_gpd(context, status):
 
     for debt_position in debt_positions:
         check_presence_debt_position_in_gpd(org_fiscal_code=org_fiscal_code, debt_position=debt_position, status=status)
+
+
+def check_aca_or_gpd_notice_presence(context, pagopa_interaction):
+    if pagopa_interaction == PagoPaInteractionModel.ACA.value:
+        step_verify_presence_debt_position_in_aca(context=context, status="valid")
+    elif pagopa_interaction == PagoPaInteractionModel.GPD.value:
+        step_verify_presence_debt_position_in_gpd(context=context, status="valid")
