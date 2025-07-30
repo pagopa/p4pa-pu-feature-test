@@ -155,19 +155,27 @@ def step_check_iun(context, status):
 def step_check_notification_fee(context):
     installments_notified = context.installments_notified
 
-    res_fee = get_send_notification_fee(token=context.send_token, nav=installments_notified[0].nav,
-                                        org_id=context.org_info.id)
+    notification_fee = {}
+    i = 1
+    for installment in installments_notified:
 
-    assert res_fee.status_code == 200
-    assert res_fee.json()['totalPrice'] is not None
+        res_fee = get_send_notification_fee(token=context.send_token, nav=installment.nav,
+                                            org_id=context.org_info.id)
 
-    context.notification_fee = res_fee.json()['totalPrice']
+        assert res_fee.status_code == 200
+        assert res_fee.json()['totalPrice'] is not None
+        notification_fee[i] = res_fee.json()['totalPrice']
+        if i != 1:
+            assert notification_fee[i] == notification_fee[i-1]
+        i += 1
+
+    context.notification_fee = notification_fee[1]
 
 
-@then("the amount of installment is increased by the notification fee")
-def step_check_installment_amount_with_fee(context):
+@then("the amount of installment of debt position {dp_identifier} is increased by the notification fee")
+def step_check_installment_amount_with_fee(context, dp_identifier):
     installments_notified = context.installments_notified
-    installment_paid = context.installment_paid
+    installment_paid = context.installment_paid.get(dp_identifier)
 
     for installment in installments_notified:
         if installment_paid.installment_id == installment.installment_id:
