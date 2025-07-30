@@ -1,7 +1,6 @@
 @receipts_file
 Feature: An organizations creates receipts by importing file
 
-
   @gpd
   Scenario: As a positive result of importing a receipts file by an organization interacting with GPD, debt positions are created
     Given organization interacting with GPD

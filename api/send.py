@@ -1,15 +1,17 @@
+import json
+
 import requests
 
 from config.configuration import secrets, settings
 
 
-def post_create_send_notification(token, payload: dict):
+def post_create_send_notification(token, payload: str):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/notification',
         headers={
             'Authorization': f'Bearer {token}'
         },
-        json=payload,
+        json=json.loads(payload),
         timeout=settings.default_timeout
     )
 

@@ -22,12 +22,14 @@ def check_res_ok_and_get_body(response_content, tag_name):
 
 @when('the citizen pays the installment of payment option {po_index}')
 @when('the citizen pays the installment {seq_num} of payment option {po_index}')
-def step_installment_payment(context, po_index, seq_num='1'):
-    citizen_info = secrets.citizen_info
+@when('the citizen pays the installment')
+@when('the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}')
+def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None):
+    citizen_info = secrets.citizen_info.get(citizen_identifier)
     psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
     org_info = context.org_info
-    debt_position = context.debt_position
+    debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
     installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
                                                            po_index=int(po_index), seq_num=int(seq_num))
 
@@ -53,12 +55,19 @@ def step_installment_payment(context, po_index, seq_num='1'):
     assert res_send_outcome.status_code == 200
     check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeRes')
 
-    context.installment_paid = installment
+    if dp_identifier is None:
+        context.installment_paid = installment
+    else:
+        context.installment_paid = {dp_identifier: installment}
 
 
 @then("the receipt is processed correctly")
-def step_check_receipt_processed(context):
-    installment_paid = context.installment_paid
+@then("the receipt of debt position {dp_identifier} is processed correctly")
+def step_check_receipt_processed(context, dp_identifier=None):
+    if dp_identifier is None:
+        installment_paid = context.installment_paid
+    else:
+        installment_paid = context.installment_paid.get(dp_identifier)
     org_info = context.org_info
 
     file_path_name = FilePathName.RECEIPT_PAGOPA
@@ -74,7 +83,10 @@ def step_check_receipt_processed(context):
     installment_paid.iur = res.json()['iur']
     installment_paid.receipt_id = res.json()['receiptId']
 
-    context.installment_paid = installment_paid
+    if dp_identifier is None:
+        context.installment_paid = installment_paid
+    else:
+        context.installment_paid[dp_identifier] = installment_paid
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + res.json()['iur'] + '-1',
