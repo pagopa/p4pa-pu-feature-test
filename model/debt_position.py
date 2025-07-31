@@ -135,3 +135,7 @@ class DebtPosition:
     flag_iuv_volatile: bool = False
     flag_pu_pago_pa_payment: bool = True
     payment_options: list[PaymentOption] = field(default_factory=list)
+
+    @property
+    def first_installment(self):
+        return self.payment_options[0].installments[0]
