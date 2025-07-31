@@ -12,6 +12,7 @@ from bdd.steps.utils.utility import retry_get_process_file_status, retrieve_org_
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
 from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, to_csv_lines, CSVVersion
+from model.debt_position import DebtPosition
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus
 from model.workflow_hub import WorkflowStatus, WorkflowType
 
@@ -34,6 +35,27 @@ def step_create_ingestion_flow_file(context, csv_version: str):
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
 
     context.receipts_file_name = zip_file_path
+
+
+@given("a receipt of a debt position inserted into an ingestion flow file with version {csv_version}")
+def step_create_ingestion_flow_file(context, csv_version: str):
+    csv_version = CSVVersion(csv_version)
+    context.csv_version = csv_version
+
+    csv_rows = create_receipts_rows(context, receipts_size=1, debt_position=context.debt_position)
+    context.receipts_rows_len = len(csv_rows)
+
+    csv_lines = to_csv_lines(csv_rows=csv_rows, csv_version=csv_version)
+
+    dataset_dataframe = pandas.DataFrame(data=csv_lines)
+
+    filename = f'FeatureTestImportPagati_{csv_version.value}_{datetime.now().strftime("%Y%m%d%H%M%S")}'
+    zip_file_path = f'{filename}.zip'
+    dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
+                             compression=dict(method='zip', archive_name=f'{filename}.csv'))
+
+    context.receipts_file_name = zip_file_path
+    context.installment_paid = context.debt_position.first_installment
 
 
 @when("the organization uploads the receipts file")
@@ -75,7 +97,7 @@ def step_receipts_file_processed(context):
                           entity_id=context.receipts_file_id, status=WorkflowStatus.COMPLETED)
 
 
-def create_receipts_rows(context, receipts_size: int = 3, debt_position=None) -> list:
+def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPosition = None) -> list:
     csv_version = context.csv_version
     date_time = (datetime.now() - timedelta(days=1))
     context.iuvs = []
@@ -84,17 +106,17 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position=None) ->
     receipts_rows = []
 
     for i in range(receipts_size):
-        iud = f'FeatureTest_{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else "dp"  # TODO P4ADEV-3349 with DP
+        iud = f'FeatureTest_{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
         amount = "{:.2f}".format(
-            random.randint(1, 200)) if debt_position is None else "100.00"  # TODO P4ADEV-3349 with DP
-        iuv = generate_iuv()
+            random.randint(1, 200)) if debt_position is None else debt_position.first_installment.amount_cents
+        iuv = generate_iuv() if debt_position is None else debt_position.first_installment.iuv
         context.iuvs.append(iuv)
 
         row = CSVRow()
         row.sourceFlowName = "FeatureTestImportReceipts"
         row.flowRowNumber = 1
         row.iud = iud
-        row.noticeNumber = iuv if debt_position is None else "iuv"  # TODO P4ADEV-3349 with DP
+        row.noticeNumber = iuv
         row.objectVersion = csv_version.object_version
         row.orgFiscalCode = org_info.fiscal_code
         row.requestingStationId = "12345"
