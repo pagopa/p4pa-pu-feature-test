@@ -135,13 +135,15 @@ def step_uploads_debt_positions_file(context):
 @then("the ingestion file is processed correctly")
 def step_debt_position_file_processed(context):
     organization_id = context.org_info.id
+    org_has_generate_notice_api_key: bool = context.org_info.has_generate_notice_api_key
 
     file_path_name = FilePathName.INSTALLMENT
     file_name = context.debt_positions_file_name
+    status = FileStatus.COMPLETED if org_has_generate_notice_api_key else FileStatus.ERROR
 
     res = retry_get_process_file_status(token=context.token, organization_id=organization_id,
                                         file_path_name=file_path_name, file_name=file_name,
-                                        status=FileStatus.COMPLETED, delay=10)
+                                        status=status, delay=10)
 
     assert res['numTotalRows'] == context.total_installments
     assert res['numTotalRows'] == res['numCorrectlyImportedRows']
