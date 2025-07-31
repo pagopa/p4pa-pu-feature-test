@@ -12,6 +12,16 @@ Feature: An organizations creates receipts by importing file
     And the receipts are created correctly with origin receipt_file
 
 
+  @aca
+  Scenario: As a positive result of importing a receipts file by an organization interacting with ACA, missing debt positions are created
+    Given organization interacting with ACA
+    And receipts of non-existent debt positions inserted into an ingestion flow file with version 1_3
+    When the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the debt positions are created correctly with origin receipt_file
+    And the receipts are created correctly with origin receipt_file
+
+
   @gpd
   Scenario: As a positive result of importing a receipts file by an organization interacting with GPD, a debt position is updated
     Given a simple debt position created by organization interacting with GPD
