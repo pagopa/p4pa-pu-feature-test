@@ -32,6 +32,8 @@ def format_ingestion_flow_file(context, amount, file, org_info):
                        org_code='XX00YY',
                        org_name=org_info.name,
                        org_fiscal_code=org_info.fiscal_code,
+                       org_istat_code=''.join(random.choices(string.digits, k=10)),
+                       org_bt_code=''.join(random.choices(string.digits, k=10)),
                        bt_flow_id='GDC-' + ''.join(
                            random.choices(string.digits, k=36)) + '#001#001',
                        bill_year=year,
