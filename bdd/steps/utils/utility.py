@@ -65,7 +65,6 @@ def retry_get_status_send_notification(token, notification_id, status, tries=15,
             break
         time.sleep(delay)
         res = get_send_notification_status(token=token, notification_id=notification_id)
-        print(res.json())
         success = (res.status_code == 200 and status in res.json())
 
     assert success

@@ -5,11 +5,11 @@
 		<data_ora_creazione_flusso>{flow_date_time}</data_ora_creazione_flusso>
 		<codice_ente>{org_code}</codice_ente>
 		<descrizione_ente>{org_name}</descrizione_ente>
-		<codice_istat_ente>{org_fiscal_code}</codice_istat_ente>
+		<codice_istat_ente>{org_istat_code}</codice_istat_ente>
 		<codice_fiscale_ente>{org_fiscal_code}</codice_fiscale_ente>
 		<codice_tramite_ente>A2A-00000000</codice_tramite_ente>
 		<codice_tramite_BT>A2A-11111111</codice_tramite_BT>
-		<codice_ente_BT>1010123</codice_ente_BT>
+		<codice_ente_BT>{org_bt_code}</codice_ente_BT>
 	</testata_messaggio>
 	<identificativo_flusso_BT>{bt_flow_id}</identificativo_flusso_BT>
 	<pagina>1</pagina>

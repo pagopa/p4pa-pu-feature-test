@@ -166,8 +166,6 @@ def step_check_notification_fee(context):
         assert res_fee.json()['totalPrice'] is not None
         notification_fee[i] = res_fee.json()['totalPrice']
         if i != 1:
-            print(notification_fee[i])
-            print(notification_fee[i-1])
             assert notification_fee[i] == notification_fee[i - 1]
         i += 1
 
