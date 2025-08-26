@@ -73,6 +73,7 @@ class Installment:
     status: Status = Status.UNPAID.value
     sync_status: SyncStatus = None
     iupd_pagopa: str = None
+    generate_notice: bool = True
     iuv: str = None
     nav: str = None
     iur: str | None = None

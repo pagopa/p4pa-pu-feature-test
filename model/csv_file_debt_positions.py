@@ -107,7 +107,9 @@ class CSVRow:
         'multiDebtor': {'versions': ["2_0", "2_0-eng"], 'IT': 'multiDebtor', 'EN': 'multiDebtor'},
         'legacyPaymentMetadata': {'versions': ["1_0", "1_1", "1_2", "1_3", "1_4", "2_0", "2_0-eng"],
                                   'IT': 'datiSpecificiRiscossione', 'EN': 'legacyPaymentMetadata'},
-        'flagPuPagoPaPayment': {'versions': ["1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'flagGeneraIuv',
+        'generateNotice': {'versions': ["1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'flagGeneraIuv',
+                                'EN': 'generateNotice'},
+        'flagPuPagoPaPayment': {'versions': ["2_0", "2_0-eng"], 'IT': 'flagPagamentoPu',
                                 'EN': 'flagPuPagoPaPayment'},
         'balance': {'versions': ["1_0", "1_1", "1_2", "1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'bilancio',
                     'EN': 'balance'},
@@ -175,6 +177,7 @@ class CSVRow:
     multiDebtor: bool = False
     legacyPaymentMetadata: str = None
     flagPuPagoPaPayment: bool = True
+    generateNotice: bool = True
     balance: str = None
     debtPositionTypeCode: str = settings.debt_position_type_org_code
     flagMultibeneficiary: bool = False
