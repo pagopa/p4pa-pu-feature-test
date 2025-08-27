@@ -3,6 +3,14 @@ trigger:
     include:
       - main
 
+schedules:
+  - cron: "0 6 * * *" # Runs every day at 05:00:00 UTC
+    displayName: Scheduled every day run
+    branches:
+      include:
+        - main
+    always: true
+
 variables:
   # Python version: 3.x
   pythonVersion: '3.x'
