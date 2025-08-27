@@ -4,8 +4,8 @@ trigger:
       - main
 
 schedules:
-  - cron: "0 6 * * *" # Runs every day at 05:00:00 UTC
-    displayName: Scheduled every day run
+  - cron: "0 6 * * 1-5" # Runs from monday to friday
+    displayName: Scheduled run
     branches:
       include:
         - main
