@@ -4,7 +4,7 @@ trigger:
       - main
 
 schedules:
-  - cron: "0 6 * * 1-5" # Runs from monday to friday
+  - cron: "0 5 * * 1-5" # Runs from monday to friday
     displayName: Scheduled run
     branches:
       include:
@@ -26,7 +26,7 @@ parameters:
   - name: env
     displayName: Target Environment
     type: string
-    default: uat
+    default: dev
     values:
       - dev
       - uat
