@@ -139,7 +139,7 @@ def step_debt_position_file_processed(context):
 
     file_path_name = FilePathName.INSTALLMENT
     file_name = context.debt_positions_file_name
-    status = FileStatus.COMPLETED if org_has_generate_notice_api_key else FileStatus.ERROR
+    status = FileStatus.COMPLETED if org_has_generate_notice_api_key == True else FileStatus.ERROR
 
     res = retry_get_process_file_status(token=context.token, organization_id=organization_id,
                                         file_path_name=file_path_name, file_name=file_name,
