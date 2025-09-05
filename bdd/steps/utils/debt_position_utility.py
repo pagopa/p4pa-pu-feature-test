@@ -78,7 +78,6 @@ def create_debt_position(token, organization_id: int, debt_position_type_org_cod
     res_dp_type_org = get_debt_position_type_org_by_code(token=token, organization_id=organization_id,
                                                          code=debt_position_type_org_code)
 
-    print(res_dp_type_org.json())
     assert res_dp_type_org.status_code == 200
     debt_position_type_org_id = res_dp_type_org.json()['debtPositionTypeOrgId']
     assert debt_position_type_org_id is not None

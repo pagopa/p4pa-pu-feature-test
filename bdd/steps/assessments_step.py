@@ -67,9 +67,8 @@ def retrieve_balance(context, installment_paid) -> Balance:
         res_dp_type_org = get_debt_position_type_org_by_code(token=context.token, organization_id=context.org_info.id,
                                                              code=context.debt_position_type_org_code)
         assert res_dp_type_org.status_code == 200
-        balance_xml = res_dp_type_org.json()['balance']
+        balance_xml = res_dp_type_org.json().get('balance')
 
-    balance = None
     if balance_xml is not None:
         balance_dict = extract_balance_from_xml(balance_xml=balance_xml)
         assessment_registry = extract_assessment_registry_from_balance_dict(balance_dict=balance_dict)
