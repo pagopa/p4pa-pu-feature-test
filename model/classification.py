@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -15,3 +16,16 @@ class Classification(Enum):
     IUF_TES_DIV_IMP = "IUF_TES_DIV_IMP"
     IUD_NO_RT = "IUD_NO_RT"
     TES_NO_MATCH = "TES_NO_MATCH"
+
+
+@dataclass
+class AssessmentRegistry:
+    section_code: str = 'FTCAP_01'
+    office_code: str = 'FTUFF_01'
+    assessment_code: str = 'FTACC_01'
+
+
+@dataclass
+class Balance:
+    amount: int
+    assessment_registry: field(default_factory=lambda : AssessmentRegistry())
