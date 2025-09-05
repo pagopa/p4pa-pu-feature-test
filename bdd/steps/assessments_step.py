@@ -12,8 +12,7 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
 @then("the assessment is in status {status}")
-def step_check_assessment(context, status: str,
-                          debt_position_type_org_code=settings.debt_position_type_org_code.feature_test):
+def step_check_assessment(context, status: str):
     org_info = context.org_info
     installment_paid = context.installment_paid
 
@@ -24,7 +23,7 @@ def step_check_assessment(context, status: str,
     installment_paid.source_flow_name = res.json()["sourceFlowName"]
 
     res = get_assessment(token=context.token, organization_id=org_info.id,
-                         debt_position_type_org_code=debt_position_type_org_code,
+                         debt_position_type_org_code=context.debt_position_type_org_code,
                          assessment_name=installment_paid.source_flow_name)
 
     assert res.status_code == 200
