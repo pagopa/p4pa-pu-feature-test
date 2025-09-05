@@ -20,23 +20,25 @@ from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, cal
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
+from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
 
-@given("a new debt position of type TEST")
-def step_create_dp_entity(context):
+@given("a new debt position of type {debt_position_type_org_code}")
+def step_create_dp_entity(context, debt_position_type_org_code = settings.debt_position_type_org_code.feature_test):
     token = context.token
 
     organization_id = retrieve_org_id_by_ipa_code(token=token, ipa_code=context.org_info.ipa_code)
     context.org_info['id'] = organization_id
 
     debt_position = create_debt_position(token=token, organization_id=organization_id,
-                                         debt_position_type_org_code=settings.debt_position_type_org_code)
+                                         debt_position_type_org_code=debt_position_type_org_code)
 
     context.debt_position = debt_position
+    context.debt_position_type_org_code = debt_position_type_org_code
 
 
 @given(
@@ -47,23 +49,20 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
                                            payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
 
     amount_cents = int(amount) * 100
-    section_code = 'FTCAP_01'
-    office_code = 'FTUFF_01'
-    assessment_code = 'FTACC_01'
+    assessment_registry = AssessmentRegistry()
     balance_str = None
     if balance:
         balance_template = Path('./bdd/steps/file_template/balance.xml').read_text()
-        balance_str = (balance_template.format(section_code=section_code, office_code=office_code,
-                                               assessment_code=assessment_code, amount="{:.2f}".format(int(amount)))
+        balance_str = (balance_template.format(section_code=assessment_registry.section_code,
+                                               office_code=assessment_registry.office_code,
+                                               assessment_code=assessment_registry.assessment_code,
+                                               amount="{:.2f}".format(int(amount)))
                        .replace('\n', '')).replace(' ', '')
 
     installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1,
                                      balance=balance_str, citizen_identifier=citizen_identifier)
     payment_option.installments.append(installment)
 
-    context.balance_section_code = section_code
-    context.balance_office_code = office_code
-    context.balance_assessment_code = assessment_code
     context.debt_position.payment_options.append(payment_option)
 
 
@@ -158,11 +157,13 @@ def step_check_outcome9_installment_status(context, status):
 
 
 @given("a simple debt position created by organization interacting with {pagopa_interaction}")
+@given("a simple debt position of type {dp_type_org_code} created by organization interacting with {pagopa_interaction}")
 @given(
     "a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}")
-def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=None, citizen_identifier=None):
+def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=None, citizen_identifier=None,
+                                     dp_type_org_code=settings.debt_position_type_org_code.feature_test):
     get_token_org(context=context, pagopa_interaction=pagopa_interaction)
-    step_create_dp_entity(context=context)
+    step_create_dp_entity(context=context, debt_position_type_org_code=dp_type_org_code)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100,
                                             expiration_days=3, citizen_identifier=citizen_identifier)
     step_create_dp(context=context)
@@ -313,7 +314,7 @@ def _validate_debt_position_fields(org_info, request, response, status, csv_vers
     if csv_version:
         csv_version = CSVVersion(csv_version)
         if not CSVVersion.is_v2(csv_version):
-            assert f"DebtPosition with code {settings.debt_position_type_org_code} was created" in response[
+            assert f"DebtPosition with code {settings.debt_position_type_org_code.feature_test} was created" in response[
                 'description']
         if csv_version <= CSVVersion.V1_4:
             assert len(response['paymentOptions']) == 1

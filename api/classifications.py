@@ -14,7 +14,7 @@ def get_classification(token, organization_id: int, iuv: str,
             'lastClassificationDateFrom': last_classification_date_from,
             'lastClassificationDateTo': last_classification_date_to,
             'iuv': iuv,
-            'debtPositionTypeOrgCodes': [settings.debt_position_type_org_code, 'UNKNOWN']
+            'debtPositionTypeOrgCodes': [settings.debt_position_type_org_code.feature_test, 'UNKNOWN']
         },
         timeout=settings.default_timeout
     )
@@ -46,6 +46,20 @@ def get_assessment_details(token, assessment_id: int, iud: str, iuv: str):
             'assessmentId': assessment_id,
             'iud': iud,
             'iuv': iuv
+        },
+        timeout=settings.default_timeout
+    )
+
+def get_assessment_registry(token, organization_id: int, debt_position_type_org_code: str):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments-registries/search/findAssessmentsRegistriesByFilters',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        params={
+            'organizationId': organization_id,
+            'debtPositionTypeOrgCodes': [debt_position_type_org_code],
+            'status': 'ACTIVE'
         },
         timeout=settings.default_timeout
     )

@@ -179,7 +179,7 @@ class CSVRow:
     flagPuPagoPaPayment: bool = True
     generateNotice: bool = True
     balance: str = None
-    debtPositionTypeCode: str = settings.debt_position_type_org_code
+    debtPositionTypeCode: str = settings.debt_position_type_org_code.feature_test
     flagMultibeneficiary: bool = False
     numberBeneficiary: int = 1
     orgFiscalCode_2: str = None

@@ -17,4 +17,6 @@ api:
     classifications: "/p4paclassification"
     fileshare: "/p4pafileshare"
     send_notification: "/p4pasendnotification/p4pasend"
-debt_position_type_org_code: "FEATURE_TEST"
+debt_position_type_org_code:
+  feature_test: "FEATURE_TEST"
+  feature_test_2: "FEATURE_TEST_2"
