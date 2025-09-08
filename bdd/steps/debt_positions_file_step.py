@@ -36,7 +36,7 @@ def step_configure_debt_positions_for_file(context, identifiers):
 
         if debt_position_identifier not in debt_positions:
             debt_position = create_debt_position(token=token, organization_id=organization_id,
-                                                 debt_position_type_org_code=settings.debt_position_type_org_code,
+                                                 debt_position_type_org_code=settings.debt_position_type_org_code.feature_test,
                                                  iupd_org=f'Feature-test-{uuid.uuid4().hex[:10]}',
                                                  identifier=debt_position_identifier)
             debt_positions[debt_position_identifier] = debt_position
