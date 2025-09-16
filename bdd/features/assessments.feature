@@ -21,7 +21,6 @@ Feature: Storing assessments starting from an installment payment
     And the assessment detail is created correctly
 
   @gpd
-      @test
   Scenario: As a positive result of payment, the assessment detail, about installment with balance information from assessment registry, is created
     Given a simple debt position of type FEATURE_TEST_2 created by organization interacting with GPD
     When the citizen pays the installment of payment option 1

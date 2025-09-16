@@ -177,7 +177,7 @@ class CSVRow:
     multiDebtor: bool = False
     legacyPaymentMetadata: str = None
     flagPuPagoPaPayment: bool = True
-    generateNotice: bool = True
+    generateNotice: bool = False
     balance: str = None
     debtPositionTypeCode: str = settings.debt_position_type_org_code.feature_test
     flagMultibeneficiary: bool = False
