@@ -2,6 +2,24 @@
 Feature: Classification process starting from an installment payment
 
   @aca
+  @payment
+  Scenario: As a positive result of payment, a simple debt position, created on ACA, is paid
+    Given a simple debt position created by organization interacting with ACA
+    When the citizen pays the installment of payment option 1
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And the check of debt position expiration is canceled
+
+  @gpd
+  @payment
+  Scenario: As a positive result of payment, a simple debt position, created on GPD, is paid
+    Given a simple debt position created by organization interacting with GPD
+    When the citizen pays the installment of payment option 1
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And the check of debt position expiration is canceled
+
+  @aca
   Scenario: As a positive result of payment, payment reporting and treasury a simple debt position, created on ACA, is reported
     Given a simple debt position created by organization interacting with ACA
     When the citizen pays the installment of payment option 1
