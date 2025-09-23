@@ -4,7 +4,7 @@ trigger:
       - main
 
 schedules:
-  - cron: "0 5 * * 1-5" # Runs from monday to friday
+  - cron: "0 6 * * 1-5" # Runs from monday to friday
     displayName: Scheduled run
     branches:
       include:
@@ -40,6 +40,7 @@ parameters:
       - aca
       - gpd
       - debt_positions
+      - payment
       - classification
       - debt_positions_file
       - receipts_file
