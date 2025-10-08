@@ -6,6 +6,7 @@ from datetime import datetime
 from zipfile import ZipFile
 
 from behave import when, then
+from config.configuration import settings
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.utility import retry_get_process_file_status
@@ -62,11 +63,12 @@ def format_ingestion_flow_file(context, amount, file, org_info):
 def create_files(context, ingestion_flow_file):
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
-    xml_file_path = f'GDC-{now}.xml'
+    file_version=settings.ingestion_flow_file.base_version
+    xml_file_path = f'GDC-{now}_{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
 
-    zip_file_path = f'GDC-{now}.zip'
+    zip_file_path = f'GDC-{now}_{file_version}.zip'
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
