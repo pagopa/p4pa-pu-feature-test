@@ -20,3 +20,5 @@ api:
 debt_position_type_org_code:
   feature_test: "FEATURE_TEST"
   feature_test_2: "FEATURE_TEST_2"
+ingestion_flow_file:
+  base_version: "1_0"
