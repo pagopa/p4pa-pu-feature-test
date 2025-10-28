@@ -70,7 +70,7 @@ class CSVRow:
         'iupdOrg': {'versions': ["2_0", "2_0-eng"], 'IT': 'IUPD', 'EN': 'iupdOrg'},
         'description': {'versions': ["2_0", "2_0-eng"], 'IT': 'descrizionePosizioneDebitoria', 'EN': 'description'},
         'validityDate': {'versions': ["1_4", "2_0", "2_0-eng"], 'IT': 'dataValidita', 'EN': 'validityDate'},
-        'paymentOptionIndex': {'versions': ["1_4", "2_0", "2_0-eng"], 'IT': 'indiceOpzionePagamento',
+        'paymentOptionIndex': {'versions': ["2_0", "2_0-eng"], 'IT': 'indiceOpzionePagamento',
                                'EN': 'paymentOptionIndex'},
         'paymentOptionType': {'versions': ["2_0", "2_0-eng"], 'IT': 'tipoOpzionePagamento', 'EN': 'paymentOptionType'},
         'paymentOptionDescription': {'versions': ["2_0", "2_0-eng"], 'IT': 'descrizioneOpzionePagamento',
