@@ -15,6 +15,7 @@ class FileStatus(Enum):
     PROCESSING = 'PROCESSING'
     COMPLETED = 'COMPLETED'
     ERROR = 'ERROR'
+    WARNING = 'WARNING'
 
 
 class IngestionFlowFileType(Enum):
