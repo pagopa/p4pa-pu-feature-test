@@ -1,7 +1,7 @@
 @sil
 Feature: SIL management of debt positions
 
-  @mixed
+  @debt_position_mixed
   Scenario: Organization interacting with GPD creates a mixed debt position
     Given a SIL acting on behalf of an organization interacting with GPD
     And a new mixed debt position configured as follows:

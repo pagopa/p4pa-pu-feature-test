@@ -47,6 +47,8 @@ parameters:
       - send
       - classification_outcome9
       - assessments
+      - sil
+      - debt_position_mixed
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
@@ -70,6 +72,8 @@ stages:
               current_tag: 'send'
             assessments:
               current_tag: 'assessments'
+            sil_integration:
+              current_tag: 'sil'
         steps:
           - checkout: self
           - template: template\test-run.yml
