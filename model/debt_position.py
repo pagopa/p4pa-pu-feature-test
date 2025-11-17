@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
-from dataclasses_json import dataclass_json, LetterCase
+from dataclasses_json import dataclass_json, LetterCase, Undefined
 
 from config.configuration import secrets
 
@@ -37,13 +37,13 @@ class Debtor:
     entity_type: EntityType = EntityType.F.value
     fiscal_code: str = secrets.citizen_info.X.fiscal_code
     full_name: str = secrets.citizen_info.X.name
-    email: str = secrets.citizen_info.X.email
-    address: str = "Via del Corso"
-    civic: str = "1"
-    postal_code: str = "00186"
+    address: str = "Via Test"
+    civic: str = "123"
+    postal_code: str = "00000"
     location: str = "Roma"
     province: str = "RM"
     nation: str = "IT"
+    email: str = secrets.citizen_info.X.email
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -100,11 +100,11 @@ class PaymentOptionType(Enum):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class PaymentOption:
-    description: str
     payment_option_type: PaymentOptionType
     payment_option_index: int
     payment_option_id: int = None
     debt_position_id: int = None
+    description: str = None
     total_amount_cents: int = 0
     status: Status = Status.UNPAID.value
     installments: list[Installment] = field(default_factory=list)
@@ -115,6 +115,7 @@ class DebtPositionOrigin(Enum):
     ORDINARY_SIL = 'ORDINARY_SIL'
     SPONTANEOUS = 'SPONTANEOUS'
     SPONTANEOUS_SIL = 'SPONTANEOUS_SIL'
+    SPONTANEOUS_MIXED = 'SPONTANEOUS_MIXED'
     SECONDARY_ORG = 'SECONDARY_ORG'
     RECEIPT_FILE = 'RECEIPT_FILE'
     RECEIPT_PAGOPA = 'RECEIPT_PAGOPA'

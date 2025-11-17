@@ -8,7 +8,7 @@ from behave import given, when, then
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.debt_position_utility import generate_iuv
-from bdd.steps.utils.utility import retry_get_process_file_status, retrieve_org_id_by_ipa_code
+from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
 from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, to_csv_lines, CSVVersion
@@ -60,14 +60,9 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 
 @when("the organization uploads the receipts file")
 def step_uploads_debt_positions_file(context):
-    token = context.token
-
-    organization_id = retrieve_org_id_by_ipa_code(token=token, ipa_code=context.org_info.ipa_code)
-    context.org_info['id'] = organization_id
-
     zip_file_path = context.receipts_file_name
 
-    res = post_upload_file(token=token, organization_id=organization_id,
+    res = post_upload_file(token=context.token, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.RECEIPT,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -81,12 +76,10 @@ def step_uploads_debt_positions_file(context):
 
 @then("the receipts file is processed correctly")
 def step_receipts_file_processed(context):
-    organization_id = context.org_info.id
-
     file_path_name = FilePathName.RECEIPT
     file_name = context.receipts_file_name
 
-    res = retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    res = retry_get_process_file_status(token=context.token, organization_id=context.org_info.id,
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=FileStatus.COMPLETED, delay=10)
 

@@ -12,7 +12,7 @@ from config.configuration import settings
 from api.debt_positions import get_debt_position, get_installment
 from api.fileshare import post_upload_file
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, generate_iuv
-from bdd.steps.utils.utility import retry_get_process_file_status, retrieve_org_id_by_ipa_code
+from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from model.debt_position import DebtPosition
@@ -137,9 +137,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
-    context.org_info['id'] = retrieve_org_id_by_ipa_code(token, org_info.ipa_code)
-
-    res = post_upload_file(token=token, organization_id=org_info.id,
+    res = post_upload_file(token=token, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 

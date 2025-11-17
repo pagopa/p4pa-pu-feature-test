@@ -16,3 +16,13 @@ def get_debt_position_type_org_by_code(token, organization_id: int, code: str):
         },
         timeout=settings.default_timeout
     )
+
+
+def get_debt_position_type_by_id(token, debt_position_type_id: int):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/debt-position-types/{debt_position_type_id}',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        timeout=settings.default_timeout
+    )

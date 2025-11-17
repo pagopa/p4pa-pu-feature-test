@@ -1,0 +1,7 @@
+<datiSingoloVersamento>
+    <identificativoUnivocoDovuto>{iud}</identificativoUnivocoDovuto>
+    <importoSingoloVersamento>{importo}</importoSingoloVersamento>
+    <identificativoTipoDovuto>{tipo_dovuto}</identificativoTipoDovuto>
+    <causaleVersamento>Test {iud}</causaleVersamento>
+    <datiSpecificiRiscossione>{dati_specifici_riscossione}</datiSpecificiRiscossione>
+</datiSingoloVersamento>

@@ -2,7 +2,7 @@ import time
 
 from behave import given, when, then
 
-from api.auth import post_send_auth_token
+from api.auth import post_external_auth_token
 from api.debt_positions import get_installment
 from api.send import post_create_send_notification, post_upload_send_file, get_send_notification_status, \
     get_send_notification_fee
@@ -24,7 +24,7 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
         case PagoPaInteractionModel.GPD.value:
             client = secrets.send_info.gpd
 
-    res = post_send_auth_token(client_id=client.client_id, client_secret=client.client_secret)
+    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret)
 
     assert res.status_code == 200
     assert res.json()['access_token'] is not None

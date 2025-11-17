@@ -17,7 +17,7 @@ class PSP:
 def verify_payment_notice(psp: PSP,
                           org_fiscal_code: str,
                           iuv: str):
-    with open('./api/soap/requests_template/verifyPaymentNotice.xml', 'r') as file:
+    with open('./api/soap/requests_template_nodo/verifyPaymentNotice.xml', 'r') as file:
         data = file.read()
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, iuv=iuv)
@@ -39,7 +39,7 @@ def activate_payment_notice(psp: PSP,
                             iuv: str,
                             amount: str,
                             due_date: str):
-    with open('./api/soap/requests_template/activatePaymentNotice.xml', 'r') as file:
+    with open('./api/soap/requests_template_nodo/activatePaymentNotice.xml', 'r') as file:
         data = file.read()
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, iuv=iuv,
@@ -61,7 +61,7 @@ def send_payment_outcome(psp: PSP,
                          citizen_fiscal_code: str,
                          citizen_name: str,
                          citizen_email: str):
-    with open('./api/soap/requests_template/sendPaymentOutcome.xml', 'r') as file:
+    with open('./api/soap/requests_template_nodo/sendPaymentOutcome.xml', 'r') as file:
         data = file.read()
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, payment_token=payment_token, citizen_fiscal_code=citizen_fiscal_code,

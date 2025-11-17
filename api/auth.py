@@ -19,7 +19,7 @@ def post_auth_token(user_id: str):
     )
 
 
-def post_send_auth_token(client_id: str, client_secret: str):
+def post_external_auth_token(client_id: str, client_secret: str):
     return requests.post(
         url=f'{secrets.base_url}/pu/auth/oauth/token',
         params={

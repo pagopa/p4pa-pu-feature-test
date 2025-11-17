@@ -17,7 +17,6 @@ from bdd.steps.treasury_step import step_upload_treasury_file
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
     create_payment_option
-from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.classification import AssessmentRegistry
@@ -29,12 +28,7 @@ from model.workflow_hub import WorkflowStatus
 
 @given("a new debt position of type {debt_position_type_org_code}")
 def step_create_dp_entity(context, debt_position_type_org_code = settings.debt_position_type_org_code.feature_test):
-    token = context.token
-
-    organization_id = retrieve_org_id_by_ipa_code(token=token, ipa_code=context.org_info.ipa_code)
-    context.org_info['id'] = organization_id
-
-    debt_position = create_debt_position(token=token, organization_id=organization_id,
+    debt_position = create_debt_position(token=context.token, organization_id=context.org_info.id,
                                          debt_position_type_org_code=debt_position_type_org_code)
 
     context.debt_position = debt_position
@@ -80,10 +74,9 @@ def step_create_po_and_inst_entities(context, po_index, installments_size, expir
 
 @when("the organization creates the debt position")
 def step_create_dp(context):
-    token = context.token
     debt_position = context.debt_position
 
-    res = post_create_debt_position(token=token, debt_position=debt_position.to_json())
+    res = post_create_debt_position(token=context.token, debt_position=debt_position.to_json())
 
     assert res.status_code == 200
 
@@ -99,10 +92,9 @@ def step_create_dp(context):
 
 @then("the debt position is in status {status}")
 def step_check_dp_status(context, status):
-    token = context.token
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
 
     assert res.status_code == 200
     assert res.json()['status'] == status.upper()
@@ -110,10 +102,9 @@ def step_check_dp_status(context, status):
 
 @then("the payment option {po_index} is in status {status}")
 def step_check_po_status(context, po_index, status):
-    token = context.token
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
     assert res.status_code == 200
 
     debt_position = DebtPosition.from_dict(res.json())
@@ -126,10 +117,9 @@ def step_check_po_status(context, po_index, status):
 @then("the installment of payment option {po_index} is in status {status}")
 @then("the installment {installment_seq_num} of payment option {po_index} is in status {status}")
 def step_check_installment_status(context, po_index, status, installment_seq_num='1'):
-    token = context.token
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
 
     assert res.status_code == 200
 
@@ -143,10 +133,9 @@ def step_check_installment_status(context, po_index, status, installment_seq_num
 
 @then("the installment of the created debt position is in status {status}")
 def step_check_outcome9_installment_status(context, status):
-    token = context.token
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
 
     assert res.status_code == 200
 

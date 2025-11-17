@@ -9,7 +9,7 @@ from api.debt_positions import get_debt_positions_by_ingestion_flow_id
 from api.fileshare import post_upload_file
 from bdd.steps.debt_positions_step import validate_debt_position_created
 from bdd.steps.utils.debt_position_utility import create_debt_position, create_payment_option, create_installment
-from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code, retry_get_process_file_status
+from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import settings
 from model.csv_file_debt_positions import CSVRow, to_csv_lines, CSVVersion
@@ -20,11 +20,6 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 
 @given("debt positions {identifiers} with the installments configured as follows")
 def step_configure_debt_positions_for_file(context, identifiers):
-    token = context.token
-
-    organization_id = retrieve_org_id_by_ipa_code(token=token, ipa_code=context.org_info.ipa_code)
-    context.org_info['id'] = organization_id
-
     debt_positions = {}
 
     for row in context.table:
@@ -35,7 +30,7 @@ def step_configure_debt_positions_for_file(context, identifiers):
         action = row['action']
 
         if debt_position_identifier not in debt_positions:
-            debt_position = create_debt_position(token=token, organization_id=organization_id,
+            debt_position = create_debt_position(token=context.token, organization_id=context.org_info.id,
                                                  debt_position_type_org_code=settings.debt_position_type_org_code.feature_test,
                                                  iupd_org=f'Feature-test-{uuid.uuid4().hex[:10]}',
                                                  identifier=debt_position_identifier)

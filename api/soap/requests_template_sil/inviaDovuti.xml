@@ -1,0 +1,13 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ppt="http://www.regione.veneto.it/pagamenti/ente/ppthead" xmlns:ente="http://www.regione.veneto.it/pagamenti/ente/">
+   <soapenv:Header>
+      <ppt:intestazionePPT>
+         <codIpaEnte>{codice_ipa}</codIpaEnte>
+      </ppt:intestazionePPT>
+   </soapenv:Header>
+   <soapenv:Body>
+      <ente:paaSILInviaDovuti>
+         <dovuti>{dovuto}</dovuti>
+         <showMyPay>NONE</showMyPay>
+      </ente:paaSILInviaDovuti>
+   </soapenv:Body>
+</soapenv:Envelope>
