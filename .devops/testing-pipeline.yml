@@ -49,6 +49,7 @@ parameters:
       - assessments
       - sil
       - debt_position_mixed
+      - debt_position_mixed_classification
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
