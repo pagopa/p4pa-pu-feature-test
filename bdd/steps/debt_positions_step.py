@@ -91,8 +91,8 @@ def step_create_dp(context):
 
 
 @then("the debt position is in status {status}")
-def step_check_dp_status(context, status):
-    debt_position_id = context.debt_position.debt_position_id
+def step_check_dp_status(context, status, debt_position_id=None):
+    debt_position_id = debt_position_id if debt_position_id is not None else context.debt_position.debt_position_id
 
     res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
 

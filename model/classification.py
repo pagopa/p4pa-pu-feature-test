@@ -29,3 +29,9 @@ class AssessmentRegistry:
 class Balance:
     amount: int
     assessment_registry: field(default_factory=lambda : AssessmentRegistry())
+
+
+class AssessmentDetailClassificationLabel(Enum):
+    PAID = 'PAID'
+    REPORTED = 'REPORTED'
+    CASHED = 'CASHED'

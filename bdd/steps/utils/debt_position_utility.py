@@ -16,6 +16,8 @@ def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_ind
             for inst in po.installments:
                 if inst.iud.startswith('FeatureTest_' + str(seq_num)):
                     installment = inst
+                elif inst.remittance_information == 'Causali multiple':
+                    installment = inst
     return installment
 
 

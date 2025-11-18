@@ -1,19 +1,25 @@
 import json
 import uuid
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 import xmltodict
 from behave import given, when, then
 
-from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
+from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv, get_debt_position
 from api.soap.sil import post_sil_invia_dovuto
+from bdd.steps.authentication_step import get_token_sil
+from bdd.steps.debt_positions_step import step_check_dp_status
+from bdd.steps.gpd_aca_step import check_aca_or_gpd_notice_presence
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
-from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition
+from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
+from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition, Status
 from model.debt_position_mixed import TransferMixed, DebtPositionMixed
+from model.workflow_hub import WorkflowType
 
 
 @given("a new mixed debt position configured as follows")
-def step_create_dp_mixed_entity(context, ):
+def step_create_dp_mixed_entity(context):
     org_id = context.org_info.id
 
     transfers_mixed = []
@@ -46,7 +52,7 @@ def step_create_dp_mixed_entity(context, ):
 
 
 @when("SIL creates the mixed debt position")
-def step_sil_create_mixed_dp(context):
+def step_sil_invia_dovuto_mixed(context):
     res = post_sil_invia_dovuto(token=context.token,
                                 debt_position_mixed=context.debt_position_mixed,
                                 ipa_code=context.org_info.ipa_code)
@@ -65,7 +71,6 @@ def step_check_debt_positions_mixed_created(context, status):
     dp_mixed = context.debt_position_mixed
 
     transfer_index_map = {transfer.transfer_index: transfer for transfer in dp_mixed.transfers}
-
     iuv = ''
 
     for row in context.table:
@@ -98,6 +103,79 @@ def step_check_debt_positions_mixed_created(context, status):
                                          row, transfers_index, transfer_index_map, status)
 
             context.debt_position = DebtPosition.from_dict(res_dp)
+
+
+@given(
+    "a mixed debt position created by SIL for organization interacting with {pagopa_interaction} configured as follows")
+def step_sil_create_mixed_dp(context, pagopa_interaction):
+    get_token_sil(context=context, pagopa_interaction=pagopa_interaction)
+    token = context.token
+    org_id = context.org_info.id
+    step_create_dp_mixed_entity(context=context)
+    step_sil_invia_dovuto_mixed(context=context)
+
+    iuv = _extract_iuv_from_dp_found_by_iud(token=token, org_id=org_id,
+                                            iud=context.debt_position_mixed.transfers[0].iud)
+
+    res_dp_by_iuv = get_debt_position_by_iuv(token=token, organization_id=org_id, iuv=iuv)
+    assert res_dp_by_iuv.status_code == 200
+    res_dp_list = res_dp_by_iuv.json()
+
+    _quick_validate_all_dp(context=context, res_dp_list=res_dp_list, org_id=org_id)
+
+    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
+
+
+@then("the mixed debt position and technical ones are in status {status}")
+def step_check_mixed_and_tech_dp_status(context, status):
+    if status == 'reported':
+        step_check_dp_status(context=context, status='paid') #TODO fix task P4ADEV-4072: this code will be removed
+    else:
+        step_check_dp_status(context=context, status=status)
+
+    res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, organization_id=context.org_info.id,
+                                             iuv=context.iuv_mixed, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
+    assert res_dp_by_iuv.status_code == 200
+    for dp_sp_mixed in res_dp_by_iuv.json():
+        step_check_dp_status(context=context, status=status, debt_position_id=dp_sp_mixed['debtPositionId'])
+
+
+def _quick_validate_all_dp(context, res_dp_list, org_id):
+    dp_mixed_request = context.debt_position_mixed
+
+    amount_by_type_org_id = defaultdict(int)
+    for transfer in dp_mixed_request.transfers:
+        dp_type_org_id = transfer.debt_position_type_org_id
+        amount_by_type_org_id[dp_type_org_id] += int(float(transfer.amount) * 100)
+
+    assert len(res_dp_list) == len(amount_by_type_org_id) + 1
+    for dp in res_dp_list:
+        assert dp['status'] == Status.UNPAID.value
+        if dp['debtPositionOrigin'] == DebtPositionOrigin.SPONTANEOUS_MIXED.value:
+            assert dp['paymentOptions'][0]['totalAmountCents'] == amount_by_type_org_id[dp['debtPositionTypeOrgId']]
+            check_workflow_does_not_exist(context=context, workflow_type=WorkflowType.EXPIRATION_DP,
+                                          entity_id=dp['debtPositionId'])
+        else:
+            assert dp['debtPositionOrigin'] == DebtPositionOrigin.SPONTANEOUS_SIL.value
+            debt_position_type_org_id = retrieve_dp_type_org_by_code(token=context.token, organization_id=org_id,
+                                                                     debt_position_type_org_code='MIXED')[
+                'debtPositionTypeOrgId']
+            assert dp['debtPositionTypeOrgId'] == debt_position_type_org_id
+            assert dp['paymentOptions'][0]['totalAmountCents'] == sum(amount_by_type_org_id.values())
+
+            context.iuv_mixed = dp['paymentOptions'][0]['installments'][0]['iuv']
+            context.debt_position = DebtPosition.from_dict(dp)
+
+            step_debt_position_workflow_check_expiration(context=context, status="scheduled")
+
+
+def _extract_iuv_from_dp_found_by_iud(token, org_id, iud):
+    res_dp_by_iud = get_debt_position_by_iud(token=token, organization_id=org_id, iud=iud,
+                                             debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
+    assert res_dp_by_iud.status_code == 200
+    assert res_dp_by_iud.json() != []
+
+    return res_dp_by_iud.json()[0]['paymentOptions'][0]['installments'][0]['iuv']
 
 
 def _validate_dp_spontaneous_mixed_and_retrieve_iuv(res_dp, transfer_mixed, dp_mixed, org_info, row,

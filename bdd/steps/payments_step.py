@@ -22,7 +22,7 @@ def check_res_ok_and_get_body(response_content, tag_name):
 
 @when('the citizen pays the installment of payment option {po_index}')
 @when('the citizen pays the installment {seq_num} of payment option {po_index}')
-@when('the citizen pays the installment')
+@when('the citizen pays the installment of mixed debt position')
 @when('the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}')
 @when('the citizen pays the installment {seq_num} of debt position {dp_identifier}')
 def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None):
@@ -127,9 +127,10 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()['receiptId']
     installment_paid.iur = res.json()['iur']
 
-    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                          entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
-                          status=WorkflowStatus.COMPLETED)
+    for transfer in installment_paid.transfers:
+        check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                              entity_id=str(org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-' + str(transfer.transfer_index),
+                              status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
                           entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)

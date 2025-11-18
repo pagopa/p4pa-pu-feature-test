@@ -1,0 +1,8 @@
+<datiSingoliPagamenti>
+        <identificativoUnivocoVersamento>{iuv}</identificativoUnivocoVersamento>
+        <identificativoUnivocoRiscossione>{iur}</identificativoUnivocoRiscossione>
+        <indiceDatiSingoloPagamento>{transfer_index}</indiceDatiSingoloPagamento>
+        <singoloImportoPagato>{amount_paid}</singoloImportoPagato>
+        <codiceEsitoSingoloPagamento>{payment_outcome_code}</codiceEsitoSingoloPagamento>
+        <dataEsitoSingoloPagamento>{payment_date}</dataEsitoSingoloPagamento>
+</datiSingoliPagamenti>

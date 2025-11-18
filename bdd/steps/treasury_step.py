@@ -82,7 +82,6 @@ def step_upload_payment_reporting_file_with_amount(context, amount):
     token = context.token
     org_info = context.org_info
 
-
     with open('./bdd/steps/file_template/treasury_opi.xml', 'r') as file:
         ingestion_flow_file = file.read()
 
@@ -143,9 +142,11 @@ def step_check_treasury_processed(context):
     check_workflow_status(context=context, workflow_type=WorkflowType.TREASURY_OPI_INGESTION,
                           entity_id=context.treasury_file_id, status=WorkflowStatus.COMPLETED)
 
-    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                          entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
-                          status=WorkflowStatus.COMPLETED)
+    for transfer in installment_paid.transfers:
+        check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                              entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' +
+                                        installment_paid.iur + '-' + str(transfer.transfer_index),
+                              status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUF_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + context.iuf,
