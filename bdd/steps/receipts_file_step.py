@@ -1,5 +1,6 @@
 import os
 import random
+import string
 import uuid
 from datetime import datetime, timedelta
 
@@ -113,7 +114,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
         row.objectVersion = csv_version.object_version
         row.orgFiscalCode = org_info.fiscal_code
         row.requestingStationId = "12345"
-        row.paymentReceiptId = str(random.randint(5000, 10000))
+        row.paymentReceiptId = ''.join(random.choices(string.digits + string.ascii_letters, k=32))
         row.paymentDateTime = date_time.isoformat(timespec="seconds")
         row.requestMessageReference = "requestMessageReference"
         row.requestDateReference = date_time.date().isoformat()
