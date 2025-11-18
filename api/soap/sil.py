@@ -37,7 +37,6 @@ def post_sil_invia_dovuto(token, debt_position_mixed: DebtPositionMixed, ipa_cod
             'Content-Type': 'text/xml',
             'Authorization': f'Bearer {token}'
         },
-        verify=False,
         data=data,
         timeout=settings.default_timeout
     )
