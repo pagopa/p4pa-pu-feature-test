@@ -12,7 +12,7 @@ def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
 
 
-def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, tries=15, delay=3):
+def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, tries=20, delay=4):
     count = 0
 
     res = get_workflow_status(token=token, workflow_id=workflow_id)
@@ -31,7 +31,7 @@ def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, t
 
 
 def retry_get_process_file_status(token, organization_id: int, file_path_name: FilePathName,
-                                  file_name: str, status: FileStatus, tries=15, delay=3) -> dict:
+                                  file_name: str, status: FileStatus, tries=20, delay=4) -> dict:
     count = 0
 
     res = get_by_org_and_file_path_and_file_name(token=token, organization_id=organization_id,
@@ -52,7 +52,7 @@ def retry_get_process_file_status(token, organization_id: int, file_path_name: F
     return res.json()
 
 
-def retry_get_status_send_notification(token, notification_id, status, tries=15, delay=3):
+def retry_get_status_send_notification(token, notification_id, status, tries=20, delay=4):
     count = 0
 
     res = get_send_notification_status(token=token, notification_id=notification_id)

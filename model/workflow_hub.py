@@ -23,3 +23,4 @@ class WorkflowType(Enum):
     DEBT_POSITION_INGESTION_FLOW = "DebtPositionIngestionFlowWF"
     RECEIPT_INGESTION_FLOW = "ReceiptIngestionWF"
     CREATE_ASSESSMENT = "CreateAssessmentsWF"
+    CLASSIFY_ASSESSMENT = "ClassifyAssessmentsWF"

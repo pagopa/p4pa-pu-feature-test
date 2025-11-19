@@ -36,7 +36,6 @@ Feature: Classification process starting from an installment payment
     And the debt position is in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
 
-
   @gpd
   Scenario: As a positive result of payment, payment reporting and treasury a simple debt position, created on GPD, is reported
     Given a simple debt position created by organization interacting with GPD
@@ -53,7 +52,6 @@ Feature: Classification process starting from an installment payment
     Then the treasury is processed correctly
     And the debt position is in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
-
 
   @gpd
   Scenario: As a positive result of payment, payment reporting and treasury of an installment, a complex debt position, created on GPD, is partially paid
@@ -77,7 +75,6 @@ Feature: Classification process starting from an installment payment
     And the debt position is in status partially_paid
     And the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES
 
-
   @gpd
   Scenario: As a positive result of payment, payment reporting and treasury of all installments, a complex debt position, created on GPD, is reported
     Given a complex debt position with 2 payment options created by organization interacting with GPD
@@ -100,7 +97,6 @@ Feature: Classification process starting from an installment payment
     And the debt position is in status reported
     And the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES
 
-
   @classification_outcome9
   @gpd
   Scenario: As a positive result of payment reporting of a paid debt position without receipt, created with GPD, a receipt is created and the debt position is reported
@@ -111,7 +107,6 @@ Feature: Classification process starting from an installment payment
     And the installment of payment option 1 is in status reported
     And the debt position is in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
-
 
   @classification_outcome9
   @gpd

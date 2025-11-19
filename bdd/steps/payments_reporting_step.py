@@ -7,15 +7,15 @@ from datetime import datetime
 from zipfile import ZipFile
 
 from behave import when, then
-from config.configuration import settings
 
-from api.debt_positions import get_debt_position, get_installment
+from api.debt_positions import get_debt_position, get_installment, get_debt_position_by_iuv
 from api.fileshare import post_upload_file
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, generate_iuv
-from bdd.steps.utils.utility import retry_get_process_file_status, retrieve_org_id_by_ipa_code
+from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
-from model.debt_position import DebtPosition
+from config.configuration import settings
+from model.debt_position import DebtPosition, DebtPositionOrigin
 from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
@@ -24,8 +24,10 @@ psp_info = secrets.payment_info.psp
 
 @when("the organization uploads the payment reporting file about installment of payment option {po_index}")
 @when("the organization uploads the payment reporting file about installment {seq_num} of payment option {po_index}")
-@when("the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
-def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_code='0'):
+@when(
+    "the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
+@when("the organization uploads the payment reporting file about installment paid")
+def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0'):
     token = context.token
     org_info = context.org_info
 
@@ -37,15 +39,28 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
                                                            po_index=int(po_index), seq_num=int(seq_num))
     installment.iur = installment.iur if int(outcome_code) != 9 else uuid.uuid4().hex
 
-    with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
-        ingestion_flow_file = file.read()
-
     date = datetime.now().strftime('%Y-%m-%d')
     date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
 
     amount = int(installment.amount_cents) / 100
+
+    data_payments = ""
+    for transfer in installment.transfers:
+        with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
+            data_single_payment_file = file.read()
+            data_single_payment = data_single_payment_file.format(iuv=installment.iuv,
+                                                                  iur=installment.iur,
+                                                                  transfer_index=transfer.transfer_index,
+                                                                  amount_paid=int(transfer.amount_cents) / 100,
+                                                                  payment_outcome_code=int(outcome_code),
+                                                                  payment_date=date)
+
+            data_payments += data_single_payment
+
+    with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
+        ingestion_flow_file = file.read()
 
     ingestion_flow_file = ingestion_flow_file.format(iuf=iuf,
                                                      flow_date_time=date_time,
@@ -59,14 +74,9 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
                                                      receiver_organization_name=org_info.name,
                                                      total_payments=1,
                                                      total_amount=amount,
-                                                     iuv=installment.iuv,
-                                                     iur=installment.iur,
-                                                     transfer_index=1,
-                                                     amount_paid=amount,
-                                                     payment_outcome_code=int(outcome_code),
-                                                     payment_date=date)
+                                                     data_payments=data_payments)
 
-    file_version=settings.ingestion_flow_file.base_version
+    file_version = settings.ingestion_flow_file.base_version
     xml_file_path = f'{iuf}_{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
@@ -93,7 +103,8 @@ def step_upload_payment_reporting_file(context, po_index, seq_num='1', outcome_c
     os.remove(xml_file_path)
 
 
-@when("the organization uploads the payment reporting file about a missing debt position with outcome code {outcome_code}")
+@when(
+    "the organization uploads the payment reporting file about a missing debt position with outcome code {outcome_code}")
 def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9'):
     token = context.token
     org_info = context.org_info
@@ -109,6 +120,17 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     iuv = generate_iuv()
     iur = uuid.uuid4().hex
 
+    with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
+        data_single_payment_file = file.read()
+        data_single_payment = data_single_payment_file.format(iuv=iuv,
+                                                              iur=iur,
+                                                              transfer_index=1,
+                                                              amount_paid=amount,
+                                                              payment_outcome_code=int(outcome_code),
+                                                              payment_date=date)
+
+    data_payments = data_single_payment
+
     ingestion_flow_file = ingestion_flow_file.format(iuf=iuf,
                                                      flow_date_time=date_time,
                                                      regulation_unique_identifier=regulation_unique_identifier,
@@ -121,14 +143,9 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
                                                      receiver_organization_name=org_info.name,
                                                      total_payments=1,
                                                      total_amount=amount,
-                                                     iuv=iuv,
-                                                     iur=iur,
-                                                     transfer_index=1,
-                                                     amount_paid=amount,
-                                                     payment_outcome_code=int(outcome_code),
-                                                     payment_date=date)
+                                                     data_payments=data_payments)
 
-    file_version=settings.ingestion_flow_file.base_version
+    file_version = settings.ingestion_flow_file.base_version
     xml_file_path = f'{iuf}_{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
@@ -137,9 +154,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
-    context.org_info['id'] = retrieve_org_id_by_ipa_code(token, org_info.ipa_code)
-
-    res = post_upload_file(token=token, organization_id=org_info.id,
+    res = post_upload_file(token=token, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -171,16 +186,23 @@ def step_check_payment_reporting_processed(context):
     check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
                           entity_id=context.payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
 
-    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                          entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
-                          status=WorkflowStatus.COMPLETED)
+    for transfer in installment_paid.transfers:
+        check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                              entity_id=str(organization_id) + '-' + installment_paid.iuv + '-' +
+                                        installment_paid.iur + '-' + str(transfer.transfer_index),
+                              status=WorkflowStatus.COMPLETED)
 
     res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
-    assert res.json()['iuf'] is not None
-
-    context.iuf = (res.json()['iuf'])
+    if 'iuf' not in res.json(): #TODO fix task P4ADEV-4072: this code below will be removed
+        res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, organization_id=context.org_info.id,
+                                                 iuv=context.iuv_mixed,
+                                                 debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
+        context.iuf = res_dp_by_iuv.json()[0]['paymentOptions'][0]['installments'][0]['iuf']
+    else:
+        assert res.json()['iuf'] is not None
+        context.iuf = (res.json()['iuf'])
 
 
 @then("the payment reporting with outcome code 9 is processed correctly")
@@ -191,12 +213,11 @@ def step_check_payment_reporting_outcome9_processed(context):
     file_name = context.payment_reporting_file_name
 
     retry_get_process_file_status(token=context.token, organization_id=organization_id,
-                                                              file_path_name=file_path_name, file_name=file_name,
-                                                              status=FileStatus.COMPLETED)
+                                  file_path_name=file_path_name, file_name=file_name,
+                                  status=FileStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.PAYMENTS_REPORTING_INGESTION,
                           entity_id=context.payment_reporting_file_id, status=WorkflowStatus.COMPLETED)
-
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + context.iuv + '-' + context.iur + '-1',
