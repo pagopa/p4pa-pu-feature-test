@@ -128,10 +128,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
 
 @then("the mixed debt position and technical ones are in status {status}")
 def step_check_mixed_and_tech_dp_status(context, status):
-    if status == 'reported':
-        step_check_dp_status(context=context, status='paid') #TODO fix task P4ADEV-4072: this code will be removed
-    else:
-        step_check_dp_status(context=context, status=status)
+    step_check_dp_status(context=context, status=status)
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, organization_id=context.org_info.id,
                                              iuv=context.iuv_mixed, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
