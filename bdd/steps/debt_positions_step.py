@@ -9,7 +9,7 @@ from api.debt_positions import post_create_debt_position, get_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
 from bdd.steps.authentication_step import get_token_org
 from bdd.steps.classification_step import step_check_classification
-from bdd.steps.gpd_aca_step import check_aca_or_gpd_notice_presence
+from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_check_treasury_processed
@@ -157,7 +157,7 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
                                             expiration_days=3, citizen_identifier=citizen_identifier)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
+    step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction, status='valid')
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
@@ -175,7 +175,7 @@ def step_create_simple_debt_position(context, pagopa_interaction):
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, balance=True)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
+    step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction, status='valid')
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
@@ -191,7 +191,7 @@ def step_create_simple_debt_position(context, po_size, pagopa_interaction, dp_id
         step_create_po_and_inst_entities(context=context, po_index=i + 1, installments_size=installments_size, expiration_days=3)
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
-    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
+    step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction, status='valid')
 
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
