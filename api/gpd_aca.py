@@ -14,8 +14,7 @@ def get_debt_position_on_gpd(org_fiscal_code: str, iupd_pagopa: str):
     )
 
 
-def get_debt_position_on_aca(org_fiscal_code: str, iuv: str):
-    iupd_pagopa = 'ACA_' + org_fiscal_code + '_' + iuv
+def get_debt_position_on_aca(org_fiscal_code: str, iupd_pagopa: str):
     return requests.get(
         f'{settings.api.base_path.gpd}/organizations/{org_fiscal_code}/debtpositions/{iupd_pagopa}',
         headers={

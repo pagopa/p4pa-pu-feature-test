@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 import xmltodict
 from behave import given, when, then
 
-from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv, get_debt_position
+from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
 from api.soap.sil import post_sil_invia_dovuto
 from bdd.steps.authentication_step import get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
-from bdd.steps.gpd_aca_step import check_aca_or_gpd_notice_presence
+from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
 from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
 from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition, Status
@@ -123,7 +123,8 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
 
     _quick_validate_all_dp(context=context, res_dp_list=res_dp_list, org_id=org_id)
 
-    check_aca_or_gpd_notice_presence(context=context, pagopa_interaction=pagopa_interaction)
+    step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction,
+                                                     status='valid')
 
 
 @then("the mixed debt position and technical ones are in status {status}")
