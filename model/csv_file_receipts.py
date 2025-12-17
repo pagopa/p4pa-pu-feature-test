@@ -156,10 +156,10 @@ class CSVRow:
                                       'EN': 'receiptAttachmentTypeCode'},
         'mbdAttachment': {'versions': ['1_0', '1_1', '1_2', '1_3'], 'IT': 'blbRtDatiPagDatiSingPagAllegatoRicevutaTest',
                           'EN': 'mbdAttachment'},
-        'balance': {'versions': ['1_0', '1_1', '1_2', '1_3'], 'IT': 'bilancio', 'EN': 'balance'},
-        'fiscalCodePA': {'versions': ['1_0', '1_1', '1_2', '1_3'], 'IT': 'cod_fiscale_pa1', 'EN': 'fiscalCodePA'},
-        'companyName': {'versions': ['1_0', '1_1', '1_2', '1_3'], 'IT': 'de_nome_pa1', 'EN': 'companyName'},
-        'transferCategory': {'versions': ['1_0', '1_1', '1_2', '1_3'], 'IT': 'cod_tassonomico_dovuto_pa1',
+        'balance': {'versions': ['1_2', '1_3'], 'IT': 'bilancio', 'EN': 'balance'},
+        'fiscalCodePA': {'versions': ['1_3'], 'IT': 'cod_fiscale_pa1', 'EN': 'fiscalCodePA'},
+        'companyName': {'versions': ['1_3'], 'IT': 'de_nome_pa1', 'EN': 'companyName'},
+        'transferCategory': {'versions': ['1_3'], 'IT': 'cod_tassonomico_dovuto_pa1',
                              'EN': 'transferCategory'}
     }
 

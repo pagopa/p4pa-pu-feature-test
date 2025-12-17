@@ -111,7 +111,7 @@ class CSVRow:
                                 'EN': 'generateNotice'},
         'flagPuPagoPaPayment': {'versions': ["2_0", "2_0-eng"], 'IT': 'flagPagamentoPu',
                                 'EN': 'flagPuPagoPaPayment'},
-        'balance': {'versions': ["1_0", "1_1", "1_2", "1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'bilancio',
+        'balance': {'versions': ["1_2", "1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'bilancio',
                     'EN': 'balance'},
         'debtPositionTypeCode': {'versions': ["1_0", "1_1", "1_2", "1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'tipoDovuto',
                                  'EN': 'debtPositionTypeCode'},

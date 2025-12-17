@@ -195,14 +195,8 @@ def step_check_payment_reporting_processed(context):
     res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
-    if 'iuf' not in res.json(): #TODO fix task P4ADEV-4072: this code below will be removed
-        res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, organization_id=context.org_info.id,
-                                                 iuv=context.iuv_mixed,
-                                                 debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
-        context.iuf = res_dp_by_iuv.json()[0]['paymentOptions'][0]['installments'][0]['iuf']
-    else:
-        assert res.json()['iuf'] is not None
-        context.iuf = (res.json()['iuf'])
+    assert res.json()['iuf'] is not None
+    context.iuf = (res.json()['iuf'])
 
 
 @then("the payment reporting with outcome code 9 is processed correctly")
