@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 
 from config.configuration import secrets, settings
@@ -79,7 +81,8 @@ def get_assessment_registry(token, organization_id: int, debt_position_type_org_
         params={
             'organizationId': organization_id,
             'debtPositionTypeOrgCodes': [debt_position_type_org_code],
-            'status': 'ACTIVE'
+            'status': 'ACTIVE',
+            'operatingYear': str(datetime.now().year)
         },
         timeout=settings.default_timeout
     )
