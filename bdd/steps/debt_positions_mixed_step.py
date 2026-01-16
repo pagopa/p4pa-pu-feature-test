@@ -206,8 +206,7 @@ def _validate_dp_spontaneous_mixed_and_retrieve_iuv(res_dp, transfer_mixed, dp_m
         assert first_transfer['orgFiscalCode'] == org_info.fiscal_code
         assert first_transfer['orgName'] == org_info.name
         assert first_transfer['iban'] == org_info.iban
-        assert (first_transfer['category'] == str(transfer_mixed.legacy_payment_metadata).replace('9/', '')
-                .replace('/', ''))
+        assert first_transfer['category'] == str(transfer_mixed.legacy_payment_metadata)
         assert first_transfer['remittanceInformation'] == transfer_mixed.remittance_information
         assert first_transfer['amountCents'] == int(float(transfer_mixed.amount) * 100)
 
@@ -242,7 +241,6 @@ def _validate_dp_spontaneous_sil(res_dp, debt_position_type_org_id, dp_mixed, or
         assert res_transfer['orgFiscalCode'] == org_info.fiscal_code
         assert res_transfer['orgName'] == org_info.name
         assert res_transfer['iban'] == org_info.iban
-        assert (res_transfer['category'] == str(transfer_mixed.legacy_payment_metadata).replace('9/', '')
-                .replace('/', ''))
+        assert res_transfer['category'] == str(transfer_mixed.legacy_payment_metadata)
         assert res_transfer['remittanceInformation'] == transfer_mixed.remittance_information
         assert res_transfer['amountCents'] == int(float(transfer_mixed.amount) * 100)
