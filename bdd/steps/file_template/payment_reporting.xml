@@ -2,6 +2,7 @@
 <FlussoRiversamento xmlns="http://www.digitpa.gov.it/schemas/2011/Pagamenti/">
     <versioneOggetto>1.0</versioneOggetto>
     <identificativoFlusso>{iuf}</identificativoFlusso>
+    <revisioneFlusso>1</revisioneFlusso>
     <dataOraFlusso>{flow_date_time}</dataOraFlusso>
     <identificativoUnivocoRegolamento>{regulation_unique_identifier}</identificativoUnivocoRegolamento>
     <dataRegolamento>{regulation_date}</dataRegolamento>
