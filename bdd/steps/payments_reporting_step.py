@@ -44,7 +44,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
 
-    amount = int(installment.amount_cents) / 100
+    amount = "{:.2f}".format(int(installment.amount_cents) / 100)
 
     data_payments = ""
     for transfer in installment.transfers:
@@ -53,7 +53,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
             data_single_payment = data_single_payment_file.format(iuv=installment.iuv,
                                                                   iur=installment.iur,
                                                                   transfer_index=transfer.transfer_index,
-                                                                  amount_paid=int(transfer.amount_cents) / 100,
+                                                                  amount_paid="{:.2f}".format(int(transfer.amount_cents) / 100),
                                                                   payment_outcome_code=int(outcome_code),
                                                                   payment_date=date)
 
@@ -116,7 +116,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
-    amount = random.randint(1, 200)
+    amount = "{:.2f}".format(random.randint(1, 200))
     iuv = generate_iuv()
     iur = uuid.uuid4().hex
 
