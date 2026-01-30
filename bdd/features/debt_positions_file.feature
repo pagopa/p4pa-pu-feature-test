@@ -13,7 +13,7 @@ Feature: An organizations creates debt positions by importing file
       | B          | 1        | INSTALLMENTS       | 1               | I      |
       | B          | 1        | INSTALLMENTS       | 2               | I      |
       | C          | 1        | SINGLE_INSTALLMENT | 1               | I      |
-    And debt positions <identifiers> inserted into an ingestion flow file with version <csv_version>-eng
+    And debt positions <identifiers> inserted into an ingestion flow file with version <csv_version>
     When the organization uploads the debt positions file
     Then the ingestion file is processed correctly
     And the debt positions <identifiers> are created in status UNPAID
@@ -22,6 +22,7 @@ Feature: An organizations creates debt positions by importing file
 
     Examples:
       | identifiers | csv_version |
+      | A B C       | 2_0-eng     |
       | A B C       | 2_0         |
 
 
