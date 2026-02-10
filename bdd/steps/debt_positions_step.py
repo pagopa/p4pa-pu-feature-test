@@ -245,13 +245,13 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     iuv = iuv if iuv else context.iuv
 
     nav = '3' + iuv
-    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id,
-                                                                   installment_nav=nav)
+    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id, nav=nav)
 
     assert res.status_code == 200
-    assert len(res.json()['_embedded']['debtPositions']) == 1
+    print(res.json())
+    assert len(res.json()) == 1
 
-    res_debt_position = res.json()['_embedded']['debtPositions'][0]
+    res_debt_position = res.json()[0]
     assert res_debt_position['debtPositionId'] is not None
 
     res = get_debt_position(token, res_debt_position['debtPositionId'])

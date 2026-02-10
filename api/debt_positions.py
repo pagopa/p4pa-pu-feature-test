@@ -30,15 +30,11 @@ def get_debt_position(token, debt_position_id: int):
     )
 
 
-def get_debt_position_by_organization_id_and_installment_nav(token, organization_id: int, installment_nav: int):
+def get_debt_position_by_organization_id_and_installment_nav(token, organization_id: int, nav: int):
     return requests.get(
-        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/debt-positions/search/findByOrganizationIdAndInstallmentNav',
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-nav/{organization_id}/{nav}',
         headers={
             'Authorization': f'Bearer {token}'
-        },
-        params={
-            'organizationId': organization_id,
-            'nav': installment_nav
         },
         timeout=settings.default_timeout
     )
