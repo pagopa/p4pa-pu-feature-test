@@ -44,7 +44,7 @@ parameters:
       - classification
       - debt_positions_file
       - receipts_file
-      - send
+      #- send
       - classification_outcome9
       - assessments
       - sil_debt_positions
@@ -69,8 +69,8 @@ stages:
               current_tag: 'debt_positions_file'
             receipts_file:
               current_tag: 'receipts_file'
-            send:
-              current_tag: 'send'
+            #send:
+            #  current_tag: 'send'
             assessments:
               current_tag: 'assessments'
             sil_debt_positions:
