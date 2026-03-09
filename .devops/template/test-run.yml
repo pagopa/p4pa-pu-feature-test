@@ -42,11 +42,10 @@ steps:
           exit 1
         fi
   
-        if ! python3 -c "import yaml; yaml.safe_load(open('$(Pipeline.Workspace)/secrets/pu_feature_secrets.yaml'))" 2>/dev/null; then
+        if ! python3 -c "import yaml; yaml.safe_load(open('$(Pipeline.Workspace)/secrets/pu_feature_secrets.yaml'))"; then
           echo "##[error]Invalid YAML format in secrets file"
           echo "File size: $(wc -c < $(Pipeline.Workspace)/secrets/pu_feature_secrets.yaml) bytes"
           echo "Line count: $(wc -l < $(Pipeline.Workspace)/secrets/pu_feature_secrets.yaml)"
-          echo "Encoding: $(file $(Pipeline.Workspace)/secrets/pu_feature_secrets.yaml)"
           exit 1
         fi
 
