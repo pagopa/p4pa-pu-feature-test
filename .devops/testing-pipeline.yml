@@ -92,6 +92,9 @@ stages:
             parameters:
               env: ${{ parameters.env }}
               tag: '$(current_tag)'
+              azureServiceConnection: ${{ parameters.azureServiceConnection }}
+              keyVaultName: ${{ parameters.keyVaultName }}
+              secretName: ${{ parameters.secretName }}
       - job: "${{ upper(parameters.env) }}_Run_feature_tests_by_tag"
         condition: and(succeeded(), and( not(eq('${{ parameters.tag }}', '')), not(eq('${{ parameters.tag }}', 'all'))))
         steps:
@@ -100,3 +103,6 @@ stages:
             parameters:
               env: ${{ parameters.env }}
               tag: ${{ parameters.tag }}
+              azureServiceConnection: ${{ parameters.azureServiceConnection }}
+              keyVaultName: ${{ parameters.keyVaultName }}
+              secretName: ${{ parameters.secretName }}
