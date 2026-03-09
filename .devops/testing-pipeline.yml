@@ -50,12 +50,12 @@ variables:
   # Key Vault config
   ${{ if eq(parameters.env, 'dev') }}:
     azureServiceConnection: $(DEV_AZURE_SERVICE_CONNECTION_NAME)
-    keyVaultName: $(DEV_FEATURE_KV_NAME)
+    keyVaultName: $(DEV_KV_NAME)
     secretName: $(DEV_FEATURE_SECRET_NAME)
 
   ${{ if eq(parameters.env, 'uat') }}:
     azureServiceConnection: $(UAT_AZURE_SERVICE_CONNECTION_NAME)
-    keyVaultName: $(UAT_FEATURE_KV_NAME)
+    keyVaultName: $(UAT_KV_NAME)
     secretName: $(UAT_FEATURE_SECRET_NAME)
 
 pool:
