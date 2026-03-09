@@ -11,17 +11,6 @@ schedules:
         - main
     always: true
 
-variables:
-  # Python version: 3.x
-  pythonVersion: '3.x'
-  # Folder name of this sub-repository
-  working-dir: '.'
-  # Project root folder
-  projectRoot: $(System.DefaultWorkingDirectory)/$(working-dir)
-
-pool:
-  vmImage: 'ubuntu-22.04'
-
 parameters:
   - name: env
     displayName: Target Environment
@@ -50,6 +39,28 @@ parameters:
       - sil_debt_positions
       - debt_position_mixed
       - debt_position_mixed_classification
+
+variables:
+  # Python version: 3.x
+  pythonVersion: '3.x'
+  # Folder name of this sub-repository
+  working-dir: '.'
+  # Project root folder
+  projectRoot: $(System.DefaultWorkingDirectory)/$(working-dir)
+  # Key Vault config
+  ${{ if eq(parameters.env, 'dev') }}:
+    azureServiceConnection: $(DEV_AZURE_SERVICE_CONNECTION_NAME)
+    keyVaultName: $(DEV_FEATURE_KV_NAME)
+    secretName: $(DEV_FEATURE_SECRET_NAME)
+
+  ${{ if eq(parameters.env, 'uat') }}:
+    azureServiceConnection: $(UAT_AZURE_SERVICE_CONNECTION_NAME)
+    keyVaultName: $(UAT_FEATURE_KV_NAME)
+    secretName: $(UAT_FEATURE_SECRET_NAME)
+
+pool:
+  vmImage: 'ubuntu-22.04'
+
 stages:
   - stage: Feature_tests
     dependsOn: [ ]
