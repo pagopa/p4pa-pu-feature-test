@@ -9,7 +9,7 @@ venv/
 .idea/
 
 # Ignore dynaconf secret files
-config/pu_feature_secrets.yaml
+config/pu_feature_secrets.json
 
 # Test report
 /tests/reports/
