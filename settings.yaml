@@ -5,7 +5,7 @@ API_KEY_HEADER: "Ocp-Apim-Subscription-Key"
 SOAP_ACTION_HEADER: "SOAPAction"
 api:
   base_path:
-    gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v1"
+    gpd: "https://api.uat.platform.pagopa.it/gpd/debt-positions-service/v3"
     nodo_psp: "https://api.uat.platform.pagopa.it/nodo/node-for-psp/v1"
   ingress_path:
     bff: "/p4papubff/bff"
