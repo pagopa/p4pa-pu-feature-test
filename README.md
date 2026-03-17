@@ -26,7 +26,7 @@ pipenv run pip freeze > requirements.txt
 pipenv install -r requirements.txt
 ```
 
-> **_NOTE_**: Create `pu_feature_secrets.yaml` based on `pu_feature_secrets_template.yaml` and customize it.
+> **_NOTE_**: Create `pu_feature_secrets.json` based on `pu_feature_secrets_template.json` and customize it.
 
 ## Test execution
 Run tests:

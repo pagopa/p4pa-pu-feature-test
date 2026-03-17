@@ -1,8 +1,13 @@
 parameters:
   - name: env
     type: string
-
   - name: tag
+    type: string
+  - name: azureServiceConnection
+    type: string
+  - name: keyVaultName
+    type: string
+  - name: secretName
     type: string
 
 steps:
@@ -11,20 +16,53 @@ steps:
       pip3 --version
     displayName: "Display Python version"
   - script: |
-      python3 --version
       python3 -m pip install --user pipenv
       python3 -m pipenv sync
     displayName: "Install requirements"
-  - task: DownloadSecureFile@1
-    name: pu_feature_secrets
-    displayName: 'Download PU secrets'
+  - task: AzureCLI@2
+    name: fetchSecretFromKeyVault
+    displayName: 'Fetch PU secrets from Key Vault'
     inputs:
-      secureFile: 'pu_feature_secrets.yaml'
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo "🔐 Fetching secret from Key Vault..."
+
+        # Create directory for secrets file
+        mkdir -p $(Pipeline.Workspace)/secrets
+
+        # Fetch secret and save to file
+        az keyvault secret show \
+          --name "${{ parameters.secretName }}" \
+          --vault-name "${{ parameters.keyVaultName }}" \
+          --query 'value' -o json | jq -r '.' > $(Pipeline.Workspace)/secrets/pu_feature_secrets.json
+
+        if [ $? -ne 0 ]; then
+          echo "##[error]Failed to fetch secret from Key Vault"
+          exit 1
+        fi
+
+        if [ ! -s $(Pipeline.Workspace)/secrets/pu_feature_secrets.json ]; then
+          echo "##[error]Secret file is empty"
+          exit 1
+        fi
+
+        # Validate JSON format
+        if ! jq empty $(Pipeline.Workspace)/secrets/pu_feature_secrets.json 2>/dev/null; then
+          echo "##[error]Invalid JSON format in secrets file"
+          echo "File size: $(wc -c < $(Pipeline.Workspace)/secrets/pu_feature_secrets.json) bytes"
+          echo "Line count: $(wc -l < $(Pipeline.Workspace)/secrets/pu_feature_secrets.json)"
+          exit 1
+        fi
+
+        echo "##vso[task.setvariable variable=secretFilePath]$(Pipeline.Workspace)/secrets/pu_feature_secrets.json"
+        echo "✅ Secrets fetched and validated successfully"
   - script: |
       python3 -m pipenv run behave --junit --junit-directory "tests/reports/behave" --tags "${{ parameters.tag }}"
     displayName: 'Run tests with Behave'
     env:
-      PU_SECRETS_PATH: $(pu_feature_secrets.secureFilePath)
+      PU_SECRETS_PATH: $(secretFilePath)
       PU_TARGET_ENV: ${{ parameters.env }}
     continueOnError: true
   - task: PublishTestResults@2
