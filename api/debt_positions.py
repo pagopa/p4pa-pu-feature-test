@@ -74,6 +74,16 @@ def get_receipt(token, organization_id, receipt_origin, iuv, iur):
         timeout=settings.default_timeout
     )
 
+def get_receipt_by_id(token, receipt_id: int):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/receipts/{receipt_id}',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
 def get_debt_position_by_iud(token, organization_id: int, iud: str, debt_position_origin: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iud/{organization_id}/{iud}',

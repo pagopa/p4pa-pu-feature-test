@@ -17,6 +17,7 @@ from bdd.steps.treasury_step import step_upload_treasury_file
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
     create_payment_option
+from bdd.steps.utils.utility import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.classification import AssessmentRegistry
@@ -94,10 +95,7 @@ def step_create_dp(context):
 def step_check_dp_status(context, status, debt_position_id=None):
     debt_position_id = debt_position_id if debt_position_id is not None else context.debt_position.debt_position_id
 
-    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
-
-    assert res.status_code == 200
-    assert res.json()['status'] == status.upper()
+    retry_get_dp_status(token=context.token, debt_position_id=debt_position_id, status=status.upper())
 
 
 @then("the payment option {po_index} is in status {status}")

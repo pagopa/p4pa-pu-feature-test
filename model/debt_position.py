@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
-from dataclasses_json import dataclass_json, LetterCase, Undefined
-
+from dataclasses_json import dataclass_json, LetterCase
 from config.configuration import secrets
 
 
@@ -58,6 +57,7 @@ class Transfer:
     category: str
     iban: str = None
     org_name: str = None
+    flag_owner: bool = False
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -125,9 +125,9 @@ class DebtPositionOrigin(Enum):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class DebtPosition:
-    description: str
     organization_id: int
     debt_position_type_org_id: int
+    description: str = None
     debt_position_id: int = None
     iupd_org: str = None
     status: Status = Status.UNPAID.value

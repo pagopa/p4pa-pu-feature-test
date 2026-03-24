@@ -41,3 +41,4 @@ def check_workflow_does_not_exist(context, workflow_type: WorkflowType, entity_i
 
     res = get_workflow_status(token=context.token, workflow_id=workflow_id)
     assert res.status_code == 404
+    assert res.json()['category'] == 'WORKFLOW_NOT_FOUND'

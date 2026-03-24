@@ -8,7 +8,7 @@
           <password xmlns="">{psp_password}</password>
           <qrCode xmlns="">
             <fiscalCode>{org_fiscal_code}</fiscalCode>
-            <noticeNumber>3{iuv}</noticeNumber>
+            <noticeNumber>{nav}</noticeNumber>
           </qrCode>
         </verifyPaymentNoticeReq>
       </Body>
