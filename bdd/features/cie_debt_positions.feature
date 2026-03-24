@@ -1,4 +1,4 @@
-@debt_positions_cie
+@cie_debt_positions
 Feature: Management of debt positions related to the issuance of the CIE
 
   Scenario Outline: A citizen creates a spontaneous debt position related to CIE issued by <organization_name>
