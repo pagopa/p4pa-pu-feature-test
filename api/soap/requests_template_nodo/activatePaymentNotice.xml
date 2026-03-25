@@ -8,7 +8,7 @@
             <password>{psp_password}</password>
 			<qrCode>
                 <fiscalCode>{org_fiscal_code}</fiscalCode>
-                <noticeNumber>3{iuv}</noticeNumber>
+                <noticeNumber>{nav}</noticeNumber>
             </qrCode>
 			<expirationTime>300000</expirationTime>
 			<amount>{amount}</amount>

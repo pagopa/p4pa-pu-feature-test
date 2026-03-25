@@ -1,5 +1,6 @@
 import time
 
+from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification_status
@@ -77,3 +78,21 @@ def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
     assert organization_id is not None
 
     return organization_id
+
+
+def retry_get_dp_status(token, debt_position_id: int, status: str, tries=10, delay=2):
+    count = 0
+
+    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+
+    success = (res.status_code == 200 and res.json()['status'] == status)
+
+    while not success:
+        count += 1
+        if count == tries:
+            break
+        time.sleep(delay)
+        res = get_debt_position(token=token, debt_position_id=debt_position_id)
+        success = (res.status_code == 200 and res.json()['status'] == status)
+
+    assert success

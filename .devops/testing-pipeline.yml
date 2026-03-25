@@ -36,9 +36,8 @@ parameters:
       #- send
       - classification_outcome9
       - assessments
+      - cie_debt_positions
       - sil_debt_positions
-      - debt_position_mixed
-      - debt_position_mixed_classification
 
 variables:
   # Python version: 3.x
@@ -86,6 +85,8 @@ stages:
               current_tag: 'assessments'
             sil_debt_positions:
               current_tag: 'sil_debt_positions'
+            cie_debt_positions:
+              current_tag: 'cie_debt_positions'
         steps:
           - checkout: self
           - template: template\test-run.yml
