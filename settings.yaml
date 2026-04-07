@@ -20,8 +20,13 @@ api:
     sil_payments: "/pu/sil/soap/payments/PagamentiTelematiciDovutiPagati"
     arpu: "/arc/v1/public"
     cie: "/pu/cie/public"
+    payments_node: "/p4papagopapayments/soap/node/wsdl/paForNode"
+    organization: "/p4paorganization"
+    spontaneous_form_crud: "/p4padebtpositions/crud/spontaneous-forms/search"
 debt_position_type_org_code:
   feature_test: "FEATURE_TEST"
   feature_test_2: "FEATURE_TEST_2"
 ingestion_flow_file:
   base_version: "1_0"
+demand_payment_notice:
+  service_id: "99"

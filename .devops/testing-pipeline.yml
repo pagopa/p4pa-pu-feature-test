@@ -38,6 +38,7 @@ parameters:
       - assessments
       - cie_debt_positions
       - sil_debt_positions
+      - cie_demand_payment_notice
 
 variables:
   # Python version: 3.x
@@ -87,6 +88,8 @@ stages:
               current_tag: 'sil_debt_positions'
             cie_debt_positions:
               current_tag: 'cie_debt_positions'
+            cie_demand_payment_notice:
+              current_tag: 'cie_demand_payment_notice'
         steps:
           - checkout: self
           - template: template\test-run.yml

@@ -2,16 +2,21 @@ from datetime import datetime, timedelta
 
 from behave import given, when, then
 
-from api.arpu import get_broker_info, get_orgs_info_for_spontaneous, get_debt_position_type_orgs_for_spontaneous, \
-    post_create_spontaneous
+from api.arpu import get_broker_info, get_orgs_info_for_spontaneous, \
+  get_debt_position_type_orgs_for_spontaneous, \
+  post_create_spontaneous
 from api.auth import post_auth_token
 from api.cie import get_cie_organizations, get_cie_amount
 from api.debt_positions import get_debt_position, get_receipt_by_id
-from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
+from api.spontaneous_form import \
+  get_spontaneous_form_by_organization_id_and_debt_position_type_org_code
+from bdd.steps.payments_step import step_installment_payment, \
+  step_check_receipt_processed
 from config.configuration import secrets
 from model.debt_position import DebtPosition, DebtPositionOrigin
-from model.debt_position_cie import get_debt_position_type_org_code_by_reason, DebtPositionSpontaneous, FieldValues, \
-    PaymentOptionSpontaneous, InstallmentSpontaneous, DebtorSpontaneous
+from model.debt_position_cie import get_debt_position_type_org_code_by_reason, \
+  DebtPositionSpontaneous, FieldValues, \
+  PaymentOptionSpontaneous, InstallmentSpontaneous, DebtorSpontaneous
 
 
 def get_admin_ipzs_token() -> str:
@@ -41,6 +46,7 @@ def step_get_broker_and_org_delegate_for_cie(context, external_id: str):
     assert res_orgs.json()[0]['orgName'] == "Ministero dell'Interno"
 
     context.broker_id = broker_id
+    context.broker_fiscal_code = res_broker.json()['brokerFiscalCode']
     context.organization_id = res_orgs.json()[0]['organizationId']
     context.organization_fiscal_code = res_orgs.json()[0]['orgFiscalCode']
 
@@ -101,6 +107,12 @@ def step_create_dp_cie_entity(context, organization_name: str, reason_of_request
                                                   ],
                                                   field_values=FieldValues(org_fiscal_code=cie_org_fiscal_code))
 
+    context.total_amount_cents = spontaneous_request.payment_options[0].total_amount_cents
+    context.cie_org_fiscal_code = cie_org_fiscal_code
+    context.remittance_information = remittance_information
+    context.debt_position_type_org_code = dp_type_org_code
+    context.debt_position_origin = DebtPositionOrigin.SPONTANEOUS.value
+    context.debt_position_type_org_id = dp_type_org_id
     context.spontaneous_request = spontaneous_request
 
 
@@ -124,28 +136,39 @@ def step_citizen_create_cie_spontaneous(context):
 
 @then("it has only one installment with 2 transfers: the owner beneficiary is {organization_name} and the other is MEF")
 def step_check_cie_spontaneous_data(context, organization_name: str):
-    spontaneous_request = context.spontaneous_request
     debt_position_created = context.debt_position
 
-    assert debt_position_created.debt_position_origin.value == DebtPositionOrigin.SPONTANEOUS.value
-    assert debt_position_created.organization_id == spontaneous_request.organization_id
+    assert debt_position_created.debt_position_origin.value == context.debt_position_origin
+    assert debt_position_created.organization_id == context.organization_id
     assert debt_position_created.iupd_org.startswith(context.organization_fiscal_code)
-    assert debt_position_created.debt_position_type_org_id == spontaneous_request.debt_position_type_org_id
+    assert debt_position_created.debt_position_type_org_id == context.debt_position_type_org_id
 
     assert len(debt_position_created.payment_options) == 1
-    assert debt_position_created.payment_options[0].total_amount_cents == spontaneous_request.payment_options[0].total_amount_cents
+    assert debt_position_created.payment_options[0].total_amount_cents == context.total_amount_cents
 
     assert len(debt_position_created.payment_options[0].installments) == 1
     installment_created = debt_position_created.payment_options[0].installments[0]
-    installment_request = spontaneous_request.payment_options[0].installments[0]
     assert installment_created.iupd_pagopa.startswith(context.organization_fiscal_code)
-    assert installment_created.amount_cents == installment_request.amount_cents
+    assert installment_created.amount_cents == context.total_amount_cents
     assert installment_created.due_date == (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d")
-    assert installment_created.remittance_information == installment_request.remittance_information
+
+    remittance_information = getattr(context, 'remittance_information', None)
+    if remittance_information is None:
+      res_spontaneous_form = get_spontaneous_form_by_organization_id_and_debt_position_type_org_code(context.token, context.organization_id, context.debt_position_type_org_code)
+      assert res_spontaneous_form.status_code == 200
+      assert res_spontaneous_form.json()['structure'] is not None
+      assert len(res_spontaneous_form.json()['structure']['fields'])>0
+      spontaneous_form_fields = res_spontaneous_form.json()['structure']['fields']
+      sys_type_default_field = next(
+        field['defaultValue'] for field in spontaneous_form_fields if field['name'] == 'sys_type'
+      )
+      assert sys_type_default_field is not None
+      remittance_information = sys_type_default_field
+    assert installment_created.remittance_information == remittance_information
 
     assert len(installment_created.transfers) == 2
     transfer_owner = next(transfer for transfer in installment_created.transfers if transfer.flag_owner == True)
-    assert transfer_owner.org_fiscal_code == spontaneous_request.field_values.org_fiscal_code
+    assert transfer_owner.org_fiscal_code == context.cie_org_fiscal_code
     assert transfer_owner.org_name == organization_name
 
     other_transfer = installment_created.transfers[0] if installment_created.transfers[1] == transfer_owner else installment_created.transfers[1]
@@ -160,13 +183,12 @@ def step_citizen_pays_spontaneous(context):
     installment_to_paid = debt_position.payment_options[0].installments[0]
 
     step_installment_payment(context=context, installment_to_paid=installment_to_paid,
-                             org_fiscal_code_owner=context.spontaneous_request.field_values.org_fiscal_code)
+                             org_fiscal_code_owner=context.cie_org_fiscal_code)
 
 
 @then("the receipt is processed correctly for {organization_name} with classification disabled")
 def step_check_receipt_processed_without_classification(context, organization_name: str):
-    spontaneous = context.spontaneous_request
-    org_id = spontaneous.organization_id
+    org_id = context.organization_id
     step_check_receipt_processed(context=context, classification=False, organization_id=org_id)
 
     installment_paid = context.installment_paid
@@ -176,6 +198,6 @@ def step_check_receipt_processed_without_classification(context, organization_na
     assert res.status_code == 200
     assert res.json() is not None
     receipt = res.json()
-    assert receipt['orgFiscalCode'] == spontaneous.field_values.org_fiscal_code
+    assert receipt['orgFiscalCode'] == context.cie_org_fiscal_code
     assert receipt['companyName'] == organization_name
-    assert receipt['paymentAmountCents'] == spontaneous.payment_options[0].total_amount_cents
+    assert receipt['paymentAmountCents'] == context.total_amount_cents
