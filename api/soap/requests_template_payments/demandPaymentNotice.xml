@@ -1,0 +1,13 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:paf="http://pagopa-api.pagopa.gov.it/pa/paForNode.xsd">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <paf:paDemandPaymentNoticeRequest>
+      <idPA>{delegate_org_fiscal_code}</idPA>
+      <idBrokerPA>{broker_id}</idBrokerPA>
+      <idStation>{station_id}</idStation>
+      <idServizio>{service_id}</idServizio>
+      <idSoggettoServizio>{service_subject_id}</idSoggettoServizio>
+      <datiSpecificiServizioRequest>{request_data}</datiSpecificiServizioRequest>
+    </paf:paDemandPaymentNoticeRequest>
+  </soapenv:Body>
+</soapenv:Envelope>

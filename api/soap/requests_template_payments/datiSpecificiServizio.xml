@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pagamentoCIE xmlns="http://PuntoAccessoPSP.spcoop.gov.it/pagamentoCIE">
+  <codiceCausale>{debt_position_type_org_code}</codiceCausale>
+  <codiceFiscaleComune>{cie_org_fiscal_code}</codiceFiscaleComune>
+  <intestatario>
+    <codiceFiscaleIntestatario>{debtor_fiscal_code}</codiceFiscaleIntestatario>
+    <denominazioneIntestatario>{debtor_full_name}</denominazioneIntestatario>
+  </intestatario>
+</pagamentoCIE>
