@@ -5,7 +5,7 @@ charset-normalizer==3.3.2
 dataclasses-json==0.6.7
 distlib==0.3.8
 dominate==2.9.0
-dynaconf==3.2.4
+dynaconf==3.2.13
 filelock==3.20.3
 idna==3.10
 Markdown==3.8.1
