@@ -9,7 +9,7 @@ dynaconf==3.2.4
 filelock==3.20.3
 idna==3.10
 Markdown==3.8.1
-marshmallow==3.23.2
+marshmallow==3.26.2
 mypy_extensions==1.1.0
 numpy==2.1.1
 packaging==25.0
