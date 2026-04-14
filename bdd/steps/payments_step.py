@@ -47,7 +47,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
                                                    amount=amount, due_date=due_date)
     assert res_activate_payment.status_code == 200
     res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
-                                                          tag_name='activatePaymentNoticeRes')
+                                                          tag_name='activatePaymentNoticeV2Response')
 
     payment_token = res_activate_payment_body["paymentToken"]
 
@@ -56,7 +56,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
                                             citizen_name=citizen_info.name,
                                             citizen_email=citizen_info.email)
     assert res_send_outcome.status_code == 200
-    check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeRes')
+    check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeV2Response')
 
     if dp_identifier is None:
         context.installment_paid = installment
