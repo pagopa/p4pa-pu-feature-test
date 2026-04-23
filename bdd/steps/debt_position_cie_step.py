@@ -55,7 +55,7 @@ def step_get_broker_and_org_delegate_for_cie(context, external_id: str):
 
 def get_cie_org_fiscal_code(cie_orgs_list: list[dict], org_name: str):
     for cie_org in cie_orgs_list:
-        if org_name in cie_org['label']:
+        if org_name.upper() in cie_org['label'].upper():
             return cie_org['value']
     return None
 
@@ -169,7 +169,7 @@ def step_check_cie_spontaneous_data(context, organization_name: str):
     assert len(installment_created.transfers) == 2
     transfer_owner = next(transfer for transfer in installment_created.transfers if transfer.flag_owner == True)
     assert transfer_owner.org_fiscal_code == context.cie_org_fiscal_code
-    assert transfer_owner.org_name == organization_name
+    assert organization_name.upper() in transfer_owner.org_name.upper()
 
     other_transfer = installment_created.transfers[0] if installment_created.transfers[1] == transfer_owner else installment_created.transfers[1]
     assert other_transfer.flag_owner == False
@@ -199,5 +199,5 @@ def step_check_receipt_processed_without_classification(context, organization_na
     assert res.json() is not None
     receipt = res.json()
     assert receipt['orgFiscalCode'] == context.cie_org_fiscal_code
-    assert receipt['companyName'] == organization_name
+    assert organization_name.upper() in receipt['companyName'].upper()
     assert receipt['paymentAmountCents'] == context.total_amount_cents

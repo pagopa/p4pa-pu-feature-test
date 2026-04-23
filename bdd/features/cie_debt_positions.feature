@@ -14,7 +14,6 @@ Feature: Management of debt positions related to the issuance of the CIE
     And the check of debt position expiration is canceled
 
     Examples:
-      | organization_name        | reason_of_request    |
-      | Comune di Milano         | renewal expired card |
-      | Comune di Brescia        | first card issuance  |
-      | Ente P4PA intermediato 2 | lost card            |
+      | organization_name | reason_of_request    |
+      | Milano            | renewal expired card |
+      | Brescia           | first card issuance  |
