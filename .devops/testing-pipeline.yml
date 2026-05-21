@@ -36,9 +36,7 @@ parameters:
       #- send
       - classification_outcome9
       - assessments
-      - cie_debt_positions
       - sil_debt_positions
-      - cie_demand_payment_notice
 
 variables:
   # Python version: 3.x
