@@ -84,10 +84,6 @@ stages:
               current_tag: 'assessments'
             sil_debt_positions:
               current_tag: 'sil_debt_positions'
-            cie_debt_positions:
-              current_tag: 'cie_debt_positions'
-            cie_demand_payment_notice:
-              current_tag: 'cie_demand_payment_notice'
         steps:
           - checkout: self
           - template: template\test-run.yml
