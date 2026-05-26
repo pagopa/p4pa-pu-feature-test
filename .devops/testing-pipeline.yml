@@ -4,8 +4,15 @@ trigger:
       - main
 
 schedules:
-  - cron: "0 6 * * 1-5" # Runs from monday to friday
-    displayName: Scheduled run
+  - cron: "0 6 * * 1-5" # Runs from Monday to Friday at 06:00
+    displayName: Scheduled Morning run
+    branches:
+      include:
+        - main
+    always: true
+
+  - cron: "30 19 * * 1-5" # Runs from Monday to Friday at 19:30
+    displayName: Scheduled Evening run
     branches:
       include:
         - main
