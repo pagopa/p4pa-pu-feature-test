@@ -6,7 +6,7 @@ from config.configuration import secrets
 from config.configuration import settings
 
 
-def post_create_debt_position(token, traceparent, debt_position: str, massive: bool = False):
+def post_create_debt_position(token, traceparent: str, debt_position: str, massive: bool = False):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions',
         headers={
@@ -21,7 +21,7 @@ def post_create_debt_position(token, traceparent, debt_position: str, massive: b
     )
 
 
-def get_debt_position(token, traceparent, debt_position_id: int):
+def get_debt_position(token, traceparent: str, debt_position_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/{debt_position_id}',
         headers={
@@ -32,7 +32,7 @@ def get_debt_position(token, traceparent, debt_position_id: int):
     )
 
 
-def get_debt_position_by_organization_id_and_installment_nav(token, traceparent, organization_id: int, nav: int):
+def get_debt_position_by_organization_id_and_installment_nav(token, traceparent: str, organization_id: int, nav: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-nav/{organization_id}/{nav}',
         headers={
@@ -43,7 +43,7 @@ def get_debt_position_by_organization_id_and_installment_nav(token, traceparent,
     )
 
 
-def get_installment(token, traceparent, installment_id: int):
+def get_installment(token, traceparent: str, installment_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/installments/{installment_id}',
         headers={
@@ -54,7 +54,7 @@ def get_installment(token, traceparent, installment_id: int):
     )
 
 
-def get_debt_positions_by_ingestion_flow_id(token, traceparent, ingestion_flow_id: int):
+def get_debt_positions_by_ingestion_flow_id(token, traceparent: str, ingestion_flow_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/ingestion-flow-file/{ingestion_flow_id}',
         headers={
@@ -65,7 +65,7 @@ def get_debt_positions_by_ingestion_flow_id(token, traceparent, ingestion_flow_i
     )
 
 
-def get_receipt(token, traceparent, organization_id, receipt_origin, iuv, iur):
+def get_receipt(token, traceparent: str, organization_id, receipt_origin, iuv, iur):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.bff}/organization/{organization_id}/receipts',
         headers={
@@ -80,7 +80,7 @@ def get_receipt(token, traceparent, organization_id, receipt_origin, iuv, iur):
         timeout=settings.default_timeout
     )
 
-def get_receipt_by_id(token, traceparent, receipt_id: int):
+def get_receipt_by_id(token, traceparent: str, receipt_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/receipts/{receipt_id}',
         headers={
@@ -91,7 +91,7 @@ def get_receipt_by_id(token, traceparent, receipt_id: int):
     )
 
 
-def get_debt_position_by_iud(token, traceparent, organization_id: int, iud: str, debt_position_origin: str = None):
+def get_debt_position_by_iud(token, traceparent: str, organization_id: int, iud: str, debt_position_origin: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iud/{organization_id}/{iud}',
         headers={
@@ -105,7 +105,7 @@ def get_debt_position_by_iud(token, traceparent, organization_id: int, iud: str,
     )
 
 
-def get_debt_position_by_iuv(token, traceparent, organization_id: int, iuv: str, debt_position_origin: str = None):
+def get_debt_position_by_iuv(token, traceparent: str, organization_id: int, iuv: str, debt_position_origin: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iuv/{organization_id}/{iuv}',
         headers={

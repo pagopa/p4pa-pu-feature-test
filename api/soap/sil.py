@@ -6,7 +6,7 @@ from config.configuration import settings, secrets
 from model.debt_position_mixed import DebtPositionMixed
 
 
-def post_sil_invia_dovuto(token, debt_position_mixed: DebtPositionMixed, ipa_code: str):
+def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
     dati_versamento = ""
     for transfer_mixed in debt_position_mixed.transfers:
         with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
@@ -35,7 +35,8 @@ def post_sil_invia_dovuto(token, debt_position_mixed: DebtPositionMixed, ipa_cod
         url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
         headers={
             'Content-Type': 'text/xml',
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         data=data,
         timeout=settings.default_timeout

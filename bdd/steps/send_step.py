@@ -16,7 +16,7 @@ from model.send_notification import SendStatus, SendPdfDigest, NotificationReque
 from model.workflow_hub import WorkflowStatus, WorkflowType
 
 
-def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
+def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str) -> str:
     client = None
     match pagopa_interaction:
         case PagoPaInteractionModel.ACA.value:
@@ -24,7 +24,7 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel) -> str:
         case PagoPaInteractionModel.GPD.value:
             client = secrets.send_info.gpd
 
-    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret)
+    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret, traceparent=traceparent)
 
     assert res.status_code == 200
     assert res.json()['access_token'] is not None
@@ -77,10 +77,10 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     notification_request = NotificationRequest(organization_id=org_info.id, pago_pa_int_mode=pagopa_int_mode,
                                                sender_denomination=org_info.name, recipients=recipients)
 
-    send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction)
+    send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction, traceparent=context.traceparent)
     context.send_token = send_token
 
-    res = post_create_send_notification(token=send_token, payload=notification_request.to_json())
+    res = post_create_send_notification(token=send_token, traceparent=context.traceparent, payload=notification_request.to_json())
 
     assert res.status_code == 200
     assert res.json()['sendNotificationId'] is not None
@@ -99,7 +99,8 @@ def step_upload_notification_file(context):
 
     notification_file_path = './bdd/steps/file_template/notification.pdf'
 
-    res_notification_file = post_upload_send_file(token=send_token, org_id=org_id, notification_id=notification_id,
+    res_notification_file = post_upload_send_file(token=send_token, traceparent=context.traceparent,
+                                                  org_id=org_id, notification_id=notification_id,
                                                   file_path=notification_file_path,
                                                   digest=SendPdfDigest.notification_pdf_digest)
 
@@ -108,7 +109,8 @@ def step_upload_notification_file(context):
     workflow_id = ''
     for i in range(1, len(installments_notified) + 1):
         payment_file_path = f'./bdd/steps/file_template/payment_{i}.pdf'
-        res_payment_file = post_upload_send_file(token=send_token, org_id=org_id, notification_id=notification_id,
+        res_payment_file = post_upload_send_file(token=send_token, traceparent=context.traceparent,
+                                                 org_id=org_id, notification_id=notification_id,
                                                  file_path=payment_file_path, digest=SendPdfDigest.payment_pdf_digest)
 
         if i == len(installments_notified):
@@ -119,13 +121,14 @@ def step_upload_notification_file(context):
             assert res_payment_file.status_code == 202
 
     time.sleep(5)
-    res_status = get_send_notification_status(token=send_token, notification_id=notification_id)
+    res_status = get_send_notification_status(token=send_token, traceparent=context.traceparent,
+                                              notification_id=notification_id)
 
     assert res_status.status_code == 200
     assert res_status.json()['status'] == SendStatus.COMPLETE.value
     assert res_status.json().get('iun') is None
 
-    retry_get_workflow_status(token=context.token, workflow_id=workflow_id,
+    retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id,
                               status=WorkflowStatus.COMPLETED,
                               tries=18, delay=30)
 
@@ -136,7 +139,8 @@ def step_check_iun(context, status):
     notification_id = context.send_notification_id
     installments_notified = context.installments_notified
 
-    res_status = get_send_notification_status(token=context.send_token, notification_id=notification_id)
+    res_status = get_send_notification_status(token=context.send_token, traceparent=context.traceparent,
+                                              notification_id=notification_id)
 
     assert res_status.status_code == 200
     assert res_status.json()['status'] == status.upper()
@@ -159,8 +163,8 @@ def step_check_notification_fee(context):
     notification_fee = {}
     i = 1
     for installment in installments_notified:
-        res_fee = get_send_notification_fee(token=context.send_token, nav=installment.nav,
-                                            org_id=context.org_info.id)
+        res_fee = get_send_notification_fee(token=context.send_token, traceparent=context.traceparent,
+                                            nav=installment.nav, org_id=context.org_info.id)
 
         assert res_fee.status_code == 200
         assert res_fee.json()['totalPrice'] is not None

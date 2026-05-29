@@ -13,11 +13,10 @@ from secrets import token_hex
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
 
-
-def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, tries=20, delay=4):
+def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status: WorkflowStatus, tries=20, delay=4):
     count = 0
 
-    res = get_workflow_status(token=token, workflow_id=workflow_id)
+    res = get_workflow_status(token=token, traceparent=traceparent, workflow_id=workflow_id)
 
     success = (res.status_code == 200 and res.json()['status'] == status.value)
 
@@ -26,17 +25,16 @@ def retry_get_workflow_status(token, workflow_id: str, status: WorkflowStatus, t
         if count == tries:
             break
         time.sleep(delay)
-        res = get_workflow_status(token=token, workflow_id=workflow_id)
+        res = get_workflow_status(token=token, traceparent=traceparent, workflow_id=workflow_id)
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
     assert success
 
-
-def retry_get_process_file_status(token, organization_id: int, file_path_name: FilePathName,
+def retry_get_process_file_status(token, traceparent: str, organization_id: int, file_path_name: FilePathName,
                                   file_name: str, status: FileStatus, tries=20, delay=4) -> dict:
     count = 0
 
-    res = get_by_org_and_file_path_and_file_name(token=token, organization_id=organization_id,
+    res = get_by_org_and_file_path_and_file_name(token=token, traceparent=traceparent, organization_id=organization_id,
                                                  file_path_name=file_path_name.value, file_name=file_name)
 
     success = (res.status_code == 200 and res.json()['status'] == status.value)
@@ -46,18 +44,17 @@ def retry_get_process_file_status(token, organization_id: int, file_path_name: F
         if count == tries:
             break
         time.sleep(delay)
-        res = get_by_org_and_file_path_and_file_name(token=token, organization_id=organization_id,
+        res =  get_by_org_and_file_path_and_file_name(token=token, traceparent=traceparent, organization_id=organization_id,
                                                      file_path_name=file_path_name.value, file_name=file_name)
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
     assert success
     return res.json()
 
-
-def retry_get_status_send_notification(token, notification_id, status, tries=20, delay=4):
+def retry_get_status_send_notification(token, traceparent: str, notification_id, status, tries=20, delay=4):
     count = 0
 
-    res = get_send_notification_status(token=token, notification_id=notification_id)
+    res = get_send_notification_status(token=token, traceparent=traceparent, notification_id=notification_id)
 
     success = (res.status_code == 200 and status in res.json())
 
@@ -66,13 +63,13 @@ def retry_get_status_send_notification(token, notification_id, status, tries=20,
         if count == tries:
             break
         time.sleep(delay)
-        res = get_send_notification_status(token=token, notification_id=notification_id)
+        res = get_send_notification_status(token=token, traceparent=traceparent, notification_id=notification_id)
         success = (res.status_code == 200 and status in res.json())
 
     assert success
 
-def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
-    res_org = get_org_by_ipa_code(token=token, ipa_code=ipa_code)
+def retrieve_org_id_by_ipa_code(token: str, traceparent: str, ipa_code: str) -> int:
+    res_org = get_org_by_ipa_code(token=token, traceparent=traceparent, ipa_code=ipa_code)
 
     assert res_org.status_code == 200
     organization_id = res_org.json()['organizationId']
@@ -80,8 +77,7 @@ def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
 
     return organization_id
 
-
-def retry_get_dp_status(token, traceparent, debt_position_id: int, status: str, tries=10, delay=2):
+def retry_get_dp_status(token, traceparent: str, debt_position_id: int, status: str, tries=10, delay=2):
     count = 0
 
     res = get_debt_position(token=token, traceparent=traceparent, debt_position_id=debt_position_id)

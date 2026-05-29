@@ -5,21 +5,23 @@ import requests
 from config.configuration import secrets, settings
 
 
-def post_create_send_notification(token, payload: str):
+def post_create_send_notification(token, traceparent: str, payload: str):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/notification',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         json=json.loads(payload),
         timeout=settings.default_timeout
     )
 
-def post_upload_send_file(token, org_id: int, notification_id: str, file_path: str, digest: str):
+def post_upload_send_file(token, traceparent: str, org_id: int, notification_id: str, file_path: str, digest: str):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.fileshare}/organization/{org_id}/send-files/{notification_id}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         data={
             'digest': digest
@@ -30,21 +32,22 @@ def post_upload_send_file(token, org_id: int, notification_id: str, file_path: s
         timeout=settings.default_timeout
     )
 
-def get_send_notification_status(token, notification_id: str):
+def get_send_notification_status(token, traceparent: str, notification_id: str):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/send/{notification_id}/status',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
-
-def get_send_notification_fee(token, nav: str, org_id: int):
+def get_send_notification_fee(token, traceparent: str, nav: str, org_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/send/notificationprice',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         params={
             'organizationId': org_id,

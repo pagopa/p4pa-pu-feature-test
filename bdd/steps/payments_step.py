@@ -87,7 +87,7 @@ def step_check_receipt_processed(context, dp_identifier=None, classification=Tru
     file_path_name = FilePathName.RECEIPT_PAGOPA
     file_name = 'RT_' + installment_paid.nav + '.xml'
 
-    retry_get_process_file_status(token=context.token, organization_id=org_id,
+    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=org_id,
                                   file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
 
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)

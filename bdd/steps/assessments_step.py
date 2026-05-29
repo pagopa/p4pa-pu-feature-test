@@ -24,7 +24,7 @@ def step_check_assessment(context, status: str):
     assert res.json()["sourceFlowName"] is not None
     installment_paid.source_flow_name = res.json()["sourceFlowName"]
 
-    res = get_assessment(token=context.token, organization_id=org_info.id,
+    res = get_assessment(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
                          debt_position_type_org_code=context.debt_position_type_org_code,
                          assessment_name=installment_paid.source_flow_name)
 
@@ -39,13 +39,14 @@ def step_check_assessment(context, status: str):
 
 
 def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
-    res = get_assessment_details_by_iud_and_iuv(token=context.token, organization_id=context.org_info.id,
+    res = get_assessment_details_by_iud_and_iuv(token=context.token, traceparent=context.traceparent,
+                                                organization_id=context.org_info.id,
                                                 iud=installment_paid.iud, iuv=installment_paid.iuv)
     assert res.status_code == 200
     assert len(res.json()["_embedded"]["assessmentsDetails"]) == 0
 
     date_now = datetime.now().strftime('%Y-%m-%d')
-    res = get_classification(token=context.token, organization_id=context.org_info.id,
+    res = get_classification(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                              last_classification_date_from=date_now, last_classification_date_to=date_now,
                              iuv=installment_paid.iuv, iud=installment_paid.iud)
 
@@ -65,7 +66,8 @@ def step_check_assessment_detail_classification_label(context, label):
                               entity_id=str(context.org_info.id) + '-' + installment_paid.iuv + '-' + transfer_mixed.iud,
                               status=WorkflowStatus.COMPLETED)
 
-        res = get_assessment_details_by_iud_and_iuv(token=context.token, organization_id=context.org_info.id,
+        res = get_assessment_details_by_iud_and_iuv(token=context.token, traceparent=context.traceparent,
+                                                    organization_id=context.org_info.id,
                                                     iud=transfer_mixed.iud, iuv=installment_paid.iuv)
 
         assert res.status_code == 200
@@ -88,7 +90,8 @@ def step_check_assessment_detail(context):
                           entity_id=str(context.org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iud,
                           status=WorkflowStatus.COMPLETED)
 
-    res = get_assessment_details(context.token, assessment_id=assessment_id, iud=installment_paid.iud,
+    res = get_assessment_details(token=context.token, traceparent=context.traceparent,
+                                 assessment_id=assessment_id, iud=installment_paid.iud,
                                  iuv=installment_paid.iuv)
 
     assert res.status_code == 200
@@ -108,7 +111,8 @@ def retrieve_balance(context, installment_paid) -> Balance:
     if installment_paid.balance is not None:
         balance_xml = installment_paid.balance
     else:
-        res_dp_type_org = get_debt_position_type_org_by_code(token=context.token, organization_id=context.org_info.id,
+        res_dp_type_org = get_debt_position_type_org_by_code(token=context.token, traceparent=context.traceparent,
+                                                             organization_id=context.org_info.id,
                                                              code=context.debt_position_type_org_code)
         assert res_dp_type_org.status_code == 200
         balance_xml = res_dp_type_org.json().get('balance')
@@ -121,7 +125,8 @@ def retrieve_balance(context, installment_paid) -> Balance:
 
         balance = Balance(amount=amount_cents, assessment_registry=assessment_registry)
     else:
-        res = get_assessment_registry(token=context.token, organization_id=context.org_info.id,
+        res = get_assessment_registry(token=context.token, traceparent=context.traceparent,
+                                      organization_id=context.org_info.id,
                                       debt_position_type_org_code=context.debt_position_type_org_code)
         assert res.status_code == 200
         assert len(res.json()["_embedded"]["assessmentsRegistries"]) == 1

@@ -29,7 +29,8 @@ from model.workflow_hub import WorkflowStatus
 
 @given("a new debt position of type {debt_position_type_org_code}")
 def step_create_dp_entity(context, debt_position_type_org_code = settings.debt_position_type_org_code.feature_test):
-    debt_position = create_debt_position(token=context.token, organization_id=context.org_info.id,
+    debt_position = create_debt_position(token=context.token, traceparent=context.traceparent,
+                                         organization_id=context.org_info.id,
                                          debt_position_type_org_code=debt_position_type_org_code)
 
     context.debt_position = debt_position
