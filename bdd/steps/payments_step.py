@@ -37,6 +37,10 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
         po_index=int(po_index), seq_num=int(seq_num)))
 
     res_verify_payment = verify_payment_notice(psp=psp, org_fiscal_code="pippo", nav=installment.nav)
+
+    if res_verify_payment.status_code != 200:
+        print(f"Error in verify_payment_notice call to node: {res_verify_payment.content}")
+
     assert res_verify_payment.status_code == 200
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
@@ -45,6 +49,9 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
     res_activate_payment = activate_payment_notice(psp=psp, org_fiscal_code="pippo", nav=installment.nav,
                                                    amount=amount, due_date=due_date)
+    if res_activate_payment.status_code != 200:
+        print(f"Error in activate_payment_notice call to node: {res_activate_payment.content}")
+
     assert res_activate_payment.status_code == 200
     res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
                                                           tag_name='activatePaymentNoticeV2Response')
@@ -55,6 +62,10 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
                                             citizen_fiscal_code=citizen_info.fiscal_code,
                                             citizen_name=citizen_info.name,
                                             citizen_email=citizen_info.email)
+
+    if res_send_outcome.status_code != 200:
+        print(f"Error in send_payment_outcome call to node: {res_send_outcome.content}")
+
     assert res_send_outcome.status_code == 200
     check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeV2Response')
 

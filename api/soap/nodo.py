@@ -22,20 +22,16 @@ def verify_payment_notice(psp: PSP,
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, nav=nav)
 
-    try:
-        return requests.post(
-            url=f'{settings.api.base_path.nodo_psp}',
-            headers={
-                'Content-Type': 'text/xml',
-                settings.SOAP_ACTION_HEADER: 'verifyPaymentNotice'
-            },
-            verify=False,
-            data=data,
-            timeout=settings.default_timeout
-        )
-    except Exception as err:
-        print(f"Error \"{type(err)=}\" in verify_payment_notice call to node: {err=}")
-        raise
+    return requests.post(
+        url=f'{settings.api.base_path.nodo_psp}',
+        headers={
+            'Content-Type': 'text/xml',
+            settings.SOAP_ACTION_HEADER: 'verifyPaymentNotice'
+        },
+        verify=False,
+        data=data,
+        timeout=settings.default_timeout
+    )
 
 
 def activate_payment_notice(psp: PSP,
@@ -48,20 +44,16 @@ def activate_payment_notice(psp: PSP,
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, nav=nav,
                        amount=amount, due_date=due_date)
-    try:
-        return requests.post(
-            url=f'{settings.api.base_path.nodo_psp}',
-            headers={
-                'Content-Type': 'text/xml',
-                settings.SOAP_ACTION_HEADER: 'activatePaymentNoticeV2'
-            },
-            verify=False,
-            data=data,
-            timeout=settings.default_timeout
-        )
-    except Exception as err:
-        print(f"Error \"{type(err)=}\" in activate_payment_notice call to node: {err=}")
-        raise
+    return requests.post(
+        url=f'{settings.api.base_path.nodo_psp}',
+        headers={
+            'Content-Type': 'text/xml',
+            settings.SOAP_ACTION_HEADER: 'activatePaymentNoticeV2'
+        },
+        verify=False,
+        data=data,
+        timeout=settings.default_timeout
+    )
 
 def send_payment_outcome(psp: PSP,
                          payment_token: str,
@@ -74,17 +66,13 @@ def send_payment_outcome(psp: PSP,
                        psp_password=psp.password, payment_token=payment_token, citizen_fiscal_code=citizen_fiscal_code,
                        citizen_name=citizen_name, citizen_email=citizen_email,
                        current_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-    try:
-        return requests.post(
-            url=f'{settings.api.base_path.nodo_psp}',
-            headers={
-                'Content-Type': 'text/xml',
-                settings.SOAP_ACTION_HEADER: 'sendPaymentOutcomeV2'
-            },
-            verify=False,
-            data=data,
-            timeout=settings.default_timeout
-        )
-    except Exception as err:
-        print(f"Error \"{type(err)=}\" in send_payment_outcome call to node: {err=}")
-        raise
+    return requests.post(
+        url=f'{settings.api.base_path.nodo_psp}',
+        headers={
+            'Content-Type': 'text/xml',
+            settings.SOAP_ACTION_HEADER: 'sendPaymentOutcomeV2'
+        },
+        verify=False,
+        data=data,
+        timeout=settings.default_timeout
+    )
