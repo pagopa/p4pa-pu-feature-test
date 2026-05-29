@@ -55,6 +55,7 @@ def activate_payment_notice(psp: PSP,
         timeout=settings.default_timeout
     )
 
+
 def send_payment_outcome(psp: PSP,
                          payment_token: str,
                          citizen_fiscal_code: str,

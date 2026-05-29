@@ -1,5 +1,4 @@
 # -- FILE: features/environment.py
-import steps.utils.utility
 from bdd.steps.utils import utility
 
 def before_scenario(context, scenario):
