@@ -8,6 +8,7 @@ from api.workflow_hub import get_workflow_status
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
+from secrets import token_hex
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
@@ -80,10 +81,10 @@ def retrieve_org_id_by_ipa_code(token: str, ipa_code: str) -> int:
     return organization_id
 
 
-def retry_get_dp_status(token, debt_position_id: int, status: str, tries=10, delay=2):
+def retry_get_dp_status(token, traceparent, debt_position_id: int, status: str, tries=10, delay=2):
     count = 0
 
-    res = get_debt_position(token=token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=token, traceparent=traceparent, debt_position_id=debt_position_id)
 
     success = (res.status_code == 200 and res.json()['status'] == status)
 
@@ -92,7 +93,14 @@ def retry_get_dp_status(token, debt_position_id: int, status: str, tries=10, del
         if count == tries:
             break
         time.sleep(delay)
-        res = get_debt_position(token=token, debt_position_id=debt_position_id)
+        res = get_debt_position(token=token, traceparent=traceparent, debt_position_id=debt_position_id)
         success = (res.status_code == 200 and res.json()['status'] == status)
 
     assert success
+
+def generate_traceparent():
+    trace_id = token_hex(16)  # 16 bytes (32 caratteri esadecimali)
+    span_id = token_hex(8)    # 8 bytes (16 caratteri esadecimali)
+    flags = "01"              # "01" significa traccia campionata (sampled)
+
+    return f"00-{trace_id}-{span_id}-{flags}"

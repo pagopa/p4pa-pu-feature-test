@@ -78,7 +78,7 @@ def step_check_debt_positions_mixed_created(context, status):
         transfers_index = row['transfers index'].split()
         if dp_origin == DebtPositionOrigin.SPONTANEOUS_MIXED.value:
             transfer_mixed = transfer_index_map[int(transfers_index[0])]
-            res_dp_by_iud = get_debt_position_by_iud(token=token, organization_id=org_info.id,
+            res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                                                      iud=transfer_mixed.iud,
                                                      debt_position_origin=dp_origin)
             assert res_dp_by_iud.status_code == 200
@@ -89,7 +89,7 @@ def step_check_debt_positions_mixed_created(context, status):
                                                                   row, transfers_index, transfer_index_map, status)
 
         elif dp_origin == DebtPositionOrigin.SPONTANEOUS_SIL.value:
-            res_dp_by_iuv = get_debt_position_by_iuv(token=token, organization_id=org_info.id,
+            res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                                                      iuv=iuv,
                                                      debt_position_origin=dp_origin)
             assert res_dp_by_iuv.status_code == 200
@@ -117,7 +117,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
     iuv = _extract_iuv_from_dp_found_by_iud(token=token, org_id=org_id,
                                             iud=context.debt_position_mixed.transfers[0].iud)
 
-    res_dp_by_iuv = get_debt_position_by_iuv(token=token, organization_id=org_id, iuv=iuv)
+    res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_id, iuv=iuv)
     assert res_dp_by_iuv.status_code == 200
     res_dp_list = res_dp_by_iuv.json()
 
@@ -131,7 +131,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
 def step_check_mixed_and_tech_dp_status(context, status):
     step_check_dp_status(context=context, status=status)
 
-    res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, organization_id=context.org_info.id,
+    res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                                              iuv=context.iuv_mixed, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
     assert res_dp_by_iuv.status_code == 200
     for dp_sp_mixed in res_dp_by_iuv.json():
@@ -168,7 +168,7 @@ def _quick_validate_all_dp(context, res_dp_list, org_id):
 
 
 def _extract_iuv_from_dp_found_by_iud(token, org_id, iud):
-    res_dp_by_iud = get_debt_position_by_iud(token=token, organization_id=org_id, iud=iud,
+    res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent, organization_id=org_id, iud=iud,
                                              debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
     assert res_dp_by_iud.status_code == 200
     assert res_dp_by_iud.json() != []

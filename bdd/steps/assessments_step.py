@@ -18,7 +18,7 @@ def step_check_assessment(context, status: str):
     org_info = context.org_info
     installment_paid = context.installment_paid
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()["sourceFlowName"] is not None

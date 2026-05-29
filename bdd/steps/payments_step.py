@@ -79,7 +79,7 @@ def step_check_receipt_processed(context, dp_identifier=None, classification=Tru
     retry_get_process_file_status(token=context.token, organization_id=org_id,
                                   file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
@@ -121,7 +121,7 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
     receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
 
-    res = get_receipt(token=context.token, organization_id=org_info.id,
+    res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
                       receipt_origin=receipt_origin, iuv=installment_paid.iuv,
                       iur=installment_paid.iur)
 
@@ -131,7 +131,7 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
     assert receipt['receiptOrigin'] == receipt_origin
     assert installment_paid.iuv == receipt['iuv']
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()[

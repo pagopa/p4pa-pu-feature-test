@@ -159,7 +159,7 @@ def search_dp_by_inst_iud(list_debt_positions: list[dict], inst_iud: str) -> dic
 def step_check_debt_positions_created(context, identifiers, status):
     identifiers = identifiers.split()
 
-    res = get_debt_positions_by_ingestion_flow_id(token=context.token, ingestion_flow_id=context.debt_positions_file_id)
+    res = get_debt_positions_by_ingestion_flow_id(token=context.token, traceparent=context.traceparent, ingestion_flow_id=context.debt_positions_file_id)
 
     assert res.status_code == 200
 

@@ -6,11 +6,12 @@ from config.configuration import secrets
 from config.configuration import settings
 
 
-def post_create_debt_position(token, debt_position: str, massive: bool = False):
+def post_create_debt_position(token, traceparent, debt_position: str, massive: bool = False):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         json=json.loads(debt_position),
         params={
@@ -20,51 +21,56 @@ def post_create_debt_position(token, debt_position: str, massive: bool = False):
     )
 
 
-def get_debt_position(token, debt_position_id: int):
+def get_debt_position(token, traceparent, debt_position_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/{debt_position_id}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
 
-def get_debt_position_by_organization_id_and_installment_nav(token, organization_id: int, nav: int):
+def get_debt_position_by_organization_id_and_installment_nav(token, traceparent, organization_id: int, nav: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-nav/{organization_id}/{nav}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
 
-def get_installment(token, installment_id: int):
+def get_installment(token, traceparent, installment_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/installments/{installment_id}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
 
-def get_debt_positions_by_ingestion_flow_id(token, ingestion_flow_id: int):
+def get_debt_positions_by_ingestion_flow_id(token, traceparent, ingestion_flow_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/ingestion-flow-file/{ingestion_flow_id}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
 
-def get_receipt(token, organization_id, receipt_origin, iuv, iur):
+def get_receipt(token, traceparent, organization_id, receipt_origin, iuv, iur):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.bff}/organization/{organization_id}/receipts',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         params={
             'receiptOrigin': receipt_origin,
@@ -74,21 +80,23 @@ def get_receipt(token, organization_id, receipt_origin, iuv, iur):
         timeout=settings.default_timeout
     )
 
-def get_receipt_by_id(token, receipt_id: int):
+def get_receipt_by_id(token, traceparent, receipt_id: int):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/receipts/{receipt_id}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         timeout=settings.default_timeout
     )
 
 
-def get_debt_position_by_iud(token, organization_id: int, iud: str, debt_position_origin: str = None):
+def get_debt_position_by_iud(token, traceparent, organization_id: int, iud: str, debt_position_origin: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iud/{organization_id}/{iud}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         params={
             'debtPositionOrigin': debt_position_origin
@@ -97,11 +105,12 @@ def get_debt_position_by_iud(token, organization_id: int, iud: str, debt_positio
     )
 
 
-def get_debt_position_by_iuv(token, organization_id: int, iuv: str, debt_position_origin: str = None):
+def get_debt_position_by_iuv(token, traceparent, organization_id: int, iuv: str, debt_position_origin: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iuv/{organization_id}/{iuv}',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         params={
             'debtPositionOrigin': debt_position_origin

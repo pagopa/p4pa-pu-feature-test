@@ -143,7 +143,7 @@ def step_check_iun(context, status):
     assert res_status.json()['iun'] is not None
 
     for installment in installments_notified:
-        res = get_installment(token=context.token, installment_id=installment.installment_id)
+        res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
 
         assert res.status_code == 200
         assert res.json()['iun'] == res_status.json()['iun']
@@ -184,7 +184,7 @@ def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
             previous_amount = installment.amount_cents
             expected_amount = previous_amount + context.notification_fee
 
-            res = get_installment(token=context.token, installment_id=installment.installment_id)
+            res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
 
             assert res.status_code == 200
             assert res.json()['notificationFeeCents'] == context.notification_fee
