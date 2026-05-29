@@ -36,14 +36,14 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
         debt_position=debt_position,
         po_index=int(po_index), seq_num=int(seq_num)))
 
-    res_verify_payment = verify_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav)
+    res_verify_payment = verify_payment_notice(psp=psp, org_fiscal_code="pippo", nav=installment.nav)
     assert res_verify_payment.status_code == 200
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
     amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
     due_date = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["dueDate"]
 
-    res_activate_payment = activate_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav,
+    res_activate_payment = activate_payment_notice(psp=psp, org_fiscal_code="pippo", nav=installment.nav,
                                                    amount=amount, due_date=due_date)
     assert res_activate_payment.status_code == 200
     res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
@@ -51,7 +51,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
     payment_token = res_activate_payment_body["paymentToken"]
 
-    res_send_outcome = send_payment_outcome(psp=psp, payment_token=payment_token,
+    res_send_outcome = send_payment_outcome(psp=psp, payment_token="pippo",
                                             citizen_fiscal_code=citizen_info.fiscal_code,
                                             citizen_name=citizen_info.name,
                                             citizen_email=citizen_info.email)
