@@ -114,7 +114,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
     step_create_dp_mixed_entity(context=context)
     step_sil_invia_dovuto_mixed(context=context)
 
-    iuv = _extract_iuv_from_dp_found_by_iud(token=token, org_id=org_id,
+    iuv = _extract_iuv_from_dp_found_by_iud(token=token, traceparent=context.traceparent, org_id=org_id,
                                             iud=context.debt_position_mixed.transfers[0].iud)
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_id, iuv=iuv)
@@ -167,8 +167,8 @@ def _quick_validate_all_dp(context, res_dp_list, org_id):
             step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
 
-def _extract_iuv_from_dp_found_by_iud(token, org_id, iud):
-    res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent, organization_id=org_id, iud=iud,
+def _extract_iuv_from_dp_found_by_iud(token, traceparent, org_id, iud):
+    res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=traceparent, organization_id=org_id, iud=iud,
                                              debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
     assert res_dp_by_iud.status_code == 200
     assert res_dp_by_iud.json() != []
