@@ -95,8 +95,8 @@ def retry_get_dp_status(token, traceparent: str, debt_position_id: int, status: 
     assert success
 
 def generate_traceparent():
-    trace_id = token_hex(16)  # 16 bytes (32 caratteri esadecimali)
-    span_id = token_hex(8)    # 8 bytes (16 caratteri esadecimali)
-    flags = "01"              # "01" significa traccia campionata (sampled)
+    trace_id = token_hex(16)
+    span_id = token_hex(8)
+    flags = "01" # means sampled trace
 
     return f"00-{trace_id}-{span_id}-{flags}"
