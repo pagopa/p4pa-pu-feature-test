@@ -37,6 +37,10 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
         po_index=int(po_index), seq_num=int(seq_num)))
 
     res_verify_payment = verify_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav)
+
+    if res_verify_payment.status_code != 200:
+        print(f"Error in verify_payment_notice call to node: {res_verify_payment.content}")
+
     assert res_verify_payment.status_code == 200
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
@@ -45,6 +49,9 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
     res_activate_payment = activate_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav,
                                                    amount=amount, due_date=due_date)
+    if res_activate_payment.status_code != 200:
+        print(f"Error in activate_payment_notice call to node: {res_activate_payment.content}")
+
     assert res_activate_payment.status_code == 200
     res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
                                                           tag_name='activatePaymentNoticeV2Response')
@@ -55,6 +62,10 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
                                             citizen_fiscal_code=citizen_info.fiscal_code,
                                             citizen_name=citizen_info.name,
                                             citizen_email=citizen_info.email)
+
+    if res_send_outcome.status_code != 200:
+        print(f"Error in send_payment_outcome call to node: {res_send_outcome.content}")
+
     assert res_send_outcome.status_code == 200
     check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeV2Response')
 
@@ -76,10 +87,10 @@ def step_check_receipt_processed(context, dp_identifier=None, classification=Tru
     file_path_name = FilePathName.RECEIPT_PAGOPA
     file_name = 'RT_' + installment_paid.nav + '.xml'
 
-    retry_get_process_file_status(token=context.token, organization_id=org_id,
+    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=org_id,
                                   file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
@@ -121,7 +132,7 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
     receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
 
-    res = get_receipt(token=context.token, organization_id=org_info.id,
+    res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
                       receipt_origin=receipt_origin, iuv=installment_paid.iuv,
                       iur=installment_paid.iur)
 
@@ -131,7 +142,7 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
     assert receipt['receiptOrigin'] == receipt_origin
     assert installment_paid.iuv == receipt['iuv']
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()[

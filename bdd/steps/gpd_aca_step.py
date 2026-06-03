@@ -8,6 +8,10 @@ def check_presence_debt_position_in_aca_or_gpd(org_fiscal_code, debt_position, s
     for po in debt_position.payment_options:
         for installment in po.installments:
             res = get_debt_position_on_aca_or_gpd(org_fiscal_code=org_fiscal_code, iupd_pagopa=installment.iupd_pagopa)
+
+            if res.status_code != 200:
+                print(f"Error in get_debt_position_on_aca_or_gpd call to gpd/aca: {res.content}")
+
             assert res.status_code == 200
             assert res.json()['status'] == status.upper()
 

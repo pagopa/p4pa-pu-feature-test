@@ -30,7 +30,8 @@ def step_configure_debt_positions_for_file(context, identifiers):
         action = row['action']
 
         if debt_position_identifier not in debt_positions:
-            debt_position = create_debt_position(token=context.token, organization_id=context.org_info.id,
+            debt_position = create_debt_position(token=context.token, traceparent=context.traceparent,
+                                                 organization_id=context.org_info.id,
                                                  debt_position_type_org_code=settings.debt_position_type_org_code.feature_test,
                                                  iupd_org=f'Feature-test-{uuid.uuid4().hex[:10]}',
                                                  identifier=debt_position_identifier)
@@ -115,7 +116,7 @@ def step_uploads_debt_positions_file(context):
 
     zip_file_path = context.debt_positions_file_name
 
-    res = post_upload_file(token=token, organization_id=org_info.id,
+    res = post_upload_file(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.DP_INSTALLMENTS,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -136,7 +137,7 @@ def step_debt_position_file_processed(context):
     file_name = context.debt_positions_file_name
     status = FileStatus.COMPLETED if org_has_generate_notice_api_key == True else FileStatus.WARNING
 
-    res = retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    res = retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=organization_id,
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=status, delay=10)
 
@@ -159,7 +160,7 @@ def search_dp_by_inst_iud(list_debt_positions: list[dict], inst_iud: str) -> dic
 def step_check_debt_positions_created(context, identifiers, status):
     identifiers = identifiers.split()
 
-    res = get_debt_positions_by_ingestion_flow_id(token=context.token, ingestion_flow_id=context.debt_positions_file_id)
+    res = get_debt_positions_by_ingestion_flow_id(token=context.token, traceparent=context.traceparent, ingestion_flow_id=context.debt_positions_file_id)
 
     assert res.status_code == 200
 

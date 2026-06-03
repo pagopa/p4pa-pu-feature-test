@@ -8,14 +8,14 @@ from zipfile import ZipFile
 
 from behave import when, then
 
-from api.debt_positions import get_debt_position, get_installment, get_debt_position_by_iuv
+from api.debt_positions import get_debt_position, get_installment
 from api.fileshare import post_upload_file
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, generate_iuv
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from config.configuration import settings
-from model.debt_position import DebtPosition, DebtPositionOrigin
+from model.debt_position import DebtPosition
 from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
@@ -31,7 +31,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
     token = context.token
     org_info = context.org_info
 
-    res = get_debt_position(token=token, debt_position_id=context.debt_position.debt_position_id)
+    res = get_debt_position(token=token, traceparent=context.traceparent, debt_position_id=context.debt_position.debt_position_id)
 
     debt_position = DebtPosition.from_dict(res.json())
 
@@ -85,7 +85,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
-    res = post_upload_file(token=token, organization_id=org_info.id,
+    res = post_upload_file(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -154,7 +154,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
-    res = post_upload_file(token=token, organization_id=context.org_info.id,
+    res = post_upload_file(token=token, traceparent=context.traceparent, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -179,7 +179,7 @@ def step_check_payment_reporting_processed(context):
     file_path_name = FilePathName.PAYMENTS_REPORTING
     file_name = context.payment_reporting_file_name
 
-    retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=organization_id,
                                   file_path_name=file_path_name, file_name=file_name,
                                   status=FileStatus.COMPLETED)
 
@@ -192,7 +192,7 @@ def step_check_payment_reporting_processed(context):
                                         installment_paid.iur + '-' + str(transfer.transfer_index),
                               status=WorkflowStatus.COMPLETED)
 
-    res = get_installment(token=context.token, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iuf'] is not None
@@ -206,7 +206,7 @@ def step_check_payment_reporting_outcome9_processed(context):
     file_path_name = FilePathName.PAYMENTS_REPORTING
     file_name = context.payment_reporting_file_name
 
-    retry_get_process_file_status(token=context.token, organization_id=organization_id,
+    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=organization_id,
                                   file_path_name=file_path_name, file_name=file_name,
                                   status=FileStatus.COMPLETED)
 

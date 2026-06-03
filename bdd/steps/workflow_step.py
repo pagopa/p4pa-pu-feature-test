@@ -10,7 +10,7 @@ def check_workflow_status(context, workflow_type: WorkflowType, entity_id: int, 
     workflow_id = get_workflow_id(workflow_type=workflow_type,
                                   entity_id=entity_id)
 
-    retry_get_workflow_status(token=context.token, workflow_id=workflow_id, status=status)
+    retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id, status=status)
 
 
 @then("the check of debt position expiration is {status}")
@@ -39,6 +39,6 @@ def check_workflow_does_not_exist(context, workflow_type: WorkflowType, entity_i
     workflow_id = get_workflow_id(workflow_type=workflow_type,
                                   entity_id=entity_id)
 
-    res = get_workflow_status(token=context.token, workflow_id=workflow_id)
+    res = get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id)
     assert res.status_code == 404
     assert res.json()['category'] == 'WORKFLOW_NOT_FOUND'

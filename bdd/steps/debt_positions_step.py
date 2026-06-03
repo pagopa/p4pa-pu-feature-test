@@ -29,7 +29,8 @@ from model.workflow_hub import WorkflowStatus
 
 @given("a new debt position of type {debt_position_type_org_code}")
 def step_create_dp_entity(context, debt_position_type_org_code = settings.debt_position_type_org_code.feature_test):
-    debt_position = create_debt_position(token=context.token, organization_id=context.org_info.id,
+    debt_position = create_debt_position(token=context.token, traceparent=context.traceparent,
+                                         organization_id=context.org_info.id,
                                          debt_position_type_org_code=debt_position_type_org_code)
 
     context.debt_position = debt_position
@@ -77,7 +78,7 @@ def step_create_po_and_inst_entities(context, po_index, installments_size, expir
 def step_create_dp(context):
     debt_position = context.debt_position
 
-    res = post_create_debt_position(token=context.token, debt_position=debt_position.to_json())
+    res = post_create_debt_position(token=context.token, traceparent=context.traceparent, debt_position=debt_position.to_json())
 
     assert res.status_code == 200
 
@@ -95,14 +96,14 @@ def step_create_dp(context):
 def step_check_dp_status(context, status, debt_position_id=None):
     debt_position_id = debt_position_id if debt_position_id is not None else context.debt_position.debt_position_id
 
-    retry_get_dp_status(token=context.token, debt_position_id=debt_position_id, status=status.upper())
+    retry_get_dp_status(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id, status=status.upper())
 
 
 @then("the payment option {po_index} is in status {status}")
 def step_check_po_status(context, po_index, status):
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, traceparent=context.traceparent,  debt_position_id=debt_position_id)
     assert res.status_code == 200
 
     debt_position = DebtPosition.from_dict(res.json())
@@ -117,7 +118,7 @@ def step_check_po_status(context, po_index, status):
 def step_check_installment_status(context, po_index, status, installment_seq_num='1'):
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id)
 
     assert res.status_code == 200
 
@@ -133,7 +134,7 @@ def step_check_installment_status(context, po_index, status, installment_seq_num
 def step_check_outcome9_installment_status(context, status):
     debt_position_id = context.debt_position.debt_position_id
 
-    res = get_debt_position(token=context.token, debt_position_id=debt_position_id)
+    res = get_debt_position(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id)
 
     assert res.status_code == 200
 
@@ -243,7 +244,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     iuv = iuv if iuv else context.iuv
 
     nav = '3' + iuv
-    res = get_debt_position_by_organization_id_and_installment_nav(token, organization_id=org_info.id, nav=nav)
+    res = get_debt_position_by_organization_id_and_installment_nav(token, context.traceparent, organization_id=org_info.id, nav=nav)
 
     assert res.status_code == 200
     print(res.json())
@@ -252,7 +253,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     res_debt_position = res.json()[0]
     assert res_debt_position['debtPositionId'] is not None
 
-    res = get_debt_position(token, res_debt_position['debtPositionId'])
+    res = get_debt_position(token, context.traceparent, res_debt_position['debtPositionId'])
 
     assert res.status_code == 200
 
@@ -275,7 +276,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
 def step_check_installment_fields(context, installment_fields: str):
     installment = context.debt_position.payment_options[0].installments[0]
 
-    res = get_installment(token=context.token, installment_id=installment.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
 
     assert res.status_code == 200
     for field in installment_fields.split(', '):

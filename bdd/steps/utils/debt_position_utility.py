@@ -75,9 +75,10 @@ def create_payment_option(po_index: int, payment_option_type: PaymentOptionType)
     return payment_option
 
 
-def create_debt_position(token, organization_id: int, debt_position_type_org_code: str,
+def create_debt_position(token, traceparent: str, organization_id: int, debt_position_type_org_code: str,
                          iupd_org: str = None, identifier: str = '') -> DebtPosition:
-    debt_position_type_org = retrieve_dp_type_org_by_code(token=token, organization_id=organization_id,
+    debt_position_type_org = retrieve_dp_type_org_by_code(token=token, traceparent=traceparent,
+                                                          organization_id=organization_id,
                                                           debt_position_type_org_code=debt_position_type_org_code)
 
     debt_position = DebtPosition(organization_id=organization_id,
@@ -92,17 +93,18 @@ def generate_iuv() -> str:
     return f"0199{''.join(random.choices(string.digits, k=13))}"
 
 
-def retrieve_taxonomy_code_by_dp_type_org(token, debt_position_type_id: int):
-    res_dp_type = get_debt_position_type_by_id(token=token, debt_position_type_id=debt_position_type_id)
+def retrieve_taxonomy_code_by_dp_type_org(token, traceparent: str, debt_position_type_id: int):
+    res_dp_type = get_debt_position_type_by_id(token=token, traceparent=traceparent,
+                                               debt_position_type_id=debt_position_type_id)
 
     assert res_dp_type.status_code == 200
     taxonomy_code = res_dp_type.json()['taxonomyCode']
     return taxonomy_code
 
 
-def retrieve_dp_type_org_by_code(token, organization_id: int, debt_position_type_org_code: str):
-    res_dp_type_org = get_debt_position_type_org_by_code(token=token, organization_id=organization_id,
-                                                         code=debt_position_type_org_code)
+def retrieve_dp_type_org_by_code(token, traceparent: str, organization_id: int, debt_position_type_org_code: str):
+    res_dp_type_org = get_debt_position_type_org_by_code(token=token, traceparent=traceparent,
+                                                         organization_id=organization_id, code=debt_position_type_org_code)
 
     assert res_dp_type_org.status_code == 200
     assert res_dp_type_org.json() is not None

@@ -63,7 +63,7 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 def step_uploads_debt_positions_file(context):
     zip_file_path = context.receipts_file_name
 
-    res = post_upload_file(token=context.token, organization_id=context.org_info.id,
+    res = post_upload_file(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.RECEIPT,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
@@ -80,7 +80,7 @@ def step_receipts_file_processed(context):
     file_path_name = FilePathName.RECEIPT
     file_name = context.receipts_file_name
 
-    res = retry_get_process_file_status(token=context.token, organization_id=context.org_info.id,
+    res = retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=FileStatus.COMPLETED, delay=10)
 

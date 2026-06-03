@@ -4,12 +4,13 @@ from config.configuration import secrets, settings
 from model.file import IngestionFlowFileType, FileOrigin
 
 
-def post_upload_file(token, organization_id: int, ingestion_flow_file_type: IngestionFlowFileType,
+def post_upload_file(token, traceparent: str, organization_id: int, ingestion_flow_file_type: IngestionFlowFileType,
                      file_origin: FileOrigin, file_name: str):
     return requests.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.fileshare}/organization/{organization_id}/ingestionflowfiles',
         headers={
-            'Authorization': f'Bearer {token}'
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
         },
         params={
             'ingestionFlowFileType': ingestion_flow_file_type.value,

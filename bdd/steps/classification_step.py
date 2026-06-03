@@ -13,7 +13,7 @@ def step_check_classification(context, labels: str):
 
     labels = labels.split(sep=', ')
 
-    res = get_classification(token=context.token, organization_id=context.org_info.id,
+    res = get_classification(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                              last_classification_date_from=date_now, last_classification_date_to=date_now,
                              iuv=installment_paid.iuv)
 

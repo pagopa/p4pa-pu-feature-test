@@ -30,12 +30,13 @@ def get_token_org(context, pagopa_interaction):
             org_info.workflow_type = WorkflowType.ASYNC_GPD
             org_info.pagopa_interaction = PagoPaInteractionModel.GPD.value
 
-    res = post_auth_token(user_id=user_id)
+    res = post_auth_token(user_id=user_id, traceparent=context.traceparent)
 
     assert res.status_code == 200
     assert res.json()['access_token'] is not None
 
-    organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], ipa_code=org_info.ipa_code)
+    organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], traceparent=context.traceparent,
+                                                  ipa_code=org_info.ipa_code)
     org_info['id'] = organization_id
 
     context.org_info = org_info
@@ -54,12 +55,13 @@ def get_token_sil(context, pagopa_interaction: PagoPaInteractionModel):
             client = secrets.send_info.gpd
             org_info = secrets.organization.gpd
 
-    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret)
+    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret, traceparent=context.traceparent)
 
     assert res.status_code == 200
     assert res.json()['access_token'] is not None
 
-    organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], ipa_code=org_info.ipa_code)
+    organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], traceparent=context.traceparent,
+                                                  ipa_code=org_info.ipa_code)
     org_info['id'] = organization_id
 
     context.org_info = org_info
