@@ -66,8 +66,7 @@ def step_uploads_receipts_file(context):
     res = post_upload_file(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                            ingestion_flow_file_type=IngestionFlowFileType.RECEIPT,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
-    print(zip_file_path)
-    print(res.json())
+
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 
