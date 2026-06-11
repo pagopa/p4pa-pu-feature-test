@@ -34,22 +34,30 @@ def retry_get_process_file_status(token, traceparent: str, organization_id: int,
                                   file_name: str, status: FileStatus, tries=20, delay=4) -> dict:
     count = 0
 
+    def get_latest_file(response):
+        files = response.json()['_embedded']['ingestionFlowFiles']
+        if not files:
+            return None
+        return max(files, key=lambda f: f['ingestionFlowFileId'])
+
     res = get_by_org_and_file_path_and_file_name(token=token, traceparent=traceparent, organization_id=organization_id,
                                                  file_path_name=file_path_name.value, file_name=file_name)
 
-    success = (res.status_code == 200 and res.json()['status'] == status.value)
+    file = get_latest_file(res) if res.status_code == 200 else None
+    success = (res.status_code == 200 and file is not None and file['status'] == status.value)
 
     while not success:
         count += 1
         if count == tries:
             break
         time.sleep(delay)
-        res =  get_by_org_and_file_path_and_file_name(token=token, traceparent=traceparent, organization_id=organization_id,
+        res = get_by_org_and_file_path_and_file_name(token=token, traceparent=traceparent, organization_id=organization_id,
                                                      file_path_name=file_path_name.value, file_name=file_name)
-        success = (res.status_code == 200 and res.json()['status'] == status.value)
+        file = get_latest_file(res) if res.status_code == 200 else None
+        success = (res.status_code == 200 and file is not None and file['status'] == status.value)
 
     assert success
-    return res.json()
+    return file
 
 def retry_get_status_send_notification(token, traceparent: str, notification_id, status, tries=20, delay=4):
     count = 0
