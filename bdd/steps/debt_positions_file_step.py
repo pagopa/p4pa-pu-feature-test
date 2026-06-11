@@ -66,7 +66,7 @@ def step_create_ingestion_flow_file(context, identifiers, csv_version):
 
     dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
-    filename = f'ImportFeatureTest_{datetime.now().strftime("%Y%m%d%H%M%S")}_{csv_version}'
+    filename = f'ImportFeatureTest_{datetime.now().strftime("%Y%m%d%H%M%S")}__{csv_version}'
     zip_file_path = f'{filename}.zip'
     dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
