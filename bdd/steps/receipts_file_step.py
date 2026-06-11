@@ -30,7 +30,7 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 
     dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
-    filename = f'FeatureTestImportPagati_{csv_version.value}_{datetime.now().strftime("%Y%m%d%H%M%S")}'
+    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}__{csv_version.value}'
     zip_file_path = f'{filename}.zip'
     dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
@@ -50,7 +50,7 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 
     dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
-    filename = f'FeatureTestImportPagati_{csv_version.value}_{datetime.now().strftime("%Y%m%d%H%M%S")}'
+    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}__{csv_version.value}'
     zip_file_path = f'{filename}.zip'
     dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
@@ -60,7 +60,7 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 
 
 @when("the organization uploads the receipts file")
-def step_uploads_debt_positions_file(context):
+def step_uploads_receipts_file(context):
     zip_file_path = context.receipts_file_name
 
     res = post_upload_file(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,

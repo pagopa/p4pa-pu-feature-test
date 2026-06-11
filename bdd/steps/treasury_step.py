@@ -64,11 +64,11 @@ def create_files(context, ingestion_flow_file):
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
     file_version=settings.ingestion_flow_file.base_version
-    xml_file_path = f'GDC-{now}_{file_version}.xml'
+    xml_file_path = f'GDC-{now}__{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
 
-    zip_file_path = f'GDC-{now}_{file_version}.zip'
+    zip_file_path = f'GDC-{now}__{file_version}.zip'
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
@@ -78,7 +78,7 @@ def create_files(context, ingestion_flow_file):
 
 
 @when("the organization uploads the treasury file with amount of {amount} euros")
-def step_upload_payment_reporting_file_with_amount(context, amount):
+def step_upload_treasury_file_with_amount(context, amount):
     token = context.token
     org_info = context.org_info
 
@@ -93,6 +93,7 @@ def step_upload_payment_reporting_file_with_amount(context, amount):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
+    print(res.json())
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 
