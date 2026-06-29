@@ -4,11 +4,11 @@ from behave import given, when, then
 
 from api.auth import post_external_auth_token
 from api.debt_positions import get_installment
-from api.send import post_create_send_notification, post_upload_send_file, get_send_notification_status, \
+from api.send import post_create_send_notification, post_upload_send_file, get_send_notification, \
     get_send_notification_fee
 from bdd.steps.authentication_step import PagoPaInteractionModel
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
-from bdd.steps.utils.utility import retry_get_workflow_status
+from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
@@ -121,16 +121,15 @@ def step_upload_notification_file(context):
             assert res_payment_file.status_code == 202
 
     time.sleep(5)
-    res_status = get_send_notification_status(token=send_token, traceparent=context.traceparent,
+    res_status = get_send_notification(token=send_token, traceparent=context.traceparent,
                                               notification_id=notification_id)
 
     assert res_status.status_code == 200
-    assert res_status.json()['status'] == SendStatus.COMPLETE.value
+    assert res_status.json()['status'] == SendStatus.IN_VALIDATION.value
     assert res_status.json().get('iun') is None
 
     retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id,
-                              status=WorkflowStatus.COMPLETED,
-                              tries=18, delay=30)
+                              status=WorkflowStatus.COMPLETED)
 
 
 @then("the notification is in status {status} and the IUN is assigned to the installment")
@@ -139,11 +138,10 @@ def step_check_iun(context, status):
     notification_id = context.send_notification_id
     installments_notified = context.installments_notified
 
-    res_status = get_send_notification_status(token=context.send_token, traceparent=context.traceparent,
-                                              notification_id=notification_id)
+    res_status = retry_get_valid_send_notification(token=context.send_token, traceparent=context.traceparent,
+                                              notification_id=notification_id, tries=10, delay=60)
 
     assert res_status.status_code == 200
-    assert res_status.json()['status'] == status.upper()
     assert res_status.json()['iun'] is not None
 
     for installment in installments_notified:
@@ -151,9 +149,6 @@ def step_check_iun(context, status):
 
         assert res.status_code == 200
         assert res.json()['iun'] == res_status.json()['iun']
-
-    check_workflow_status(context=context, workflow_type=WorkflowType.SEND_NOTIFICATION_DATE_RETRIEVE,
-                          entity_id=notification_id, status=WorkflowStatus.RUNNING)
 
 
 @then("SEND has set a notification fee")

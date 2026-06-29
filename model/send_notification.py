@@ -12,8 +12,18 @@ class SendStatus(Enum):
     WAITING = 'WAITING_FILE'
     SENDING = 'SENDING'
     REGISTERED = 'REGISTERED'
-    COMPLETE = 'COMPLETE'
+    UPLOADED = 'UPLOADED'
+    IN_VALIDATION = 'IN_VALIDATION'
     ACCEPTED = 'ACCEPTED'
+    REFUSED = 'REFUSED'
+    DELIVERING = 'DELIVERING'
+    DELIVERED = 'DELIVERED'
+    VIEWED = 'VIEWED'
+    EFFECTIVE_DATE = 'EFFECTIVE_DATE'
+    PAID = 'PAID'
+    UNREACHABLE = 'UNREACHABLE'
+    CANCELLED = 'CANCELLED'
+    RETURNED_TO_SENDER = 'RETURNED_TO_SENDER'
 
 
 class SendPdfDigest:
@@ -84,6 +94,7 @@ class NotificationRequest:
     sender_tax_id: str = '00000000018'
     amount: int = 0
     payment_expiration_date: str = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
-    taxonomy_code: str = '010101P'
+    taxonomy_code: str = '030101P'
     pa_fee: int = 100
     vat: int = 22
+    campaignId: str = 'featureTest-'+datetime.now().strftime("%m/%d/%Y-%H:%M:%S")

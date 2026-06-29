@@ -20,6 +20,7 @@ class WorkflowType(Enum):
     TREASURY_OPI_INGESTION = "TreasuryOpiIngestionWF"
     SEND_NOTIFICATION_PROCESS = "SendNotificationProcessWF"
     SEND_NOTIFICATION_DATE_RETRIEVE = "SendNotificationDateRetrieveWF"
+    SEND_NOTIFICATION_STREAM_CONSUME = "SendNotificationStreamConsumeWF"
     DEBT_POSITION_INGESTION_FLOW = "DebtPositionIngestionFlowWF"
     RECEIPT_INGESTION_FLOW = "ReceiptIngestionWF"
     CREATE_ASSESSMENT = "CreateAssessmentsWF"
