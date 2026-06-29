@@ -3,7 +3,7 @@ import time
 from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
-from api.send import get_send_notification_status
+from api.send import get_send_notification
 from api.workflow_hub import get_workflow_status
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
@@ -59,22 +59,22 @@ def retry_get_process_file_status(token, traceparent: str, organization_id: int,
     assert success
     return file
 
-def retry_get_status_send_notification(token, traceparent: str, notification_id, status, tries=20, delay=4):
+def retry_get_valid_send_notification(token, traceparent: str, notification_id, tries=20, delay=4):
     count = 0
 
-    res = get_send_notification_status(token=token, traceparent=traceparent, notification_id=notification_id)
+    res = get_send_notification(token=token, traceparent=traceparent, notification_id=notification_id)
 
-    success = (res.status_code == 200 and status in res.json())
+    success = (res.status_code == 200 and res.json().get('iun') is not None)
 
     while not success:
         count += 1
         if count == tries:
             break
         time.sleep(delay)
-        res = get_send_notification_status(token=token, traceparent=traceparent, notification_id=notification_id)
-        success = (res.status_code == 200 and status in res.json())
+        res = get_send_notification(token=token, traceparent=traceparent, notification_id=notification_id)
+        success = (res.status_code == 200 and res.json().get('iun') is not None)
 
-    assert success
+    return res
 
 def retrieve_org_id_by_ipa_code(token: str, traceparent: str, ipa_code: str) -> int:
     res_org = get_org_by_ipa_code(token=token, traceparent=traceparent, ipa_code=ipa_code)

@@ -32,9 +32,9 @@ def post_upload_send_file(token, traceparent: str, org_id: int, notification_id:
         timeout=settings.default_timeout
     )
 
-def get_send_notification_status(token, traceparent: str, notification_id: str):
+def get_send_notification(token, traceparent: str, notification_id: str):
     return requests.get(
-        url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/send/{notification_id}/status',
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_notification}/notification/{notification_id}',
         headers={
             'Authorization': f'Bearer {token}',
             'traceparent': f'{traceparent}'
