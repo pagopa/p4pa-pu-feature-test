@@ -97,4 +97,4 @@ class NotificationRequest:
     taxonomy_code: str = '030101P'
     pa_fee: int = 100
     vat: int = 22
-    campaignId: str = 'featureTest-'+datetime.now().strftime("%m/%d/%Y-%H:%M:%S")
+    externalCampaignId: str = 'featureTest-'+datetime.now().strftime('%Y-%m-%d')
