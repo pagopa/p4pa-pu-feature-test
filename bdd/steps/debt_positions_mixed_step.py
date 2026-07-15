@@ -36,7 +36,7 @@ def step_create_dp_mixed_entity(context):
 
         transfer = TransferMixed(iud=iud,
                                  remittance_information=remittance_information,
-                                 amount=row["amount"],
+                                 amount_cents=int(float(row["amount"])*100),
                                  debt_position_type_org_code=dp_type_org_code,
                                  legacy_payment_metadata=taxonomy_code,
                                  debt_position_type_org_id=debt_position_type_org['debtPositionTypeOrgId'],
@@ -144,7 +144,7 @@ def _quick_validate_all_dp(context, res_dp_list, org_id):
     amount_by_type_org_id = defaultdict(int)
     for transfer in dp_mixed_request.transfers:
         dp_type_org_id = transfer.debt_position_type_org_id
-        amount_by_type_org_id[dp_type_org_id] += int(float(transfer.amount) * 100)
+        amount_by_type_org_id[dp_type_org_id] += transfer.amount_cents
 
     assert len(res_dp_list) == len(amount_by_type_org_id) + 1
     for dp in res_dp_list:
@@ -195,7 +195,7 @@ def _validate_dp_spontaneous_mixed_and_retrieve_iuv(res_dp, transfer_mixed, dp_m
         transfer_mixed = transfer_index_map[int(transfer_index)]
         res_installment = res_inst_map[transfer_mixed.iud]
         assert res_installment['status'] == status.upper()
-        assert res_installment['amountCents'] == int(float(transfer_mixed.amount) * 100)
+        assert res_installment['amountCents'] == transfer_mixed.amount_cents
         assert res_installment['dueDate'] == (datetime.now() + timedelta(minutes=120)).strftime("%Y-%m-%d")
         assert res_installment['remittanceInformation'] == transfer_mixed.remittance_information
         assert res_installment['legacyPaymentMetadata'] == transfer_mixed.legacy_payment_metadata
@@ -208,7 +208,7 @@ def _validate_dp_spontaneous_mixed_and_retrieve_iuv(res_dp, transfer_mixed, dp_m
         assert first_transfer['iban'] == org_info.iban
         assert first_transfer['category'] == str(transfer_mixed.legacy_payment_metadata)
         assert first_transfer['remittanceInformation'] == transfer_mixed.remittance_information
-        assert first_transfer['amountCents'] == int(float(transfer_mixed.amount) * 100)
+        assert first_transfer['amountCents'] == transfer_mixed.amount_cents
 
     return res_installments[0]['iuv']
 
@@ -243,4 +243,4 @@ def _validate_dp_spontaneous_sil(res_dp, debt_position_type_org_id, dp_mixed, or
         assert res_transfer['iban'] == org_info.iban
         assert res_transfer['category'] == str(transfer_mixed.legacy_payment_metadata)
         assert res_transfer['remittanceInformation'] == transfer_mixed.remittance_information
-        assert res_transfer['amountCents'] == int(float(transfer_mixed.amount) * 100)
+        assert res_transfer['amountCents'] == transfer_mixed.amount_cents

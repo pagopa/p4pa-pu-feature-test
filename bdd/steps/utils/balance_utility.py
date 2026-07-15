@@ -1,36 +1,47 @@
 import xmltodict
 import execjs
 
-from model.classification import AssessmentRegistry
+from model.classification import AssessmentRegistry, Section
 
 
 def extract_balance_from_xml(balance_xml: str) -> dict:
     return xmltodict.parse(balance_xml)
 
-def extract_assessment_registry_from_balance_dict(balance_dict: dict) -> AssessmentRegistry:
-    capitolo = balance_dict['bilancio']['capitolo']
 
-    return AssessmentRegistry(section_code=capitolo['codCapitolo'],
-                              office_code=capitolo.get('codUfficio'),
-                              assessment_code=capitolo['accertamento'].get('codAccertamento'))
+def extract_sections(balance_dict: dict) -> list:
+    section = balance_dict['bilancio']['capitolo']
+    if isinstance(section, list):
+        return section
+    return [section]
 
-def calculate_amount_from_balance(balance_dict: dict, installment_amount: int) -> int:
-    balance_amount = balance_dict['bilancio']['capitolo']['accertamento']['importo']
 
-    if balance_amount is not None:
-        balance_amount = balance_amount.strip()
+def extract_assessment_registry_from_section(section: dict) -> AssessmentRegistry:
+    return AssessmentRegistry(section_code=section['codCapitolo'],
+                              office_code=section.get('codUfficio'),
+                              assessment_code=section['accertamento'].get('codAccertamento'))
 
-        if balance_amount.startswith('function'):
-            js_extractor = JavaScriptExtractor(balance_amount)
-            amount_calculated = js_extractor.execute_calculate_amount(installment_amount)
-            return amount_calculated
-        elif balance_amount == 'TOTALE':
+
+def calculate_amount_from_section(section: dict, installment_amount: int) -> int:
+    section_amount = section['accertamento']['importo']
+
+    if section_amount is not None:
+        section_amount = section_amount.strip()
+
+        if section_amount.startswith('function'):
+            js_extractor = JavaScriptExtractor(section_amount)
+            return js_extractor.execute_calculate_amount(installment_amount)
+        elif section_amount == 'TOTALE':
             return installment_amount
         else:
-            return int(float(balance_amount) * 100)
+            return int(float(section_amount) * 100)
     else:
-        raise ValueError("Balance amount not found")
+        raise ValueError("Section amount not found")
 
+def build_section(section: dict, installment_amount: int) -> Section:
+    return Section(
+        amount=calculate_amount_from_section(section=section, installment_amount=installment_amount),
+        assessment_registry=extract_assessment_registry_from_section(section=section)
+    )
 
 class JavaScriptExtractor:
     def __init__(self, js_code):

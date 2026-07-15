@@ -26,9 +26,14 @@ class AssessmentRegistry:
 
 
 @dataclass
-class Balance:
+class Section:
     amount: int
-    assessment_registry: field(default_factory=lambda : AssessmentRegistry())
+    assessment_registry: AssessmentRegistry
+
+
+@dataclass
+class Balance:
+    sections: list[Section] = field(default_factory=list)
 
 
 class AssessmentDetailClassificationLabel(Enum):

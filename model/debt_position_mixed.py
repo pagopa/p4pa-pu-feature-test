@@ -10,7 +10,7 @@ from model.debt_position import DebtPositionOrigin, Debtor
 class TransferMixed:
     iud: str
     debt_position_type_org_code: str
-    amount: float
+    amount_cents: int
     remittance_information: str
     legacy_payment_metadata: str
     balance: str = None
