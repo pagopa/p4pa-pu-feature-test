@@ -12,7 +12,7 @@ def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPosi
         with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
             dati_singolo_versamento_data = file.read()
         dati_singolo_versamento = dati_singolo_versamento_data.format(iud=transfer_mixed.iud,
-                                                                      importo=transfer_mixed.amount,
+                                                                      importo="{:.2f}".format(int(transfer_mixed.amount_cents) / 100),
                                                                       tipo_dovuto=transfer_mixed.debt_position_type_org_code,
                                                                       dati_specifici_riscossione=transfer_mixed.legacy_payment_metadata)
 
