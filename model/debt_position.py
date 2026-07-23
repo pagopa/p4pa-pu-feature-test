@@ -142,3 +142,9 @@ class DebtPosition:
     @property
     def first_installment(self):
         return self.payment_options[0].installments[0]
+
+
+class DebtPositionTypeOrgBalanceCostType(Enum):
+    NOTIFICATION_COST = 'NOTIFICATION_COST'
+    DELAY_COST = 'DELAY_COST'
+    INTEREST_COST = 'INTEREST_COST'

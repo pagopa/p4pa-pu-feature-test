@@ -247,7 +247,6 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     res = get_debt_position_by_organization_id_and_installment_nav(token, context.traceparent, organization_id=org_info.id, nav=nav)
 
     assert res.status_code == 200
-    print(res.json())
     assert len(res.json()) == 1
 
     res_debt_position = res.json()[0]
@@ -272,15 +271,16 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     context.installment_paid = installment
 
 
-@then("the installment has {installment_fields} fields populated")
-def step_check_installment_fields(context, installment_fields: str):
-    installment = context.debt_position.payment_options[0].installments[0]
+@then("the installment has {installment_field} field populated")
+@then("the installment of debt position {dp_identifier} has {installment_field} field populated")
+def step_check_installment_fields(context, installment_field: str, dp_identifier: str = None):
+    debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
+    installment = debt_position.payment_options[0].installments[0]
 
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
 
     assert res.status_code == 200
-    for field in installment_fields.split(', '):
-        assert field in res.json()
+    assert installment_field in res.json()
 
 
 def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict,

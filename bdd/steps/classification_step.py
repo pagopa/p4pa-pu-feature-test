@@ -28,4 +28,4 @@ def step_check_classification(context, labels: str):
     for transfer in installment_paid.transfers:
         classification_labels = list(cl['label'] for cl in classification_transfer_map[transfer.transfer_index])
         assert len(labels) == len(classification_labels)
-        assert any(label in classification_labels for label in labels)
+        assert set(labels) == set(classification_labels)
