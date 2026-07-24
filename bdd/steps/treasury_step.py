@@ -93,7 +93,6 @@ def step_upload_treasury_file_with_amount(context, amount):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    print(res.json())
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 

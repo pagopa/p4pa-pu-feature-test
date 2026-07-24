@@ -39,7 +39,7 @@ def calculate_amount_from_section(section: dict, installment_amount: int) -> int
 
 def build_section(section: dict, installment_amount: int) -> Section:
     return Section(
-        amount=calculate_amount_from_section(section=section, installment_amount=installment_amount),
+        amount_cents=calculate_amount_from_section(section=section, installment_amount=installment_amount),
         assessment_registry=extract_assessment_registry_from_section(section=section)
     )
 

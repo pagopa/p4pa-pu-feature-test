@@ -9,11 +9,10 @@ from api.send import post_create_send_notification, post_upload_send_file, get_s
 from bdd.steps.authentication_step import PagoPaInteractionModel
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
 from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
-from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
     Document
-from model.workflow_hub import WorkflowStatus, WorkflowType
+from model.workflow_hub import WorkflowStatus
 
 
 def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str) -> str:
@@ -24,7 +23,8 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str
         case PagoPaInteractionModel.GPD.value:
             client = secrets.send_info.gpd
 
-    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret, traceparent=traceparent)
+    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret,
+                                   traceparent=traceparent)
 
     assert res.status_code == 200
     assert res.json()['access_token'] is not None
@@ -80,7 +80,8 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction, traceparent=context.traceparent)
     context.send_token = send_token
 
-    res = post_create_send_notification(token=send_token, traceparent=context.traceparent, payload=notification_request.to_json())
+    res = post_create_send_notification(token=send_token, traceparent=context.traceparent,
+                                        payload=notification_request.to_json())
 
     assert res.status_code == 200
     assert res.json()['sendNotificationId'] is not None
@@ -122,7 +123,7 @@ def step_upload_notification_file(context):
 
     time.sleep(5)
     res_status = get_send_notification(token=send_token, traceparent=context.traceparent,
-                                              notification_id=notification_id)
+                                       notification_id=notification_id)
 
     assert res_status.status_code == 200
     assert res_status.json()['status'] == SendStatus.IN_VALIDATION.value
@@ -139,13 +140,14 @@ def step_check_iun(context, status):
     installments_notified = context.installments_notified
 
     res_status = retry_get_valid_send_notification(token=context.send_token, traceparent=context.traceparent,
-                                              notification_id=notification_id, tries=10, delay=60)
+                                                   notification_id=notification_id, tries=10, delay=60)
 
     assert res_status.status_code == 200
     assert res_status.json()['iun'] is not None
 
     for installment in installments_notified:
-        res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
+        res = get_installment(token=context.token, traceparent=context.traceparent,
+                              installment_id=installment.installment_id)
 
         assert res.status_code == 200
         assert res.json()['iun'] == res_status.json()['iun']
@@ -183,7 +185,8 @@ def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
             previous_amount = installment.amount_cents
             expected_amount = previous_amount + context.notification_fee
 
-            res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
+            res = get_installment(token=context.token, traceparent=context.traceparent,
+                                  installment_id=installment.installment_id)
 
             assert res.status_code == 200
             assert res.json()['notificationFeeCents'] == context.notification_fee

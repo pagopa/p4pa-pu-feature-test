@@ -11,6 +11,9 @@ Feature: Management of debt position notified by SEND
     When the citizen X pays the installment of debt position A
     Then the receipt of debt position A is processed correctly
     And the amount of installment of debt position A is increased by the notification fee
+    And the installment of debt position A has balance field populated
+    And the assessment related to debt position A is in status closed
+    And the assessment detail is created correctly based on balance including notification cost section
 
 #  @gpd
 #  Scenario: Two simple debt position with two different debtor are notified by SEND and when they are paid the amount is updated

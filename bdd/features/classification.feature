@@ -106,7 +106,7 @@ Feature: Classification process starting from an installment payment
     And the receipt is created correctly
     And the installment of payment option 1 is in status reported
     And the debt position is in status reported
-    And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
+    And the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD
 
   @classification_outcome9
   @gpd
@@ -118,4 +118,4 @@ Feature: Classification process starting from an installment payment
     And the receipt is created correctly
     And the installment of the created debt position is in status reported
     And the debt position is in status reported
-    And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
+    And the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD

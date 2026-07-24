@@ -27,7 +27,7 @@ class AssessmentRegistry:
 
 @dataclass
 class Section:
-    amount: int
+    amount_cents: int
     assessment_registry: AssessmentRegistry
 
 
