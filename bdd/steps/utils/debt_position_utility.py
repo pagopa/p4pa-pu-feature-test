@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from api.debt_position_type import get_debt_position_type_org_by_code, get_debt_position_type_by_id
 from config.configuration import secrets
-from model.debt_position import DebtPosition, PaymentOption, Status, Installment
+from model.debt_position import DebtPosition, PaymentOption, Status, Installment, SyncStatus, Transfer
 from model.debt_position import Debtor, PaymentOptionType
 
 
@@ -18,6 +18,15 @@ def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_ind
                     installment = inst
                 elif inst.remittance_information == 'Causali multiple':
                     installment = inst
+    return installment
+
+
+def find_installment_by_iuv(debt_position: DebtPosition, iuv: str) -> Installment:
+    installment = None
+    for po in debt_position.payment_options:
+        for inst in po.installments:
+            if inst.iuv == iuv:
+                installment = inst
     return installment
 
 
@@ -50,12 +59,36 @@ def calculate_amount_first_transfer(installment: Installment) -> int:
     return installment.amount_cents - other_transfers_amount
 
 
+def create_transfer(token, traceparent: str, org_info: dict, debt_position_type_org_code: str,
+                    remittance_information: str, amount_cents: int) -> Transfer:
+    debt_position_type_org = retrieve_dp_type_org_by_code(token=token, traceparent=traceparent,
+                                                          organization_id=org_info.id,
+                                                          debt_position_type_org_code=debt_position_type_org_code)
+    category = retrieve_taxonomy_code_by_dp_type_org(token=token, traceparent=traceparent,
+                                                     debt_position_type_id=debt_position_type_org['debtPositionTypeId'])
+
+    transfer = Transfer(transfer_index=1,
+                        org_fiscal_code=org_info.fiscal_code,
+                        org_name=org_info.name,
+                        iban=org_info.iban,
+                        category=category,
+                        amount_cents=amount_cents,
+                        remittance_information=remittance_information)
+
+    return transfer
+
+
 def create_installment(expiration_days: int, seq_num: int, amount_cents: int = None,
-                       ingestion_flow_file_action: str = None, balance: str = None, citizen_identifier: str = None) -> Installment:
+                       ingestion_flow_file_action: str = None, balance: str = None, citizen_identifier: str = None,
+                       status: Status.UNPAID.value = None) -> Installment:
     due_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
     amount_cents = random.randint(1, 200) * 100 if amount_cents is None else amount_cents
     citizen = secrets.citizen_info.get(citizen_identifier)
-    debtor = Debtor(fiscal_code=citizen.fiscal_code, full_name=citizen.name, email=citizen.email) if citizen is not None else Debtor()
+    debtor = Debtor(fiscal_code=citizen.fiscal_code, full_name=citizen.name,
+                    email=citizen.email) if citizen is not None else Debtor()
+
+    sync_status = SyncStatus(sync_status_from=Status.DRAFT.value,
+                             sync_status_to=Status.UNPAID.value) if status == Status.TO_SYNC.value else None
 
     installment = Installment(amount_cents=amount_cents,
                               due_date=due_date,
@@ -63,7 +96,10 @@ def create_installment(expiration_days: int, seq_num: int, amount_cents: int = N
                               remittance_information=f'Feature test installment {seq_num}',
                               iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}',
                               ingestion_flow_file_action=ingestion_flow_file_action,
-                              balance=balance)
+                              balance=balance,
+                              status=status,
+                              sync_status=sync_status)
+
     return installment
 
 
@@ -104,7 +140,8 @@ def retrieve_taxonomy_code_by_dp_type_org(token, traceparent: str, debt_position
 
 def retrieve_dp_type_org_by_code(token, traceparent: str, organization_id: int, debt_position_type_org_code: str):
     res_dp_type_org = get_debt_position_type_org_by_code(token=token, traceparent=traceparent,
-                                                         organization_id=organization_id, code=debt_position_type_org_code)
+                                                         organization_id=organization_id,
+                                                         code=debt_position_type_org_code)
 
     assert res_dp_type_org.status_code == 200
     assert res_dp_type_org.json() is not None

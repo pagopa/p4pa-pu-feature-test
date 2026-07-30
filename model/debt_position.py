@@ -48,14 +48,14 @@ class Debtor:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transfer:
-    transfer_id: int
-    installment_id: int
     transfer_index: int
     org_fiscal_code: str
     amount_cents: int
     remittance_information: str
     category: str
     iban: str = None
+    transfer_id: int = None
+    installment_id: int = None
     org_name: str = None
     flag_owner: bool = False
 

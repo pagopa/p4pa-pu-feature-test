@@ -1,12 +1,14 @@
 import xmltodict
-from behave import when, then
+from behave import given, when, then
 
-from api.debt_positions import get_installment, get_receipt
+from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
+from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
 from bdd.steps.utils.utility import retry_get_process_file_status
-from bdd.steps.workflow_step import check_workflow_status, check_workflow_does_not_exist
+from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
+from model.debt_position import Status
 from model.file import FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
@@ -20,17 +22,17 @@ def check_res_ok_and_get_body(response_content, tag_name):
     return res_body
 
 
-@when('the citizen pays the installment of payment option {po_index}')
-@when('the citizen pays the installment {seq_num} of payment option {po_index}')
-@when('the citizen pays the installment of mixed debt position')
-@when('the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}')
-@when('the citizen pays the installment {seq_num} of debt position {dp_identifier}')
+@when("the citizen pays the installment of payment option {po_index}")
+@when("the citizen pays the installment {seq_num} of payment option {po_index}")
+@when("the citizen pays the installment of mixed debt position")
+@when("the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}")
+@when("the citizen pays the installment {seq_num} of debt position {dp_identifier}")
 def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None,
-                             installment_to_paid=None, org_fiscal_code_owner=None):
+                             installment_to_paid=None):
     citizen_info = secrets.citizen_info.get(citizen_identifier)
     psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
-    org_fiscal_code = org_fiscal_code_owner if org_fiscal_code_owner is not None else context.org_info.fiscal_code
+    org_fiscal_code = context.org_info.fiscal_code
     debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
     installment = installment_to_paid if installment_to_paid is not None else (find_installment_by_seq_num_and_po_index(
         debt_position=debt_position,
@@ -77,7 +79,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
 @then("the receipt is processed correctly")
 @then("the receipt of debt position {dp_identifier} is processed correctly")
-def step_check_receipt_processed(context, dp_identifier=None, classification=True, organization_id=None):
+def step_check_receipt_processed(context, dp_identifier=None, organization_id=None):
     if dp_identifier is None:
         installment_paid = context.installment_paid
     else:
@@ -90,7 +92,8 @@ def step_check_receipt_processed(context, dp_identifier=None, classification=Tru
     retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=org_id,
                                   file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
 
-    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    res = get_installment(token=context.token, traceparent=context.traceparent,
+                          installment_id=installment_paid.installment_id)
 
     assert res.status_code == 200
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
@@ -102,21 +105,14 @@ def step_check_receipt_processed(context, dp_identifier=None, classification=Tru
     else:
         context.installment_paid[dp_identifier] = installment_paid
 
-    if classification:
-        check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                              entity_id=str(org_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
-                              status=WorkflowStatus.COMPLETED)
+    check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
+                          entity_id=str(org_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
+                          status=WorkflowStatus.COMPLETED)
 
-        check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
-                              entity_id=str(org_id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
-    else:
-        check_workflow_does_not_exist(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
-                                      entity_id=str(org_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1')
-        check_workflow_does_not_exist(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
-                                      entity_id=str(org_id) + '-' + installment_paid.iud)
+    check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
+                          entity_id=str(org_id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
 
 
-@then("the receipts are created correctly")
 @then("the receipts are created correctly with origin {receipt_origin}")
 def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
     for i in range(context.receipts_rows_len):
@@ -124,30 +120,36 @@ def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType
                                    installment_paid=context.installments_paid[i])
 
 
-@then("the receipt is created correctly")
 @then("the receipt is created correctly with origin {receipt_origin}")
 def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value,
-                               installment_paid=None):
+                               installment_paid=None, is_duplicate: bool = False):
     installment_paid = installment_paid if installment_paid else context.installment_paid
     receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
 
-    res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
-                      receipt_origin=receipt_origin, iuv=installment_paid.iuv,
-                      iur=installment_paid.iur)
-
+    res = get_installment(token=context.token, traceparent=context.traceparent,
+                          installment_id=installment_paid.installment_id)
     assert res.status_code == 200
-    assert len(res.json()['content']) == 1
-    receipt = res.json()['content'][0]
-    assert receipt['receiptOrigin'] == receipt_origin
-    assert installment_paid.iuv == receipt['iuv']
+    installment = res.json()
 
-    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
-
-    assert res.status_code == 200
-    assert res.json()['iur'] is not None and res.json()['receiptId'] is not None and receipt['receiptId'] == res.json()[
-        'receiptId']
-    installment_paid.iur = res.json()['iur']
+    if is_duplicate:
+        res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=installment_paid.iur)
+        assert res.status_code == 200
+        receipt = res.json()
+        assert receipt['receiptOrigin'] == receipt_origin
+        assert installment['iur'] != installment_paid.iur
+    else:
+        res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
+                          receipt_origin=receipt_origin, iuv=installment_paid.iuv,
+                          iur=installment_paid.iur)
+        assert res.status_code == 200
+        assert len(res.json()['content']) == 1
+        receipt = res.json()['content'][0]
+        assert receipt['receiptOrigin'] == receipt_origin
+        assert installment_paid.iuv == receipt['iuv']
+        assert installment['iur'] is not None and installment['receiptId'] is not None \
+               and receipt['receiptId'] == installment['receiptId']
+        installment_paid.iur = installment['iur']
 
     for transfer in installment_paid.transfers:
         check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
@@ -158,3 +160,17 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUD_CLASSIFICATION,
                           entity_id=str(org_info.id) + '-' + installment_paid.iud, status=WorkflowStatus.COMPLETED)
+
+
+@given("the successful payment of the installment")
+def step_successful_installment_payment(context):
+    step_installment_payment(context=context)
+    step_check_dp_status(context=context, status=Status.PAID.value)
+    step_check_receipt_processed(context=context)
+
+
+@given("the successful payment of the installment created outside PU")
+def step_successful_installment_payment_outside_pu(context):
+    step_installment_payment(context=context, installment_to_paid=context.debt_position.payment_options[0].installments[0])
+    step_check_dp_status(context=context, status=Status.PAID.value)
+    step_check_receipt_processed(context=context)

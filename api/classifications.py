@@ -7,7 +7,7 @@ from config.configuration import secrets, settings
 
 def get_classification(token, traceparent: str, organization_id: int, iuv: str,
                        last_classification_date_from: str, last_classification_date_to: str,
-                       iud: str = None):
+                       iud: str = None, iuf: str = None, iur: str = None):
     return requests.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/organization/{organization_id}/classifications/treasured',
         headers={
@@ -19,6 +19,8 @@ def get_classification(token, traceparent: str, organization_id: int, iuv: str,
             'lastClassificationDateTo': last_classification_date_to,
             'iuv': iuv,
             'iud': iud,
+            'iuf': iuf,
+            'iur': iur,
             'debtPositionTypeOrgCodes': [settings.debt_position_type_org_code.feature_test,
                                          settings.debt_position_type_org_code.feature_test_2,
                                          'UNKNOWN']

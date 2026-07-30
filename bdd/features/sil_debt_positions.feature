@@ -42,6 +42,3 @@ Feature: SIL management of debt positions
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
     And the assessment classification label for each IUD is CASHED
 
-
-
-

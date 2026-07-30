@@ -6,16 +6,16 @@ from datetime import datetime
 from zipfile import ZipFile
 
 from behave import when, then
-from config.configuration import settings
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
-from config.configuration import secrets
+from config.configuration import secrets, settings
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
+
 
 def format_ingestion_flow_file(context, amount, file, org_info):
     try:
@@ -63,7 +63,7 @@ def format_ingestion_flow_file(context, amount, file, org_info):
 def create_files(context, ingestion_flow_file):
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
-    file_version=settings.ingestion_flow_file.base_version
+    file_version = settings.ingestion_flow_file.base_version
     xml_file_path = f'GDC-{now}__{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
@@ -100,6 +100,7 @@ def step_upload_treasury_file_with_amount(context, amount):
 
     os.remove(zip_file_path)
     os.remove(xml_file_path)
+
 
 @when("the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
 def step_upload_treasury_file(context, po_index, installment_seq_num):

@@ -56,7 +56,7 @@ def step_configure_debt_positions_for_file(context, identifiers):
 
 
 @given("debt positions {identifiers} inserted into an ingestion flow file with version {csv_version}")
-def step_create_ingestion_flow_file(context, identifiers, csv_version):
+def step_create_debt_positions_file(context, identifiers, csv_version):
     debt_positions = context.debt_positions
     identifiers = identifiers.split()
 
@@ -135,7 +135,7 @@ def step_debt_position_file_processed(context):
 
     file_path_name = FilePathName.INSTALLMENT
     file_name = context.debt_positions_file_name
-    status = FileStatus.COMPLETED if org_has_generate_notice_api_key == True else FileStatus.WARNING
+    status = FileStatus.COMPLETED if org_has_generate_notice_api_key else FileStatus.WARNING
 
     res = retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=organization_id,
                                         file_path_name=file_path_name, file_name=file_name,
@@ -157,7 +157,7 @@ def search_dp_by_inst_iud(list_debt_positions: list[dict], inst_iud: str) -> dic
 
 
 @then("the debt positions {identifiers} are created in status {status}")
-def step_check_debt_positions_created(context, identifiers, status):
+def step_check_debt_positions_created_from_file(context, identifiers, status):
     identifiers = identifiers.split()
 
     res = get_debt_positions_by_ingestion_flow_id(token=context.token, traceparent=context.traceparent, ingestion_flow_id=context.debt_positions_file_id)

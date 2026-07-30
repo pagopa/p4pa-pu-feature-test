@@ -73,7 +73,7 @@ def get_receipt(token, traceparent: str, organization_id, receipt_origin, iuv, i
             'traceparent': f'{traceparent}'
         },
         params={
-            'receiptOrigin': receipt_origin,
+            'receiptOrigins': [receipt_origin],
             'iuv': iuv,
             'iur': iur
         },
@@ -86,6 +86,20 @@ def get_receipt_by_id(token, traceparent: str, receipt_id: int):
         headers={
             'Authorization': f'Bearer {token}',
             'traceparent': f'{traceparent}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
+def get_receipt_by_iur(token, traceparent: str, iur: str):
+    return requests.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/receipts/search/getByPaymentReceiptId',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        params={
+            'paymentReceiptId': iur
         },
         timeout=settings.default_timeout
     )

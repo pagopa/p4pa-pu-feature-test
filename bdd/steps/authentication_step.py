@@ -15,7 +15,7 @@ class PagoPaInteractionModel(Enum):
 
 
 @given("organization interacting with {pagopa_interaction}")
-def get_token_org(context, pagopa_interaction):
+def step_get_token_org(context, pagopa_interaction):
     user_id = None
     org_info = None
     match pagopa_interaction:
@@ -44,7 +44,7 @@ def get_token_org(context, pagopa_interaction):
 
 
 @given("a SIL acting on behalf of an organization interacting with {pagopa_interaction}")
-def get_token_sil(context, pagopa_interaction: PagoPaInteractionModel):
+def step_get_token_sil(context, pagopa_interaction: PagoPaInteractionModel):
     client = None
     org_info = None
     match pagopa_interaction:
