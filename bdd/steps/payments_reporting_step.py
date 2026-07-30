@@ -6,20 +6,40 @@ import zipfile
 from datetime import datetime
 from zipfile import ZipFile
 
-from behave import when, then
+from behave import given, when, then
 
 from api.debt_positions import get_debt_position, get_installment
 from api.fileshare import post_upload_file
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, generate_iuv
+from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_position_created
+from bdd.steps.payments_step import step_check_receipt_created
+from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
+    generate_iuv
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
-from config.configuration import secrets
-from config.configuration import settings
-from model.debt_position import DebtPosition
-from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName
+from config.configuration import secrets, settings
+from model.debt_position import DebtPosition, Status, Installment
+from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName, ReceiptOriginType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
+
+
+def _register_payment_reporting_flow(context, outcome_code, iuf, iur, installment):
+    if installment is None:
+        return
+    if not hasattr(context, 'payment_reporting_flows'):
+        context.payment_reporting_flows = {}
+    context.payment_reporting_flows[str(outcome_code)] = {'iuf': iuf, 'iur': iur, 'installment': installment}
+
+
+def get_payment_reporting_flow(context, outcome_code):
+    flows = getattr(context, 'payment_reporting_flows', {})
+    key = str(outcome_code)
+    assert key in flows, (
+        f"No payment reporting flow registered for outcome code {key}. "
+        f"Available flows: {sorted(flows)}"
+    )
+    return flows[key]
 
 
 @when("the organization uploads the payment reporting file about installment of payment option {po_index}")
@@ -27,16 +47,18 @@ psp_info = secrets.payment_info.psp
 @when(
     "the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
 @when("the organization uploads the payment reporting file about installment paid")
-def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0'):
+@when("the organization uploads a second payment reporting for the installment with outcome code {outcome_code}")
+def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0', installment=None):
     token = context.token
     org_info = context.org_info
 
-    res = get_debt_position(token=token, traceparent=context.traceparent, debt_position_id=context.debt_position.debt_position_id)
+    if installment is None:
+        res = get_debt_position(token=token, traceparent=context.traceparent,
+                                debt_position_id=context.debt_position.debt_position_id)
+        debt_position = DebtPosition.from_dict(res.json())
+        installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
+                                                               po_index=int(po_index), seq_num=int(seq_num))
 
-    debt_position = DebtPosition.from_dict(res.json())
-
-    installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
-                                                           po_index=int(po_index), seq_num=int(seq_num))
     installment.iur = installment.iur if int(outcome_code) != 9 else uuid.uuid4().hex
 
     date = datetime.now().strftime('%Y-%m-%d')
@@ -46,18 +68,17 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
 
     amount = "{:.2f}".format(int(installment.amount_cents) / 100)
 
+    with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
+        data_single_payment_file = file.read()
+
     data_payments = ""
     for transfer in installment.transfers:
-        with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
-            data_single_payment_file = file.read()
-            data_single_payment = data_single_payment_file.format(iuv=installment.iuv,
-                                                                  iur=installment.iur,
-                                                                  transfer_index=transfer.transfer_index,
-                                                                  amount_paid="{:.2f}".format(int(transfer.amount_cents) / 100),
-                                                                  payment_outcome_code=int(outcome_code),
-                                                                  payment_date=date)
-
-            data_payments += data_single_payment
+        data_payments += data_single_payment_file.format(iuv=installment.iuv,
+                                                         iur=installment.iur,
+                                                         transfer_index=transfer.transfer_index,
+                                                         amount_paid="{:.2f}".format(int(transfer.amount_cents) / 100),
+                                                         payment_outcome_code=int(outcome_code),
+                                                         payment_date=date)
 
     with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
         ingestion_flow_file = file.read()
@@ -94,6 +115,8 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
     context.iuv = installment.iuv
     context.iur = installment.iur
 
+    _register_payment_reporting_flow(context, outcome_code, iuf, installment.iur, installment)
+
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
 
@@ -104,8 +127,8 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
 
 
 @when(
-    "the organization uploads the payment reporting file about a missing debt position with outcome code {outcome_code}")
-def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9'):
+    "the organization uploads the payment reporting file with outcome code {outcome_code} about a debt position created outside PU")
+def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9', installment: Installment = None):
     token = context.token
     org_info = context.org_info
 
@@ -116,8 +139,8 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
-    amount = "{:.2f}".format(random.randint(1, 200))
-    iuv = generate_iuv()
+    amount = "{:.2f}".format(random.randint(1, 200)) if installment is None else "{:.2f}".format(int(installment.amount_cents) / 100)
+    iuv = generate_iuv() if installment is None else installment.iuv
     iur = uuid.uuid4().hex
 
     with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
@@ -161,6 +184,8 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     context.payment_reporting_file_name = zip_file_path
     context.iuv = iuv
     context.iur = iur
+
+    _register_payment_reporting_flow(context, outcome_code, iuf, iur, installment)
 
     assert res.status_code == 200
     assert res.json()['ingestionFlowFileId'] is not None
@@ -216,3 +241,36 @@ def step_check_payment_reporting_outcome9_processed(context):
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + context.iuv + '-' + context.iur + '-1',
                           status=WorkflowStatus.COMPLETED)
+
+
+@given("a payment reporting with outcome code {outcome_code} has been successfully processed for the installment")
+def step_successful_payment_reporting_uploading(context, outcome_code='0'):
+    step_upload_payment_reporting_file(context=context, outcome_code=outcome_code)
+    step_check_dp_status(context=context, status=Status.REPORTED.value)
+    step_check_payment_reporting_processed(context=context)
+    if int(outcome_code) == 9:
+        step_check_receipt_created(context=context, installment_paid=context.installment_paid)
+
+
+@given("a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU")
+def step_successful_payment_reporting_uploading_outside_pu(context):
+    installment = context.debt_position.payment_options[0].installments[0]
+    step_upload_payment_reporting_file_no_debt_position(context=context, outcome_code='9', installment=installment)
+    step_check_payment_reporting_outcome9_processed(context=context)
+    step_check_debt_position_created(context=context)
+
+
+@when("the organization uploads a second payment reporting for the installment created outside PU with outcome code {outcome_code}")
+def step_upload_payment_reporting_file_outside_pu(context, outcome_code='0'):
+    res = get_debt_position(token=context.token, traceparent=context.traceparent,
+                            debt_position_id=context.debt_position.debt_position_id)
+    installment = find_installment_by_iuv(debt_position=DebtPosition.from_dict(res.json()), iuv=context.iuv)
+    step_upload_payment_reporting_file(context=context, outcome_code=outcome_code, installment=installment)
+
+
+@then("the duplicate receipt for the payment reporting with outcome code {outcome_code} is created correctly with origin {receipt_origin}")
+def step_check_duplicate_receipt_created_for_flow(context, outcome_code,
+                                                  receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
+    flow = get_payment_reporting_flow(context, outcome_code)
+    step_check_receipt_created(context=context, receipt_origin=receipt_origin,
+                               installment_paid=flow['installment'], is_duplicate=True)

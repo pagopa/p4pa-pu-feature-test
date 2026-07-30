@@ -42,6 +42,7 @@ parameters:
       - receipts_file
       - send
       - classification_outcome9
+      - classification_duplicates
       - assessments
       - sil_debt_positions
 

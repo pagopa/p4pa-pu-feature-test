@@ -1,5 +1,5 @@
 @debt_positions_file
-Feature: An organizations creates debt positions by importing file
+Feature: An organization creates debt positions by importing a file
 
   @<csv_version> @eng
   @gpd
@@ -24,7 +24,6 @@ Feature: An organizations creates debt positions by importing file
       | identifiers | csv_version |
       | A B C       | 2_0-eng     |
       | A B C       | 2_0         |
-
 
   @<csv_version> @it
   @gpd

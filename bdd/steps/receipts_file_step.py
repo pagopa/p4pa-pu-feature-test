@@ -19,7 +19,7 @@ from model.workflow_hub import WorkflowStatus, WorkflowType
 
 
 @given("receipts of non-existent debt positions inserted into an ingestion flow file with version {csv_version}")
-def step_create_ingestion_flow_file(context, csv_version: str):
+def step_create_receipts_file_for_non_existent_dp(context, csv_version: str):
     csv_version = CSVVersion(csv_version)
     context.csv_version = csv_version
 
@@ -39,7 +39,7 @@ def step_create_ingestion_flow_file(context, csv_version: str):
 
 
 @given("a receipt of a debt position inserted into an ingestion flow file with version {csv_version}")
-def step_create_ingestion_flow_file(context, csv_version: str):
+def step_create_receipts_file_for_existing_dp(context, csv_version: str):
     csv_version = CSVVersion(csv_version)
     context.csv_version = csv_version
 

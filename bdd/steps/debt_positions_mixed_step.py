@@ -8,7 +8,7 @@ from behave import given, when, then
 
 from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
 from api.soap.sil import post_sil_invia_dovuto
-from bdd.steps.authentication_step import get_token_sil
+from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
@@ -108,7 +108,7 @@ def step_check_debt_positions_mixed_created(context, status):
 @given(
     "a mixed debt position created by SIL for organization interacting with {pagopa_interaction} configured as follows")
 def step_sil_create_mixed_dp(context, pagopa_interaction):
-    get_token_sil(context=context, pagopa_interaction=pagopa_interaction)
+    step_get_token_sil(context=context, pagopa_interaction=pagopa_interaction)
     token = context.token
     org_id = context.org_info.id
     step_create_dp_mixed_entity(context=context)

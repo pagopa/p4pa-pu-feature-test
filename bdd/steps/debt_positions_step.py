@@ -1,22 +1,18 @@
 import json
+import uuid
+from datetime import datetime
 from pathlib import Path
 
-from behave import given
-from behave import then
-from behave import when
+from behave import given, when, then
 
 from api.debt_positions import post_create_debt_position, get_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
-from bdd.steps.authentication_step import get_token_org
-from bdd.steps.classification_step import step_check_classification
+from api.pagopa_payments import post_create_debt_position_on_gpd
+from bdd.steps.authentication_step import step_get_token_org, PagoPaInteractionModel
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
-from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file, step_check_payment_reporting_processed
-from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
-from bdd.steps.treasury_step import step_check_treasury_processed
-from bdd.steps.treasury_step import step_upload_treasury_file
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
-    create_payment_option
+    create_payment_option, create_transfer, generate_iuv
 from bdd.steps.utils.utility import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
@@ -40,7 +36,7 @@ def step_create_dp_entity(context, debt_position_type_org_code = settings.debt_p
 @given(
     "payment option {po_index} with single installment of {amount} euros with due date set in {expiration_days} days")
 def step_create_po_and_single_inst_entities(context, po_index, amount, expiration_days, balance=False,
-                                            citizen_identifier=None):
+                                            citizen_identifier=None, status=None):
     payment_option = create_payment_option(po_index=int(po_index),
                                            payment_option_type=PaymentOptionType.SINGLE_INSTALLMENT)
 
@@ -56,7 +52,7 @@ def step_create_po_and_single_inst_entities(context, po_index, amount, expiratio
                        .replace('\n', '')).replace(' ', '')
 
     installment = create_installment(amount_cents=amount_cents, expiration_days=int(expiration_days), seq_num=1,
-                                     balance=balance_str, citizen_identifier=citizen_identifier)
+                                     balance=balance_str, citizen_identifier=citizen_identifier, status=status)
     payment_option.installments.append(installment)
 
     context.debt_position.payment_options.append(payment_option)
@@ -150,7 +146,7 @@ def step_check_outcome9_installment_status(context, status):
     "a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=None, citizen_identifier=None,
                                      dp_type_org_code=settings.debt_position_type_org_code.feature_test):
-    get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+    step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context, debt_position_type_org_code=dp_type_org_code)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100,
                                             expiration_days=3, citizen_identifier=citizen_identifier)
@@ -168,8 +164,8 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
 
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
-def step_create_simple_debt_position(context, pagopa_interaction):
-    get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
+    step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, balance=True)
     step_create_dp(context=context)
@@ -183,8 +179,8 @@ def step_create_simple_debt_position(context, pagopa_interaction):
     "a complex debt position with {po_size} payment options created by organization interacting with {pagopa_interaction}")
 @given(
     "a debt position {dp_identifier} with {po_size} payment option and {installments_size} installments created by organization interacting with {pagopa_interaction}")
-def step_create_simple_debt_position(context, po_size, pagopa_interaction, dp_identifier=None, installments_size=2):
-    get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+def step_create_complex_debt_position(context, po_size, pagopa_interaction, dp_identifier=None, installments_size=2):
+    step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     for i in range(int(po_size)):
         step_create_po_and_inst_entities(context=context, po_index=i + 1, installments_size=installments_size, expiration_days=3)
@@ -201,31 +197,6 @@ def step_create_simple_debt_position(context, po_size, pagopa_interaction, dp_id
             context.debt_positions = {dp_identifier: context.debt_position}
 
 
-@given(
-    "the previous payment of installment {seq_num} of payment option {po_index}")
-def step_pay_installment_and_verify(context, seq_num, po_index):
-    step_installment_payment(context=context, po_index=po_index, seq_num=seq_num)
-
-    step_check_receipt_processed(context=context)
-    invalid_po_indexes = [po.payment_option_index for po in context.debt_position.payment_options if
-                          po.payment_option_index != int(po_index)]
-    for i in invalid_po_indexes:
-        step_check_po_status(context=context, po_index=str(i), status=Status.INVALID.value)
-
-    step_upload_payment_reporting_file(context=context, po_index=po_index, seq_num=seq_num)
-    step_check_payment_reporting_processed(context=context)
-    step_check_installment_status(context=context, installment_seq_num=seq_num, po_index=po_index,
-                                  status=Status.REPORTED.value)
-
-    step_upload_treasury_file(context=context, po_index=po_index, installment_seq_num=seq_num)
-    step_check_treasury_processed(context=context)
-
-    step_check_po_status(context=context, po_index=po_index, status=Status.PARTIALLY_PAID.value)
-    step_check_dp_status(context=context, status=Status.PARTIALLY_PAID.value)
-    step_check_classification(context=context, labels='RT_NO_IUD, RT_IUF, RT_IUF_TES')
-
-
-@then("the debt positions are created correctly")
 @then("the debt positions are created correctly with origin {debt_position_origin}")
 def step_check_debt_positions_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value):
     context.installments_paid = []
@@ -236,7 +207,6 @@ def step_check_debt_positions_created(context, debt_position_origin: str = DebtP
 
 
 @then("the debt position is created correctly")
-@then("the debt position are created correctly with origin {debt_position_origin}")
 def step_check_debt_position_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value,
                                      iuv: str = None):
     token = context.token
@@ -308,7 +278,7 @@ def _validate_debt_position_fields(org_info, request, response, status, csv_vers
             assert len(response['paymentOptions']) == 1
             assert len(response['paymentOptions'][0]['installments']) == 1
         if csv_version <= CSVVersion.V1_2:
-            assert response['flagPuPagoPaPayment'] == True
+            assert response['flagPuPagoPaPayment'] is True
 
 
 def _validate_payment_options(org_info, request, response_options, status, csv_version):
@@ -366,3 +336,29 @@ def _validate_first_transfer(org_info, inst_response, inst_request):
     assert first_transfer['remittanceInformation'] == inst_request.remittance_information
     assert first_transfer['amountCents'] == calculate_amount_first_transfer(
         installment=Installment.from_dict(inst_request))
+
+
+@given("a simple debt position created on {pagopa_interaction}")
+def step_create_dp_on_gpd(context, pagopa_interaction):
+    step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+    step_create_dp_entity(context=context, debt_position_type_org_code=settings.debt_position_type_org_code.feature_test)
+    step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, status=Status.TO_SYNC.value)
+    debt_position = context.debt_position
+    installment = debt_position.payment_options[0].installments[0]
+
+    transfer = create_transfer(token=context.token, traceparent=context.traceparent, org_info=context.org_info,
+                               debt_position_type_org_code=settings.debt_position_type_org_code.feature_test,
+                               remittance_information=installment.remittance_information, amount_cents=installment.amount_cents)
+
+    installment.transfers.append(transfer)
+    installment.iuv = generate_iuv()
+    installment.nav = '3' + installment.iuv
+    installment.iupd_pagopa = f'{context.org_info.fiscal_code}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
+    context.debt_position.payment_options[0].installments[0] = installment
+
+    res = post_create_debt_position_on_gpd(token=context.token, traceparent=context.traceparent, debt_position=debt_position.to_json(), iud=installment.iud)
+
+    assert res.status_code == 200
+
+    step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction,
+                                                     status='VALID')
