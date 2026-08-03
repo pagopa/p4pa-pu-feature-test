@@ -5,6 +5,7 @@ from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification
 from api.workflow_hub import get_workflow_status
+from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 

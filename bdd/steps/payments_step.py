@@ -4,7 +4,9 @@ from behave import given, when, then
 from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
 from bdd.steps.debt_positions_step import step_check_dp_status
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
+from bdd.steps.utils.scenario_state import get_installment_paid, set_installment_paid
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
@@ -40,10 +42,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
     res_verify_payment = verify_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav)
 
-    if res_verify_payment.status_code != 200:
-        print(f"Error in verify_payment_notice call to node: {res_verify_payment.content}")
-
-    assert res_verify_payment.status_code == 200
+    assert_response_ok(res_verify_payment, "Verify payment notice")
     res_verify_payment_body = check_res_ok_and_get_body(res_verify_payment.content, tag_name='verifyPaymentNoticeRes')
 
     amount = res_verify_payment_body["paymentList"]["paymentOptionDescription"]["amount"]
@@ -51,10 +50,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
 
     res_activate_payment = activate_payment_notice(psp=psp, org_fiscal_code=org_fiscal_code, nav=installment.nav,
                                                    amount=amount, due_date=due_date)
-    if res_activate_payment.status_code != 200:
-        print(f"Error in activate_payment_notice call to node: {res_activate_payment.content}")
-
-    assert res_activate_payment.status_code == 200
+    assert_response_ok(res_activate_payment, "Activate payment notice")
     res_activate_payment_body = check_res_ok_and_get_body(response_content=res_activate_payment.content,
                                                           tag_name='activatePaymentNoticeV2Response')
 
@@ -65,25 +61,16 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
                                             citizen_name=citizen_info.name,
                                             citizen_email=citizen_info.email)
 
-    if res_send_outcome.status_code != 200:
-        print(f"Error in send_payment_outcome call to node: {res_send_outcome.content}")
-
-    assert res_send_outcome.status_code == 200
+    assert_response_ok(res_send_outcome, "Send payment outcome")
     check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeV2Response')
 
-    if dp_identifier is None:
-        context.installment_paid = installment
-    else:
-        context.installment_paid = {dp_identifier: installment}
+    set_installment_paid(context, installment, dp_identifier)
 
 
 @then("the receipt is processed correctly")
 @then("the receipt of debt position {dp_identifier} is processed correctly")
 def step_check_receipt_processed(context, dp_identifier=None, organization_id=None):
-    if dp_identifier is None:
-        installment_paid = context.installment_paid
-    else:
-        installment_paid = context.installment_paid.get(dp_identifier)
+    installment_paid = get_installment_paid(context, dp_identifier)
     org_id = organization_id if organization_id is not None else context.org_info.id
 
     file_path_name = FilePathName.RECEIPT_PAGOPA
@@ -95,15 +82,12 @@ def step_check_receipt_processed(context, dp_identifier=None, organization_id=No
     res = get_installment(token=context.token, traceparent=context.traceparent,
                           installment_id=installment_paid.installment_id)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get installment by id")
     assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
     installment_paid.iur = res.json()['iur']
     installment_paid.receipt_id = res.json()['receiptId']
 
-    if dp_identifier is None:
-        context.installment_paid = installment_paid
-    else:
-        context.installment_paid[dp_identifier] = installment_paid
+    set_installment_paid(context, installment_paid, dp_identifier)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
                           entity_id=str(org_id) + '-' + installment_paid.iuv + '-' + installment_paid.iur + '-1',
@@ -123,18 +107,18 @@ def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType
 @then("the receipt is created correctly with origin {receipt_origin}")
 def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value,
                                installment_paid=None, is_duplicate: bool = False):
-    installment_paid = installment_paid if installment_paid else context.installment_paid
+    installment_paid = installment_paid if installment_paid else get_installment_paid(context)
     receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
 
     res = get_installment(token=context.token, traceparent=context.traceparent,
                           installment_id=installment_paid.installment_id)
-    assert res.status_code == 200
+    assert_response_ok(res, "Get installment by id")
     installment = res.json()
 
     if is_duplicate:
         res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=installment_paid.iur)
-        assert res.status_code == 200
+        assert_response_ok(res, "Get receipt by IUR")
         receipt = res.json()
         assert receipt['receiptOrigin'] == receipt_origin
         assert installment['iur'] != installment_paid.iur
@@ -142,8 +126,9 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
         res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
                           receipt_origin=receipt_origin, iuv=installment_paid.iuv,
                           iur=installment_paid.iur)
-        assert res.status_code == 200
-        assert len(res.json()['content']) == 1
+        assert_response_ok(res, "Get receipt by IUV and IUR")
+        assert len(res.json()['content']) == 1, \
+            f"Expected exactly 1 receipt for IUV {installment_paid.iuv} / IUR {installment_paid.iur}, got {len(res.json()['content'])}"
         receipt = res.json()['content'][0]
         assert receipt['receiptOrigin'] == receipt_origin
         assert installment_paid.iuv == receipt['iuv']

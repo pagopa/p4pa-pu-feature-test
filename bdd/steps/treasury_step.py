@@ -8,6 +8,8 @@ from zipfile import ZipFile
 from behave import when, then
 
 from api.fileshare import post_upload_file
+from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.scenario_state import get_installment_paid
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -93,7 +95,7 @@ def step_upload_treasury_file_with_amount(context, amount):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload treasury file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
@@ -106,7 +108,7 @@ def step_upload_treasury_file_with_amount(context, amount):
 def step_upload_treasury_file(context, po_index, installment_seq_num):
     token = context.token
     org_info = context.org_info
-    amount = int(context.installment_paid.amount_cents / 100)
+    amount = int(get_installment_paid(context).amount_cents / 100)
 
     with open('./bdd/steps/file_template/treasury_opi.xml', 'r') as file:
         ingestion_flow_file = file.read()
@@ -119,7 +121,7 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload treasury file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
@@ -131,7 +133,7 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
 @then("the treasury is processed correctly")
 def step_check_treasury_processed(context):
     organization_id = context.org_info.id
-    installment_paid = context.installment_paid
+    installment_paid = get_installment_paid(context)
 
     file_path_name = FilePathName.TREASURY_OPI
     file_name = context.treasury_file_name

@@ -8,6 +8,7 @@ from behave import given, when, then
 from api.debt_positions import get_debt_positions_by_ingestion_flow_id
 from api.fileshare import post_upload_file
 from bdd.steps.debt_positions_step import validate_debt_position_created
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import create_debt_position, create_payment_option, create_installment
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
@@ -120,7 +121,7 @@ def step_uploads_debt_positions_file(context):
                            ingestion_flow_file_type=IngestionFlowFileType.DP_INSTALLMENTS,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload debt positions file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.debt_positions_file_id = res.json()['ingestionFlowFileId']
@@ -162,7 +163,7 @@ def step_check_debt_positions_created_from_file(context, identifiers, status):
 
     res = get_debt_positions_by_ingestion_flow_id(token=context.token, traceparent=context.traceparent, ingestion_flow_id=context.debt_positions_file_id)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get debt positions by ingestion flow id")
 
     debt_positions_created = check_debt_positions_created(context=context, identifiers=identifiers, status=status, debt_position_by_ingestion_flow_id=res.json())
 

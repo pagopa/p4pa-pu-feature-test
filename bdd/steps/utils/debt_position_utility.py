@@ -87,8 +87,8 @@ def create_installment(expiration_days: int, seq_num: int, amount_cents: int = N
     debtor = Debtor(fiscal_code=citizen.fiscal_code, full_name=citizen.name,
                     email=citizen.email) if citizen is not None else Debtor()
 
-    sync_status = SyncStatus(sync_status_from=Status.DRAFT.value,
-                             sync_status_to=Status.UNPAID.value) if status == Status.TO_SYNC.value else None
+    sync_status = SyncStatus(sync_status_from=Status.DRAFT,
+                             sync_status_to=Status.UNPAID) if status == Status.TO_SYNC.value else None
 
     installment = Installment(amount_cents=amount_cents,
                               due_date=due_date,
