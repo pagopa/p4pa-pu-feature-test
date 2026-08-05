@@ -8,6 +8,8 @@ from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file
     step_check_payment_reporting_processed, get_payment_reporting_flow
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_upload_treasury_file, step_check_treasury_processed
+from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.debt_position_utility import get_installment_paid
 from model.debt_position import Status
 
 
@@ -23,7 +25,7 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
         iuf = flow['iuf']
         iur = flow['iur']
     else:
-        installment = context.installment_paid
+        installment = get_installment_paid(context)
         iuf = None
         iur = None
 
@@ -33,7 +35,7 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
                              last_classification_date_from=date_now, last_classification_date_to=date_now,
                              organization_id=context.org_info.id, iuv=installment.iuv, iuf=iuf, iur=iur)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get classification by IUV, IUF and IUR")
     classifications = res.json()['content']
     assert len(classifications) != 0
 

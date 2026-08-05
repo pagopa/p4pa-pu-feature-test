@@ -1,27 +1,26 @@
 @classification
 Feature: Classification process starting from an installment payment
 
-  @aca
   @payment
-  Scenario: A simple debt position created on ACA is paid after a citizen payment
-    Given a simple debt position created by organization interacting with ACA
+  Scenario Outline: A simple debt position created on <interaction> is paid after a citizen payment
+    Given a simple debt position created by organization interacting with <interaction>
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
     And the debt position is in status paid
     And the check of debt position expiration is canceled
 
-  @gpd
-  @payment
-  Scenario: A simple debt position created on GPD is paid after a citizen payment
-    Given a simple debt position created by organization interacting with GPD
-    When the citizen pays the installment of payment option 1
-    Then the receipt is processed correctly
-    And the debt position is in status paid
-    And the check of debt position expiration is canceled
+    @aca
+    Examples:
+      | interaction |
+      | ACA         |
 
-  @aca
-  Scenario: A simple debt position created on ACA is reported after payment, payment reporting and treasury
-    Given a simple debt position created by organization interacting with ACA
+    @gpd
+    Examples:
+      | interaction |
+      | GPD         |
+
+  Scenario Outline: A simple debt position created on <interaction> is reported after payment, payment reporting and treasury
+    Given a simple debt position created by organization interacting with <interaction>
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
     And the debt position is in status paid
@@ -36,22 +35,15 @@ Feature: Classification process starting from an installment payment
     And the debt position is in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
 
-  @gpd
-  Scenario: A simple debt position created on GPD is reported after payment, payment reporting and treasury
-    Given a simple debt position created by organization interacting with GPD
-    When the citizen pays the installment of payment option 1
-    Then the receipt is processed correctly
-    And the debt position is in status paid
-    And the check of debt position expiration is canceled
-    And the classification labels are RT_NO_IUF, RT_NO_IUD
-    When the organization uploads the payment reporting file about installment of payment option 1
-    Then the payment reporting is processed correctly
-    And the debt position is in status reported
-    And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD
-    When the organization uploads the treasury file with amount of 100 euros
-    Then the treasury is processed correctly
-    And the debt position is in status reported
-    And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
+    @aca
+    Examples:
+      | interaction |
+      | ACA         |
+
+    @gpd
+    Examples:
+      | interaction |
+      | GPD         |
 
   @gpd
   Scenario: A complex debt position created on GPD is partially paid after payment, payment reporting and treasury of one installment
@@ -135,7 +127,6 @@ Feature: Classification process starting from an installment payment
 
   @classification_duplicates
   @gpd
-    @test
   Scenario: An installment is classified as duplicate (DOPPI) when a payment reporting with outcome code 9 arrives before the payment and it is later reported
     Given a simple debt position created by organization interacting with GPD
     And a payment reporting with outcome code 9 has been successfully processed for the installment

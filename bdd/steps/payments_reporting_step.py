@@ -8,16 +8,17 @@ from zipfile import ZipFile
 
 from behave import given, when, then
 
-from api.debt_positions import get_debt_position, get_installment
+from api.debt_positions import get_installment
 from api.fileshare import post_upload_file
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_position_created
 from bdd.steps.payments_step import step_check_receipt_created
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
-    generate_iuv
+    generate_iuv, get_installment_paid, set_installment_paid, fetch_debt_position, find_mixed_installment
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
-from model.debt_position import DebtPosition, Status, Installment
+from model.debt_position import Status, Installment
 from model.file import IngestionFlowFileType, FileOrigin, FileStatus, FilePathName, ReceiptOriginType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
@@ -27,8 +28,6 @@ psp_info = secrets.payment_info.psp
 def _register_payment_reporting_flow(context, outcome_code, iuf, iur, installment):
     if installment is None:
         return
-    if not hasattr(context, 'payment_reporting_flows'):
-        context.payment_reporting_flows = {}
     context.payment_reporting_flows[str(outcome_code)] = {'iuf': iuf, 'iur': iur, 'installment': installment}
 
 
@@ -36,7 +35,7 @@ def get_payment_reporting_flow(context, outcome_code):
     flows = getattr(context, 'payment_reporting_flows', {})
     key = str(outcome_code)
     assert key in flows, (
-        f"No payment reporting flow registered for outcome code {key}. "
+        f"No payment reporting flow registered with outcome code {key}. "
         f"Available flows: {sorted(flows)}"
     )
     return flows[key]
@@ -46,16 +45,13 @@ def get_payment_reporting_flow(context, outcome_code):
 @when("the organization uploads the payment reporting file about installment {seq_num} of payment option {po_index}")
 @when(
     "the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
-@when("the organization uploads the payment reporting file about installment paid")
 @when("the organization uploads a second payment reporting for the installment with outcome code {outcome_code}")
 def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0', installment=None):
     token = context.token
     org_info = context.org_info
 
     if installment is None:
-        res = get_debt_position(token=token, traceparent=context.traceparent,
-                                debt_position_id=context.debt_position.debt_position_id)
-        debt_position = DebtPosition.from_dict(res.json())
+        debt_position = fetch_debt_position(context)
         installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position,
                                                                po_index=int(po_index), seq_num=int(seq_num))
 
@@ -110,20 +106,26 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
+    assert_response_ok(res, "Upload payment reporting file")
+    assert res.json()['ingestionFlowFileId'] is not None
+
+    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
     context.payment_reporting_file_name = zip_file_path
-    context.installment_paid = installment
+    set_installment_paid(context, installment)
     context.iuv = installment.iuv
     context.iur = installment.iur
 
     _register_payment_reporting_flow(context, outcome_code, iuf, installment.iur, installment)
 
-    assert res.status_code == 200
-    assert res.json()['ingestionFlowFileId'] is not None
-
-    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
-
     os.remove(zip_file_path)
     os.remove(xml_file_path)
+
+
+@when("the organization uploads the payment reporting file about mixed installment")
+def step_upload_payment_reporting_for_mixed_dp(context):
+    debt_position = fetch_debt_position(context)
+    installment = find_mixed_installment(debt_position=debt_position)
+    step_upload_payment_reporting_file(context=context, installment=installment)
 
 
 @when(
@@ -181,16 +183,15 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
                            ingestion_flow_file_type=IngestionFlowFileType.PAYMENTS_REPORTING,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
+    assert_response_ok(res, "Upload payment reporting file")
+    assert res.json()['ingestionFlowFileId'] is not None
+
+    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
     context.payment_reporting_file_name = zip_file_path
     context.iuv = iuv
     context.iur = iur
 
     _register_payment_reporting_flow(context, outcome_code, iuf, iur, installment)
-
-    assert res.status_code == 200
-    assert res.json()['ingestionFlowFileId'] is not None
-
-    context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
 
     os.remove(zip_file_path)
     os.remove(xml_file_path)
@@ -198,7 +199,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
 
 @then("the payment reporting is processed correctly")
 def step_check_payment_reporting_processed(context):
-    installment_paid = context.installment_paid
+    installment_paid = get_installment_paid(context)
     organization_id = context.org_info.id
 
     file_path_name = FilePathName.PAYMENTS_REPORTING
@@ -219,9 +220,9 @@ def step_check_payment_reporting_processed(context):
 
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get installment by id")
     assert res.json()['iuf'] is not None
-    context.iuf = (res.json()['iuf'])
+    installment_paid.iuf = res.json()['iuf']
 
 
 @then("the payment reporting with outcome code 9 is processed correctly")
@@ -249,7 +250,7 @@ def step_successful_payment_reporting_uploading(context, outcome_code='0'):
     step_check_dp_status(context=context, status=Status.REPORTED.value)
     step_check_payment_reporting_processed(context=context)
     if int(outcome_code) == 9:
-        step_check_receipt_created(context=context, installment_paid=context.installment_paid)
+        step_check_receipt_created(context=context, installment_paid=get_installment_paid(context))
 
 
 @given("a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU")
@@ -262,9 +263,8 @@ def step_successful_payment_reporting_uploading_outside_pu(context):
 
 @when("the organization uploads a second payment reporting for the installment created outside PU with outcome code {outcome_code}")
 def step_upload_payment_reporting_file_outside_pu(context, outcome_code='0'):
-    res = get_debt_position(token=context.token, traceparent=context.traceparent,
-                            debt_position_id=context.debt_position.debt_position_id)
-    installment = find_installment_by_iuv(debt_position=DebtPosition.from_dict(res.json()), iuv=context.iuv)
+    debt_position = fetch_debt_position(context)
+    installment = find_installment_by_iuv(debt_position=debt_position, iuv=context.iuv)
     step_upload_payment_reporting_file(context=context, outcome_code=outcome_code, installment=installment)
 
 

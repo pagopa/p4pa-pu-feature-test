@@ -6,7 +6,9 @@ from api.classifications import get_assessment, get_assessment_details, get_asse
     get_assessment_details_by_iud_and_iuv, get_classification
 from api.debt_position_type import get_debt_position_type_org_by_code, get_dpto_balance_cost_by_id
 from api.debt_positions import get_installment
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import extract_balance_from_xml, extract_sections, build_section
+from bdd.steps.utils.debt_position_utility import get_installment_paid, set_installment_paid
 from bdd.steps.workflow_step import check_workflow_status
 from model.classification import Balance, AssessmentRegistry, AssessmentDetailClassificationLabel, Section
 from model.debt_position import DebtPositionTypeOrgBalanceCostType
@@ -19,14 +21,13 @@ default_send_dptobc_code = 'SEND'
 @then("the assessment related to debt position {dp_identifier} is in status {status}")
 def step_check_assessment(context, status: str, dp_identifier: str = None):
     org_info = context.org_info
-    installment_paid = context.installment_paid if dp_identifier is None else context.installment_paid.get(
-        dp_identifier)
-    context.installment_paid = installment_paid
+    installment_paid = get_installment_paid(context, dp_identifier)
+    set_installment_paid(context, installment_paid)
 
     res = get_installment(token=context.token, traceparent=context.traceparent,
                           installment_id=installment_paid.installment_id)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get installment by id")
     assert res.json()["sourceFlowName"] is not None
     installment_paid.source_flow_name = res.json()["sourceFlowName"]
 
@@ -34,7 +35,7 @@ def step_check_assessment(context, status: str, dp_identifier: str = None):
                          debt_position_type_org_code=context.debt_position_type_org_code,
                          assessment_name=installment_paid.source_flow_name)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get assessment")
     assert res.json()["assessmentId"] is not None
     assert res.json()["status"] == status.upper()
 
@@ -48,7 +49,7 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
     res = get_assessment_details_by_iud_and_iuv(token=context.token, traceparent=context.traceparent,
                                                 organization_id=context.org_info.id,
                                                 iud=installment_paid.iud, iuv=installment_paid.iuv)
-    assert res.status_code == 200
+    assert_response_ok(res, "Get assessment details by IUD and IUV")
     assert len(res.json()["_embedded"]["assessmentsDetails"]) == 0
 
     date_now = datetime.now().strftime('%Y-%m-%d')
@@ -56,13 +57,13 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
                              last_classification_date_from=date_now, last_classification_date_to=date_now,
                              iuv=installment_paid.iuv, iud=installment_paid.iud)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get classification by IUD and IUV")
     assert len(res.json()['content']) == 0
 
 
 @then("the assessment classification label for each IUD is {label}")
 def step_check_assessment_detail_classification_label(context, label):
-    installment_paid = context.installment_paid
+    installment_paid = get_installment_paid(context)
 
     check_dp_with_dpto_mixed_not_classified(context=context, installment_paid=installment_paid)
 
@@ -77,7 +78,7 @@ def step_check_assessment_detail_classification_label(context, label):
                                                     organization_id=context.org_info.id,
                                                     iud=transfer_mixed.iud, iuv=installment_paid.iuv)
 
-        assert res.status_code == 200
+        assert_response_ok(res, "Get assessment details by IUD and IUV")
         assessment_details = res.json()["_embedded"]["assessmentsDetails"]
 
         balance = retrieve_balance(context=context, installment_paid=transfer_mixed,
@@ -99,7 +100,7 @@ def step_check_assessment_detail_classification_label(context, label):
 @then("the assessment detail is created correctly based on balance including {dptobc_type} section")
 def step_check_assessment_detail(context, dptobc_type=None):
     assessment_id = context.assessment_id
-    installment_paid = context.installment_paid
+    installment_paid = get_installment_paid(context)
     dptobc_type = dptobc_type.upper().replace(" ", "_") if dptobc_type is not None else None
 
     balance = retrieve_balance(context=context, installment_paid=installment_paid,
@@ -113,7 +114,7 @@ def step_check_assessment_detail(context, dptobc_type=None):
                                  assessment_id=assessment_id, iud=installment_paid.iud,
                                  iuv=installment_paid.iuv)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get assessment details")
     assessment_details = res.json()["_embedded"]["assessmentsDetails"]
     assert len(assessment_details) == len(balance.sections)
 
@@ -146,7 +147,7 @@ def retrieve_balance(context, installment_paid, debt_position_type_org_code, dpt
         res_dp_type_org = get_debt_position_type_org_by_code(token=context.token, traceparent=context.traceparent,
                                                              organization_id=context.org_info.id,
                                                              code=debt_position_type_org_code)
-        assert res_dp_type_org.status_code == 200
+        assert_response_ok(res_dp_type_org, "Get debt position type org by code")
         balance_xml = res_dp_type_org.json().get('balance')
 
     sections = []
@@ -162,7 +163,7 @@ def retrieve_balance(context, installment_paid, debt_position_type_org_code, dpt
         res = get_assessment_registry(token=context.token, traceparent=context.traceparent,
                                       organization_id=context.org_info.id,
                                       debt_position_type_org_code=debt_position_type_org_code)
-        assert res.status_code == 200
+        assert_response_ok(res, "Get assessment registry")
         assert len(res.json()["_embedded"]["assessmentsRegistries"]) == 1
         ass_reg = res.json()["_embedded"]["assessmentsRegistries"][0]
 
@@ -190,7 +191,7 @@ def retrieve_dpto_balance_cost_of_notification(context) -> AssessmentRegistry:
         return AssessmentRegistry(section_code=default_send_dptobc_code, office_code=default_send_dptobc_code,
                                   assessment_code=default_send_dptobc_code)
     else:
-        assert res_dptobc_by_id.status_code == 200
+        assert_response_ok(res_dptobc_by_id, "Get DPTO balance cost by id")
         dptobc = res_dptobc_by_id.json()
         return AssessmentRegistry(section_code=dptobc.get('sectionCode'), office_code=dptobc.get('officeCode'),
                                   assessment_code=dptobc.get('assessmentCode'))

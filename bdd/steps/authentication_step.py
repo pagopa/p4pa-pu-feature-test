@@ -3,6 +3,7 @@ from enum import Enum
 from behave import given
 
 from api.auth import post_auth_token, post_external_auth_token
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
 from config.configuration import secrets
 from model.workflow_hub import WorkflowType
@@ -32,7 +33,7 @@ def step_get_token_org(context, pagopa_interaction):
 
     res = post_auth_token(user_id=user_id, traceparent=context.traceparent)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Post auth token")
     assert res.json()['access_token'] is not None
 
     organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], traceparent=context.traceparent,
@@ -57,7 +58,7 @@ def step_get_token_sil(context, pagopa_interaction: PagoPaInteractionModel):
 
     res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret, traceparent=context.traceparent)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Post client auth token")
     assert res.json()['access_token'] is not None
 
     organization_id = retrieve_org_id_by_ipa_code(token=res.json()['access_token'], traceparent=context.traceparent,

@@ -11,10 +11,11 @@ from api.soap.sil import post_sil_invia_dovuto
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
 from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
 from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition, Status
-from model.debt_position_mixed import TransferMixed, DebtPositionMixed
+from model.debt_position_mixed import TransferMixed, DebtPositionMixed, MIXED_REMITTANCE, MIXED_REMITTANCE
 from model.workflow_hub import WorkflowType
 
 
@@ -58,7 +59,7 @@ def step_sil_invia_dovuto_mixed(context):
                                 ipa_code=context.org_info.ipa_code)
 
     res_parsed = xmltodict.parse(res.content.decode('utf-8'))
-    assert res.status_code == 200
+    assert_response_ok(res, "SIL invia dovuto")
     res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILInviaDovutiRisposta']
     assert res_body['esito'] == 'OK'
     assert res_body['url'] is not None
@@ -81,7 +82,7 @@ def step_check_debt_positions_mixed_created(context, status):
             res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                                                      iud=transfer_mixed.iud,
                                                      debt_position_origin=dp_origin)
-            assert res_dp_by_iud.status_code == 200
+            assert_response_ok(res_dp_by_iud, "Get debt position by IUD")
             assert len(res_dp_by_iud.json()) == 1
             res_dp = res_dp_by_iud.json()[0]
 
@@ -92,7 +93,7 @@ def step_check_debt_positions_mixed_created(context, status):
             res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_info.id,
                                                      iuv=iuv,
                                                      debt_position_origin=dp_origin)
-            assert res_dp_by_iuv.status_code == 200
+            assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
             assert len(res_dp_by_iuv.json()) == 1
             res_dp = res_dp_by_iuv.json()[0]
 
@@ -118,7 +119,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
                                             iud=context.debt_position_mixed.transfers[0].iud)
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_id, iuv=iuv)
-    assert res_dp_by_iuv.status_code == 200
+    assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
     res_dp_list = res_dp_by_iuv.json()
 
     _quick_validate_all_dp(context=context, res_dp_list=res_dp_list, org_id=org_id)
@@ -133,7 +134,7 @@ def step_check_mixed_and_tech_dp_status(context, status):
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                                              iuv=context.iuv_mixed, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
-    assert res_dp_by_iuv.status_code == 200
+    assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
     for dp_sp_mixed in res_dp_by_iuv.json():
         step_check_dp_status(context=context, status=status, debt_position_id=dp_sp_mixed['debtPositionId'])
 
@@ -170,7 +171,7 @@ def _quick_validate_all_dp(context, res_dp_list, org_id):
 def _extract_iuv_from_dp_found_by_iud(token, traceparent, org_id, iud):
     res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=traceparent, organization_id=org_id, iud=iud,
                                              debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
-    assert res_dp_by_iud.status_code == 200
+    assert_response_ok(res_dp_by_iud, "Get debt position by IUD")
     assert res_dp_by_iud.json() != []
 
     return res_dp_by_iud.json()[0]['paymentOptions'][0]['installments'][0]['iuv']
@@ -229,7 +230,7 @@ def _validate_dp_spontaneous_sil(res_dp, debt_position_type_org_id, dp_mixed, or
     assert res_installment['status'] == status.upper()
     assert res_installment['amountCents'] == int(float(row['total amount']) * 100)
     assert res_installment['dueDate'] == (datetime.now() + timedelta(minutes=120)).strftime("%Y-%m-%d")
-    assert res_installment['remittanceInformation'] == 'Causali multiple'
+    assert res_installment['remittanceInformation'] == MIXED_REMITTANCE
     assert res_installment['debtor'] == json.loads(dp_mixed.debtor.to_json())
 
     assert len(res_installment['transfers']) == len(transfers_index)

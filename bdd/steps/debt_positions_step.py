@@ -5,20 +5,23 @@ from pathlib import Path
 
 from behave import given, when, then
 
-from api.debt_positions import post_create_debt_position, get_debt_position, \
+from api.debt_positions import post_create_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
 from api.pagopa_payments import post_create_debt_position_on_gpd
-from bdd.steps.authentication_step import step_get_token_org, PagoPaInteractionModel
+from bdd.steps.authentication_step import step_get_token_org
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
+from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
-    create_payment_option, create_transfer, generate_iuv
+    create_payment_option, create_transfer, generate_iuv, fetch_debt_position, get_installment_paid, \
+    set_installment_paid, get_stored_debt_position, store_debt_position_by_id
 from bdd.steps.utils.utility import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion
-from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
+from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
@@ -76,7 +79,7 @@ def step_create_dp(context):
 
     res = post_create_debt_position(token=context.token, traceparent=context.traceparent, debt_position=debt_position.to_json())
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Create debt position")
 
     validate_debt_position_created(org_info=context.org_info, debt_position_request=debt_position,
                                    debt_position_response=res.json(),
@@ -97,47 +100,33 @@ def step_check_dp_status(context, status, debt_position_id=None):
 
 @then("the payment option {po_index} is in status {status}")
 def step_check_po_status(context, po_index, status):
-    debt_position_id = context.debt_position.debt_position_id
-
-    res = get_debt_position(token=context.token, traceparent=context.traceparent,  debt_position_id=debt_position_id)
-    assert res.status_code == 200
-
-    debt_position = DebtPosition.from_dict(res.json())
+    debt_position = fetch_debt_position(context)
 
     payment_option = find_payment_option_by_po_index(debt_position=debt_position, po_index=int(po_index))
 
-    assert payment_option.status.value == status.upper()
+    assert payment_option.status.value == status.upper(), \
+        f"Payment option {po_index} status mismatch: expected {status.upper()}, got {payment_option.status.value}"
 
 
 @then("the installment of payment option {po_index} is in status {status}")
 @then("the installment {installment_seq_num} of payment option {po_index} is in status {status}")
 def step_check_installment_status(context, po_index, status, installment_seq_num='1'):
-    debt_position_id = context.debt_position.debt_position_id
-
-    res = get_debt_position(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id)
-
-    assert res.status_code == 200
-
-    debt_position = DebtPosition.from_dict(res.json())
+    debt_position = fetch_debt_position(context)
 
     installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=int(po_index),
                                                            seq_num=int(installment_seq_num))
 
-    assert installment.status.value == status.upper()
+    assert installment.status.value == status.upper(), \
+        f"Installment status mismatch: expected {status.upper()}, got {installment.status.value}"
 
 
 @then("the installment of the created debt position is in status {status}")
 def step_check_outcome9_installment_status(context, status):
-    debt_position_id = context.debt_position.debt_position_id
-
-    res = get_debt_position(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id)
-
-    assert res.status_code == 200
-
-    debt_position = DebtPosition.from_dict(res.json())
+    debt_position = fetch_debt_position(context)
     installment = debt_position.payment_options[0].installments[0]
 
-    assert installment.status.value == status.upper()
+    assert installment.status.value == status.upper(), \
+        f"Installment status mismatch: expected {status.upper()}, got {installment.status.value}"
 
 
 @given("a simple debt position created by organization interacting with {pagopa_interaction}")
@@ -157,10 +146,7 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
     if dp_identifier is not None:
-        try:
-            context.debt_positions[dp_identifier] = context.debt_position
-        except AttributeError:
-            context.debt_positions = {dp_identifier: context.debt_position}
+        store_debt_position_by_id(context, dp_identifier)
 
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
@@ -171,7 +157,6 @@ def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
     step_create_dp(context=context)
     step_check_dp_status(context=context, status=Status.UNPAID.value)
     step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction, status='valid')
-
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
 
@@ -191,19 +176,16 @@ def step_create_complex_debt_position(context, po_size, pagopa_interaction, dp_i
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
     if dp_identifier is not None:
-        try:
-            context.debt_positions[dp_identifier] = context.debt_position
-        except AttributeError:
-            context.debt_positions = {dp_identifier: context.debt_position}
+        store_debt_position_by_id(context, dp_identifier)
 
 
 @then("the debt positions are created correctly with origin {debt_position_origin}")
 def step_check_debt_positions_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value):
-    context.installments_paid = []
+    context.imported_installments = []
     for i in range(context.receipts_rows_len):
         step_check_debt_position_created(context=context, debt_position_origin=debt_position_origin,
                                          iuv=context.iuvs[i])
-        context.installments_paid.append(context.installment_paid)
+        context.imported_installments.append(get_installment_paid(context))
 
 
 @then("the debt position is created correctly")
@@ -216,17 +198,14 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     nav = '3' + iuv
     res = get_debt_position_by_organization_id_and_installment_nav(token, context.traceparent, organization_id=org_info.id, nav=nav)
 
-    assert res.status_code == 200
-    assert len(res.json()) == 1
+    assert_response_ok(res, "Get debt position by NAV")
+    assert len(res.json()) == 1, \
+        f"Expected exactly 1 debt position for NAV {nav}, got {len(res.json())}"
 
     res_debt_position = res.json()[0]
     assert res_debt_position['debtPositionId'] is not None
 
-    res = get_debt_position(token, context.traceparent, res_debt_position['debtPositionId'])
-
-    assert res.status_code == 200
-
-    debt_position = DebtPosition.from_dict(res.json())
+    debt_position = fetch_debt_position(context, debt_position_id=res_debt_position['debtPositionId'])
     assert DebtPositionOrigin[debt_position_origin.upper()] == debt_position.debt_position_origin
     if DebtPositionOrigin.RECEIPT_FILE.value == debt_position_origin.upper():
         assert Status.PAID == debt_position.status
@@ -234,22 +213,22 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     installment = debt_position.payment_options[0].installments[0]
     assert iuv == installment.iuv
     if DebtPositionOrigin.REPORTING_PAGOPA.value == debt_position_origin.upper():
-        assert 'CODE_9_PAYMENTS_REPORTING' == installment.remittance_information
-        assert 'ANONIMO' == installment.debtor.fiscal_code
+        assert PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE == installment.remittance_information
+        assert ANONYMOUS_DEBTOR_FISCAL_CODE == installment.debtor.fiscal_code
 
     context.debt_position = debt_position
-    context.installment_paid = installment
+    set_installment_paid(context, installment)
 
 
 @then("the installment has {installment_field} field populated")
 @then("the installment of debt position {dp_identifier} has {installment_field} field populated")
 def step_check_installment_fields(context, installment_field: str, dp_identifier: str = None):
-    debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
+    debt_position = get_stored_debt_position(context, dp_identifier)
     installment = debt_position.payment_options[0].installments[0]
 
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Get installment by id")
     assert installment_field in res.json()
 
 
@@ -358,7 +337,7 @@ def step_create_dp_on_gpd(context, pagopa_interaction):
 
     res = post_create_debt_position_on_gpd(token=context.token, traceparent=context.traceparent, debt_position=debt_position.to_json(), iud=installment.iud)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Create debt position on GPD")
 
     step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction,
                                                      status='VALID')

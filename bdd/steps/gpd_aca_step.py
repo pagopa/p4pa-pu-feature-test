@@ -1,18 +1,17 @@
 from behave import then
 
 from api.gpd_aca import get_debt_position_on_aca_or_gpd
+from bdd.steps.authentication_step import PagoPaInteractionModel
+from bdd.steps.utils.assertions import assert_response_ok
 from config.configuration import secrets
 
 
-def check_presence_debt_position_in_aca_or_gpd(org_fiscal_code, debt_position, status):
+def check_presence_debt_position_in_aca_or_gpd(org_fiscal_code, pagopa_interaction, debt_position, status):
     for po in debt_position.payment_options:
         for installment in po.installments:
             res = get_debt_position_on_aca_or_gpd(org_fiscal_code=org_fiscal_code, iupd_pagopa=installment.iupd_pagopa)
 
-            if res.status_code != 200:
-                print(f"Error in get_debt_position_on_aca_or_gpd call to gpd/aca: {res.content}")
-
-            assert res.status_code == 200
+            assert_response_ok(res, f"Get debt position on {pagopa_interaction}")
             assert res.json()['status'] == status.upper()
 
 
@@ -21,7 +20,7 @@ def check_presence_debt_position_in_aca_or_gpd(org_fiscal_code, debt_position, s
 def step_verify_presence_debt_position_in_gpd_or_aca(context, pagopa_interaction, status):
     debt_position = context.debt_position
 
-    check_presence_debt_position_in_aca_or_gpd(context.org_info.fiscal_code, debt_position, status)
+    check_presence_debt_position_in_aca_or_gpd(context.org_info.fiscal_code, pagopa_interaction, debt_position, status)
 
 
 @then("the notices of each debt positions are present in GPD archive in status {status}")
@@ -31,4 +30,6 @@ def step_verify_presence_debt_positions_in_gpd(context, status):
     debt_positions = context.debt_positions_created
 
     for debt_position in debt_positions:
-        check_presence_debt_position_in_aca_or_gpd(org_fiscal_code=org_fiscal_code, debt_position=debt_position, status=status)
+        check_presence_debt_position_in_aca_or_gpd(org_fiscal_code=org_fiscal_code,
+                                                   pagopa_interaction=PagoPaInteractionModel.GPD.value,
+                                                   debt_position=debt_position, status=status)

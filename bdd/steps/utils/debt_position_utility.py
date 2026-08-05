@@ -4,9 +4,22 @@ import uuid
 from datetime import datetime, timedelta
 
 from api.debt_position_type import get_debt_position_type_org_by_code, get_debt_position_type_by_id
+from api.debt_positions import get_debt_position
+from bdd.steps.utils.assertions import assert_response_ok
 from config.configuration import secrets
 from model.debt_position import DebtPosition, PaymentOption, Status, Installment, SyncStatus, Transfer
 from model.debt_position import Debtor, PaymentOptionType
+from model.debt_position_mixed import MIXED_REMITTANCE
+
+FEATURE_TEST_IUD_PREFIX = 'FeatureTest_'
+
+
+def build_feature_test_iud(seq_num) -> str:
+    return f'{FEATURE_TEST_IUD_PREFIX}{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
+
+
+def seq_num_of(iud: str) -> int:
+    return int(iud.split('_')[1])
 
 
 def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_index: int, seq_num: int) -> Installment:
@@ -14,10 +27,17 @@ def find_installment_by_seq_num_and_po_index(debt_position: DebtPosition, po_ind
     for po in debt_position.payment_options:
         if po.payment_option_index == po_index:
             for inst in po.installments:
-                if inst.iud.startswith('FeatureTest_' + str(seq_num)):
+                if inst.iud.startswith(FEATURE_TEST_IUD_PREFIX) and seq_num_of(inst.iud) == int(seq_num):
                     installment = inst
-                elif inst.remittance_information == 'Causali multiple':
-                    installment = inst
+    return installment
+
+
+def find_mixed_installment(debt_position: DebtPosition) -> Installment:
+    installment = None
+    for po in debt_position.payment_options:
+        for inst in po.installments:
+            if inst.remittance_information == MIXED_REMITTANCE:
+                installment = inst
     return installment
 
 
@@ -87,14 +107,14 @@ def create_installment(expiration_days: int, seq_num: int, amount_cents: int = N
     debtor = Debtor(fiscal_code=citizen.fiscal_code, full_name=citizen.name,
                     email=citizen.email) if citizen is not None else Debtor()
 
-    sync_status = SyncStatus(sync_status_from=Status.DRAFT.value,
-                             sync_status_to=Status.UNPAID.value) if status == Status.TO_SYNC.value else None
+    sync_status = SyncStatus(sync_status_from=Status.DRAFT,
+                             sync_status_to=Status.UNPAID) if status == Status.TO_SYNC.value else None
 
     installment = Installment(amount_cents=amount_cents,
                               due_date=due_date,
                               debtor=debtor,
                               remittance_information=f'Feature test installment {seq_num}',
-                              iud=f'FeatureTest_{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}',
+                              iud=build_feature_test_iud(seq_num),
                               ingestion_flow_file_action=ingestion_flow_file_action,
                               balance=balance,
                               status=status,
@@ -133,7 +153,7 @@ def retrieve_taxonomy_code_by_dp_type_org(token, traceparent: str, debt_position
     res_dp_type = get_debt_position_type_by_id(token=token, traceparent=traceparent,
                                                debt_position_type_id=debt_position_type_id)
 
-    assert res_dp_type.status_code == 200
+    assert_response_ok(res_dp_type, "Get debt position type by id")
     taxonomy_code = res_dp_type.json()['taxonomyCode']
     return taxonomy_code
 
@@ -143,7 +163,31 @@ def retrieve_dp_type_org_by_code(token, traceparent: str, organization_id: int, 
                                                          organization_id=organization_id,
                                                          code=debt_position_type_org_code)
 
-    assert res_dp_type_org.status_code == 200
+    assert_response_ok(res_dp_type_org, "Get debt position type org by code")
     assert res_dp_type_org.json() is not None
 
     return res_dp_type_org.json()
+
+
+def set_installment_paid(context, installment, dp_identifier=None):
+    context.installments_paid_by_id[dp_identifier] = installment
+
+
+def get_installment_paid(context, dp_identifier=None):
+    return context.installments_paid_by_id[dp_identifier]
+
+
+def get_stored_debt_position(context, dp_identifier=None):
+    return context.debt_position if dp_identifier is None else context.debt_positions[dp_identifier]
+
+
+def store_debt_position_by_id(context, dp_identifier):
+    context.debt_positions[dp_identifier] = context.debt_position
+
+
+def fetch_debt_position(context, debt_position_id=None) -> DebtPosition:
+    debt_position_id = debt_position_id if debt_position_id is not None else context.debt_position.debt_position_id
+    res = get_debt_position(token=context.token, traceparent=context.traceparent, debt_position_id=debt_position_id)
+
+    assert_response_ok(res, "Get debt position by id")
+    return DebtPosition.from_dict(res.json())

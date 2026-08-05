@@ -8,6 +8,8 @@ from zipfile import ZipFile
 from behave import when, then
 
 from api.fileshare import post_upload_file
+from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.debt_position_utility import get_installment_paid
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -16,12 +18,11 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
 
+IUF_NOT_FOUND = 'IUF_NOT_FOUND'
+
 
 def format_ingestion_flow_file(context, amount, file, org_info):
-    try:
-        iuf = context.iuf
-    except AttributeError:
-        iuf = 'IUF_NOT_FOUND'
+    iuf = get_installment_paid(context).iuf or IUF_NOT_FOUND
 
     date = datetime.now().strftime('%Y-%m-%d')
     date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
@@ -54,8 +55,6 @@ def format_ingestion_flow_file(context, amount, file, org_info):
                        remittance_description=remittance_description,
                        end_to_end_id='RF' + ''.join(random.choices(string.digits, k=24))
                        )
-
-    context.iuf = iuf
 
     return file
 
@@ -93,7 +92,7 @@ def step_upload_treasury_file_with_amount(context, amount):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload treasury file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
@@ -106,7 +105,7 @@ def step_upload_treasury_file_with_amount(context, amount):
 def step_upload_treasury_file(context, po_index, installment_seq_num):
     token = context.token
     org_info = context.org_info
-    amount = int(context.installment_paid.amount_cents / 100)
+    amount = int(get_installment_paid(context).amount_cents / 100)
 
     with open('./bdd/steps/file_template/treasury_opi.xml', 'r') as file:
         ingestion_flow_file = file.read()
@@ -119,7 +118,7 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
                            ingestion_flow_file_type=IngestionFlowFileType.TREASURY_OPI,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload treasury file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
@@ -131,7 +130,7 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
 @then("the treasury is processed correctly")
 def step_check_treasury_processed(context):
     organization_id = context.org_info.id
-    installment_paid = context.installment_paid
+    installment_paid = get_installment_paid(context)
 
     file_path_name = FilePathName.TREASURY_OPI
     file_name = context.treasury_file_name
@@ -149,5 +148,5 @@ def step_check_treasury_processed(context):
                               status=WorkflowStatus.COMPLETED)
 
     check_workflow_status(context=context, workflow_type=WorkflowType.IUF_CLASSIFICATION,
-                          entity_id=str(organization_id) + '-' + context.iuf,
+                          entity_id=str(organization_id) + '-' + installment_paid.iuf,
                           status=WorkflowStatus.COMPLETED)

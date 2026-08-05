@@ -8,7 +8,8 @@ import pandas
 from behave import given, when, then
 
 from api.fileshare import post_upload_file
-from bdd.steps.utils.debt_position_utility import generate_iuv
+from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -56,7 +57,7 @@ def step_create_receipts_file_for_existing_dp(context, csv_version: str):
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
 
     context.receipts_file_name = zip_file_path
-    context.installment_paid = context.debt_position.first_installment
+    set_installment_paid(context, context.debt_position.first_installment)
 
 
 @when("the organization uploads the receipts file")
@@ -67,7 +68,7 @@ def step_uploads_receipts_file(context):
                            ingestion_flow_file_type=IngestionFlowFileType.RECEIPT,
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
-    assert res.status_code == 200
+    assert_response_ok(res, "Upload receipts file")
     assert res.json()['ingestionFlowFileId'] is not None
 
     context.receipts_file_id = res.json()['ingestionFlowFileId']
@@ -100,7 +101,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
     receipts_rows = []
 
     for i in range(receipts_size):
-        iud = f'FeatureTest_{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
+        iud = f'{FEATURE_TEST_IUD_PREFIX}{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
         amount = "{:.2f}".format(
             random.randint(1, 200)) if debt_position is None else (float(debt_position.first_installment.amount_cents) / 100)
         iuv = generate_iuv() if debt_position is None else debt_position.first_installment.iuv
@@ -129,7 +130,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
         row.certifierLocation = "Roma"
         row.certifierProvince = "RM"
         row.certifierNation = "IT"
-        row.beneficiaryEntityIdType = EntityIdType.G.value
+        row.beneficiaryEntityIdType = EntityIdType.G
         row.beneficiaryEntityIdCode = org_info.fiscal_code
         row.beneficiaryCompanyName = org_info.name
         row.beneficiaryOperationalUnitCode = "beneficiaryOperationalUnitCode"
@@ -140,7 +141,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
         row.beneficiaryCity = "Milano"
         row.beneficiaryProvince = "MI"
         row.beneficiaryNation = "IT"
-        row.payerEntityType = PersonEntityType.F.value
+        row.payerEntityType = PersonEntityType.F
         row.payerFiscalCode = secrets.citizen_info.X.fiscal_code
         row.payerFullName = secrets.citizen_info.X.name
         row.payerAddress = "Via del Test"
@@ -150,7 +151,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
         row.payerProvince = "RM"
         row.payerNation = "IT"
         row.payerEmail = secrets.citizen_info.X.email
-        row.debtorEntityType = PersonEntityType.F.value
+        row.debtorEntityType = PersonEntityType.F
         row.debtorFiscalCode = secrets.citizen_info.X.fiscal_code
         row.debtorFullName = secrets.citizen_info.X.name
         row.debtorAddress = "Via del Test"
