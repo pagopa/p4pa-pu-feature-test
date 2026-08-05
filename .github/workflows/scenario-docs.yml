@@ -1,0 +1,43 @@
+name: Publish scenario catalogue
+
+# Builds a browsable catalogue of the Gherkin scenarios (from bdd/features)
+# and publishes it to GitHub Pages. It reads only the feature files: no test
+# execution, no secrets, no internal network access.
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    name: Build scenario docs and publish to GitHub Pages
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install docs dependencies
+        run: pip install behave mkdocs mkdocs-material
+
+      - name: Generate scenario docs
+        run: |
+          python scenario_parser.py \
+            --page-name "Piattaforma Unitaria Functional Testing" \
+            --repo-name ${{ github.event.repository.name }} \
+            --root-dir bdd/features
+
+      - name: Build MkDocs site
+        run: mkdocs build
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site

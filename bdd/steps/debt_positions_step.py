@@ -8,19 +8,20 @@ from behave import given, when, then
 from api.debt_positions import post_create_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment
 from api.pagopa_payments import post_create_debt_position_on_gpd
-from bdd.steps.authentication_step import step_get_token_org, PagoPaInteractionModel
+from bdd.steps.authentication_step import step_get_token_org
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
-    create_payment_option, create_transfer, generate_iuv
-from bdd.steps.utils.scenario_state import get_installment_paid, set_installment_paid, fetch_debt_position
+    create_payment_option, create_transfer, generate_iuv, fetch_debt_position, get_installment_paid, \
+    set_installment_paid, get_stored_debt_position, store_debt_position_by_id
 from bdd.steps.utils.utility import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion
-from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType
+from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
@@ -145,7 +146,7 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
     if dp_identifier is not None:
-        context.debt_positions[dp_identifier] = context.debt_position
+        store_debt_position_by_id(context, dp_identifier)
 
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
@@ -175,16 +176,16 @@ def step_create_complex_debt_position(context, po_size, pagopa_interaction, dp_i
     step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
     if dp_identifier is not None:
-        context.debt_positions[dp_identifier] = context.debt_position
+        store_debt_position_by_id(context, dp_identifier)
 
 
 @then("the debt positions are created correctly with origin {debt_position_origin}")
 def step_check_debt_positions_created(context, debt_position_origin: str = DebtPositionOrigin.REPORTING_PAGOPA.value):
-    context.installments_paid = []
+    context.imported_installments = []
     for i in range(context.receipts_rows_len):
         step_check_debt_position_created(context=context, debt_position_origin=debt_position_origin,
                                          iuv=context.iuvs[i])
-        context.installments_paid.append(get_installment_paid(context))
+        context.imported_installments.append(get_installment_paid(context))
 
 
 @then("the debt position is created correctly")
@@ -212,8 +213,8 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     installment = debt_position.payment_options[0].installments[0]
     assert iuv == installment.iuv
     if DebtPositionOrigin.REPORTING_PAGOPA.value == debt_position_origin.upper():
-        assert 'CODE_9_PAYMENTS_REPORTING' == installment.remittance_information
-        assert 'ANONIMO' == installment.debtor.fiscal_code
+        assert PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE == installment.remittance_information
+        assert ANONYMOUS_DEBTOR_FISCAL_CODE == installment.debtor.fiscal_code
 
     context.debt_position = debt_position
     set_installment_paid(context, installment)
@@ -222,7 +223,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
 @then("the installment has {installment_field} field populated")
 @then("the installment of debt position {dp_identifier} has {installment_field} field populated")
 def step_check_installment_fields(context, installment_field: str, dp_identifier: str = None):
-    debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
+    debt_position = get_stored_debt_position(context, dp_identifier)
     installment = debt_position.payment_options[0].installments[0]
 
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment.installment_id)

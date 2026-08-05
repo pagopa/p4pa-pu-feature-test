@@ -4,6 +4,8 @@ from dataclasses_json import dataclass_json, LetterCase
 
 from model.debt_position import DebtPositionOrigin, Debtor
 
+MIXED_REMITTANCE = 'Causali multiple'
+
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass

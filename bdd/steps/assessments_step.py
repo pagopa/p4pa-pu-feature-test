@@ -8,7 +8,7 @@ from api.debt_position_type import get_debt_position_type_org_by_code, get_dpto_
 from api.debt_positions import get_installment
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import extract_balance_from_xml, extract_sections, build_section
-from bdd.steps.utils.scenario_state import get_installment_paid, set_installment_paid
+from bdd.steps.utils.debt_position_utility import get_installment_paid, set_installment_paid
 from bdd.steps.workflow_step import check_workflow_status
 from model.classification import Balance, AssessmentRegistry, AssessmentDetailClassificationLabel, Section
 from model.debt_position import DebtPositionTypeOrgBalanceCostType

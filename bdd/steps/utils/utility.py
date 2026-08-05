@@ -1,4 +1,5 @@
 import time
+from secrets import token_hex
 
 from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
@@ -9,7 +10,6 @@ from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
-from secrets import token_hex
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
@@ -29,7 +29,9 @@ def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status:
         res = get_workflow_status(token=token, traceparent=traceparent, workflow_id=workflow_id)
         success = (res.status_code == 200 and res.json()['status'] == status.value)
 
-    assert success
+    assert success, \
+        f"\nWorkflow {workflow_id} did not reach status {status.value} after {tries} tries: " \
+        f"Last response HTTP {res.status_code} - {res.content}\n"
 
 def retry_get_process_file_status(token, traceparent: str, organization_id: int, file_path_name: FilePathName,
                                   file_name: str, status: FileStatus, tries=20, delay=4) -> dict:
@@ -57,7 +59,9 @@ def retry_get_process_file_status(token, traceparent: str, organization_id: int,
         file = get_latest_file(res) if res.status_code == 200 else None
         success = (res.status_code == 200 and file is not None and file['status'] == status.value)
 
-    assert success
+    assert success, \
+        f"\nFile '{file_name}' ({file_path_name.value}) did not reach status {status.value} after {tries} tries: " \
+        f"last response HTTP {res.status_code} - {res.content}\n"
     return file
 
 def retry_get_valid_send_notification(token, traceparent: str, notification_id, tries=20, delay=4):
@@ -80,9 +84,10 @@ def retry_get_valid_send_notification(token, traceparent: str, notification_id, 
 def retrieve_org_id_by_ipa_code(token: str, traceparent: str, ipa_code: str) -> int:
     res_org = get_org_by_ipa_code(token=token, traceparent=traceparent, ipa_code=ipa_code)
 
-    assert res_org.status_code == 200
+    assert_response_ok(res_org, "Get organization by IPA code")
     organization_id = res_org.json()['organizationId']
-    assert organization_id is not None
+    assert organization_id is not None, \
+        f"\nNo organization found with IPA code {ipa_code}\n"
 
     return organization_id
 
@@ -101,7 +106,9 @@ def retry_get_dp_status(token, traceparent: str, debt_position_id: int, status: 
         res = get_debt_position(token=token, traceparent=traceparent, debt_position_id=debt_position_id)
         success = (res.status_code == 200 and res.json()['status'] == status)
 
-    assert success
+    assert success, \
+        f"\nDebt position {debt_position_id} did not reach status {status} after {tries} tries: " \
+        f"last response HTTP {res.status_code} - {res.content}\n"
 
 def generate_traceparent():
     trace_id = token_hex(16)

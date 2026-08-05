@@ -5,8 +5,8 @@ from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
-from bdd.steps.utils.scenario_state import get_installment_paid, set_installment_paid
+from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_mixed_installment, \
+    get_installment_paid, set_installment_paid, get_stored_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
@@ -26,7 +26,6 @@ def check_res_ok_and_get_body(response_content, tag_name):
 
 @when("the citizen pays the installment of payment option {po_index}")
 @when("the citizen pays the installment {seq_num} of payment option {po_index}")
-@when("the citizen pays the installment of mixed debt position")
 @when("the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}")
 @when("the citizen pays the installment {seq_num} of debt position {dp_identifier}")
 def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None,
@@ -35,7 +34,7 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
     psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
     org_fiscal_code = context.org_info.fiscal_code
-    debt_position = context.debt_position if dp_identifier is None else context.debt_positions.get(dp_identifier)
+    debt_position = get_stored_debt_position(context, dp_identifier)
     installment = installment_to_paid if installment_to_paid is not None else (find_installment_by_seq_num_and_po_index(
         debt_position=debt_position,
         po_index=int(po_index), seq_num=int(seq_num)))
@@ -65,6 +64,12 @@ def step_installment_payment(context, po_index='1', seq_num='1', citizen_identif
     check_res_ok_and_get_body(response_content=res_send_outcome.content, tag_name='sendPaymentOutcomeV2Response')
 
     set_installment_paid(context, installment, dp_identifier)
+
+
+@when("the citizen pays the installment of mixed debt position")
+def step_pay_mixed_installment(context):
+    installment = find_mixed_installment(context.debt_position)
+    step_installment_payment(context=context, installment_to_paid=installment)
 
 
 @then("the receipt is processed correctly")
@@ -101,7 +106,7 @@ def step_check_receipt_processed(context, dp_identifier=None, organization_id=No
 def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
     for i in range(context.receipts_rows_len):
         step_check_receipt_created(context=context, receipt_origin=receipt_origin,
-                                   installment_paid=context.installments_paid[i])
+                                   installment_paid=context.imported_installments[i])
 
 
 @then("the receipt is created correctly with origin {receipt_origin}")

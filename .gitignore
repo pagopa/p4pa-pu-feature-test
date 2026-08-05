@@ -16,3 +16,8 @@ config/pu_feature_secrets.json
 
 # pycache
 __pycache__/
+
+# Generated scenario catalogue (scenario_parser.py + mkdocs build)
+/docs/
+/site/
+/mkdocs.yml

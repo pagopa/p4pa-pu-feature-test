@@ -14,8 +14,7 @@ from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
-    generate_iuv
-from bdd.steps.utils.scenario_state import get_installment_paid, set_installment_paid, fetch_debt_position
+    generate_iuv, get_installment_paid, set_installment_paid, fetch_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -217,7 +216,7 @@ def step_check_payment_reporting_processed(context):
 
     assert_response_ok(res, "Get installment by id")
     assert res.json()['iuf'] is not None
-    context.iuf = (res.json()['iuf'])
+    installment_paid.iuf = res.json()['iuf']
 
 
 @then("the payment reporting with outcome code 9 is processed correctly")

@@ -15,7 +15,7 @@ from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
 from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
 from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition, Status
-from model.debt_position_mixed import TransferMixed, DebtPositionMixed
+from model.debt_position_mixed import TransferMixed, DebtPositionMixed, MIXED_REMITTANCE, MIXED_REMITTANCE
 from model.workflow_hub import WorkflowType
 
 
@@ -230,7 +230,7 @@ def _validate_dp_spontaneous_sil(res_dp, debt_position_type_org_id, dp_mixed, or
     assert res_installment['status'] == status.upper()
     assert res_installment['amountCents'] == int(float(row['total amount']) * 100)
     assert res_installment['dueDate'] == (datetime.now() + timedelta(minutes=120)).strftime("%Y-%m-%d")
-    assert res_installment['remittanceInformation'] == 'Causali multiple'
+    assert res_installment['remittanceInformation'] == MIXED_REMITTANCE
     assert res_installment['debtor'] == json.loads(dp_mixed.debtor.to_json())
 
     assert len(res_installment['transfers']) == len(transfers_index)

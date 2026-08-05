@@ -139,7 +139,6 @@ Feature: Classification process starting from an installment payment
 
   @classification_duplicates
   @gpd
-        @test
   Scenario: An installment, created outside PU, is classified as duplicate (DOPPI) when a payment reporting with outcome code 9 arrives before the payment and it is later reported
     Given a simple debt position created on GPD
     And a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU

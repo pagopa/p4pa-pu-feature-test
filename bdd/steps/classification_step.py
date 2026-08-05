@@ -9,7 +9,7 @@ from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_upload_treasury_file, step_check_treasury_processed
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.scenario_state import get_installment_paid
+from bdd.steps.utils.debt_position_utility import get_installment_paid
 from model.debt_position import Status
 
 
@@ -37,6 +37,7 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
 
     assert_response_ok(res, "Get classification by IUV, IUF and IUR")
     classifications = res.json()['content']
+    print(classifications)
     assert len(classifications) != 0
 
     classification_transfer_map = {}

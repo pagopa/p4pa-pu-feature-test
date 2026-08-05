@@ -3,6 +3,7 @@ Feature: An organization creates debt positions by importing a file
 
   @<csv_version> @eng
   @gpd
+    @test
   Scenario Outline: Organization interacting with GPD creates 3 debt positions by ingestion flow file using version <csv_version>-eng
     Given organization interacting with GPD
     And debt positions <identifiers> with the installments configured as follows:

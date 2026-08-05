@@ -9,8 +9,7 @@ from behave import given, when, then
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import generate_iuv
-from bdd.steps.utils.scenario_state import set_installment_paid
+from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -102,7 +101,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
     receipts_rows = []
 
     for i in range(receipts_size):
-        iud = f'FeatureTest_{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
+        iud = f'{FEATURE_TEST_IUD_PREFIX}{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
         amount = "{:.2f}".format(
             random.randint(1, 200)) if debt_position is None else (float(debt_position.first_installment.amount_cents) / 100)
         iuv = generate_iuv() if debt_position is None else debt_position.first_installment.iuv

@@ -1,4 +1,3 @@
-# -- FILE: features/environment.py
 from bdd.steps.utils import utility
 
 def before_scenario(context, scenario):

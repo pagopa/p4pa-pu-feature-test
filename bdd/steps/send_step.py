@@ -8,8 +8,8 @@ from api.send import post_create_send_notification, post_upload_send_file, get_s
     get_send_notification_fee
 from bdd.steps.authentication_step import PagoPaInteractionModel
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index
-from bdd.steps.utils.scenario_state import get_installment_paid
+from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, get_installment_paid, \
+    seq_num_of, FEATURE_TEST_IUD_PREFIX, get_stored_debt_position
 from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
 from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
@@ -52,7 +52,7 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     dp_identifiers = dp_identifiers.split()
     for dp_identifier in dp_identifiers:
         for seq_num in range(1, int(installments_size) + 1):
-            installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_positions[dp_identifier],
+            installment = find_installment_by_seq_num_and_po_index(debt_position=get_stored_debt_position(context, dp_identifier),
                                                                    po_index=1, seq_num=seq_num)
             installments_notified.append(installment)
 
@@ -183,7 +183,7 @@ def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
 
     for installment in installments_notified:
         if (installment_paid.installment_id == installment.installment_id and
-                installment.iud.startswith('FeatureTest_' + str(seq_num))):
+                installment.iud.startswith(FEATURE_TEST_IUD_PREFIX) and seq_num_of(installment.iud) == int(seq_num)):
             previous_amount = installment.amount_cents
             expected_amount = previous_amount + context.notification_fee
 

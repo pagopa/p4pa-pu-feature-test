@@ -4,6 +4,9 @@ from enum import Enum
 from dataclasses_json import dataclass_json, LetterCase
 from config.configuration import secrets
 
+ANONYMOUS_DEBTOR_FISCAL_CODE = 'ANONIMO'
+PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE = 'CODE_9_PAYMENTS_REPORTING'
+
 
 class Status(Enum):
     TO_SYNC = "TO_SYNC"

@@ -44,3 +44,26 @@ or save the html report to a file:
 ```commandline
 behave -f html-pretty -o ./tests/reports/behave-report.html  
 ```
+
+## Validating step definitions
+You can check that every Gherkin step matches a step definition **without hitting the live APIs**
+(the dry-run loads and matches the steps but does not run `before_scenario` or the step bodies):
+
+```commandline
+behave --dry-run
+```
+
+To list step definitions that are no longer used by any scenario:
+
+```commandline
+behave --dry-run -f steps.usage
+```
+
+## Project layout
+- `bdd/features/` — Gherkin feature files (`.feature`)
+- `bdd/steps/` — step definitions (one `*_step.py` per domain area)
+- `bdd/steps/utils/` — shared helpers (scenario-state accessors, assertions, builders)
+- `bdd/environment.py` — behave hooks; initializes per-scenario state in `before_scenario`
+- `api/` — HTTP/SOAP clients
+- `model/` — domain models and constants
+- `config/` — settings and secrets loading
