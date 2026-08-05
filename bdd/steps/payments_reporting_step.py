@@ -14,7 +14,7 @@ from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
-    generate_iuv, get_installment_paid, set_installment_paid, fetch_debt_position
+    generate_iuv, get_installment_paid, set_installment_paid, fetch_debt_position, find_mixed_installment
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
@@ -45,7 +45,6 @@ def get_payment_reporting_flow(context, outcome_code):
 @when("the organization uploads the payment reporting file about installment {seq_num} of payment option {po_index}")
 @when(
     "the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
-@when("the organization uploads the payment reporting file about installment paid")
 @when("the organization uploads a second payment reporting for the installment with outcome code {outcome_code}")
 def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0', installment=None):
     token = context.token
@@ -120,6 +119,13 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
 
     os.remove(zip_file_path)
     os.remove(xml_file_path)
+
+
+@when("the organization uploads the payment reporting file about mixed installment")
+def step_upload_payment_reporting_for_mixed_dp(context):
+    debt_position = fetch_debt_position(context)
+    installment = find_mixed_installment(debt_position=debt_position)
+    step_upload_payment_reporting_file(context=context, installment=installment)
 
 
 @when(

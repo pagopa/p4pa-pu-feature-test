@@ -37,7 +37,6 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
 
     assert_response_ok(res, "Get classification by IUV, IUF and IUR")
     classifications = res.json()['content']
-    print(classifications)
     assert len(classifications) != 0
 
     classification_transfer_map = {}

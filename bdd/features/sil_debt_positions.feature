@@ -31,7 +31,7 @@ Feature: SIL management of debt positions
     And the check of mixed debt position expiration is canceled
     And the classification labels for each transfer are RT_NO_IUF, RT_NO_IUD
     And the assessment classification label for each IUD is PAID
-    When the organization uploads the payment reporting file about installment paid
+    When the organization uploads the payment reporting file about mixed installment
     Then the payment reporting is processed correctly
     And the mixed debt position and technical ones are in status reported
     And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD
