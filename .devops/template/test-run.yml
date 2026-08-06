@@ -72,15 +72,8 @@ steps:
       searchFolder: $(Build.SourcesDirectory)
       failTaskOnFailedTests: true
       testRunTitle: 'Feature test results: ${{ parameters.tag }}'
+      mergeTestResults: true
     continueOnError: true
-  - script: |
-      python3 .devops/junit_summary.py \
-        --junit-dir tests/reports/behave \
-        --tag "${{ parameters.tag }}" \
-        --out summary.md
-      echo "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/summary.md"
-    displayName: 'Publish Markdown summary'
-    condition: always()
   - task: Bash@3
     displayName: 'Send message on Slack'
     condition: in(variables['Agent.JobStatus'], 'SucceededWithIssues', 'Failed')
