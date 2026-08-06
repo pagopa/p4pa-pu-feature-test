@@ -1,20 +1,31 @@
 name: Publish scenario catalogue
 
 # Builds a browsable catalogue of the Gherkin scenarios (from bdd/features)
-# and publishes it to GitHub Pages. It reads only the feature files: no test
-# execution, no secrets, no internal network access.
+# and publishes it to GitHub Pages using GitHub's own Pages deployment.
+# It reads only the feature files: no test execution, no secrets.
 
 on:
   push:
-    branches: [ main ]
+    # TODO: remove the test branch before merging — keep only main.
+    branches: [ main, P4ADEV-4975-fix-github-action-for-scenario-docs ]
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent Pages deployment; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build-and-publish:
     name: Build scenario docs and publish to GitHub Pages
     runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,9 +46,18 @@ jobs:
       - name: Build MkDocs site
         run: mkdocs build
 
-      - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: site
+          # Create/enable the Pages site (source = GitHub Actions) if it does
+          # not exist yet, so the first run works without a manual setup.
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

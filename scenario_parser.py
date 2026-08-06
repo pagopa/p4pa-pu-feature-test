@@ -7,7 +7,7 @@ catalogue of the scenarios. It does NOT run the tests: the output reflects the
 feature files as they are, so it needs no secrets and no environment access.
 
 Usage:
-    python scenario_parser.py --page-name "PARI Functional Testing" \
+    python scenario_parser.py --page-name "Piattaforma Unitaria Functional Testing" \
         --repo-name p4pa-pu-feature-test --root-dir bdd/features
     mkdocs build
 """
