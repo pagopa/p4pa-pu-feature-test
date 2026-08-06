@@ -1,7 +1,7 @@
 @receipts_file
-Feature: An organization creates receipts by importing a file
+Feature: Receipts import from a file
 
-  Scenario Outline: As a positive result of importing a receipts file by an organization interacting with <interaction>, missing debt positions are created
+  Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with <interaction>
     Given organization interacting with <interaction>
     And receipts of non-existent debt positions inserted into an ingestion flow file with version 1_3
     When the organization uploads the receipts file
@@ -19,7 +19,7 @@ Feature: An organization creates receipts by importing a file
       | interaction |
       | ACA         |
 
-  Scenario Outline: As a positive result of importing a receipts file by an organization interacting with <interaction>, a debt position is updated
+  Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with <interaction>
     Given a simple debt position created by organization interacting with <interaction>
     And a receipt of a debt position inserted into an ingestion flow file with version 1_3
     When the organization uploads the receipts file

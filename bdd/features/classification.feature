@@ -1,5 +1,5 @@
 @classification
-Feature: Classification process starting from an installment payment
+Feature: Debt positions classification
 
   @payment
   Scenario Outline: A simple debt position created on <interaction> is paid after a citizen payment
