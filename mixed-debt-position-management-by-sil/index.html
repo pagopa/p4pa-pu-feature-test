@@ -633,45 +633,141 @@
 <p><strong>Tags:</strong> <code>@sil_debt_positions</code></p>
 <h2 id="scenario-a-mixed-debt-position-is-created-by-a-sil-for-an-organization-interacting-with-gpd">Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD</h2>
 <p><strong>Tags:</strong> <code>@debt_position_mixed</code></p>
-<pre><code class="language-gherkin">Given a SIL acting on behalf of an organization interacting with GPD
-And a new mixed debt position configured as follows:
-  | transfer index | type org | amount |
-  | 1 | FEATURE_TEST | 34.00 |
-  | 2 | FEATURE_TEST_2 | 48.00 |
-  | 3 | FEATURE_TEST | 68.00 |
-When SIL creates the mixed debt position
-Then 3 debt positions having installments with same IUV are in status unpaid configured as follows:
-  | origin | type org | total installments | total amount | transfers index |
-  | SPONTANEOUS_MIXED | FEATURE_TEST | 2 | 102.00 | 1 3 |
-  | SPONTANEOUS_MIXED | FEATURE_TEST_2 | 1 | 48.00 | 2 |
-  | SPONTANEOUS_SIL | MIXED | 1 | 150.00 | 1 2 3 |
-And the notice is present in GPD archive in status valid
-And the check of debt position expiration is scheduled
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">a new mixed debt position configured as follows:</span>
+<span class="k">  |</span><span class="s"> transfer index</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> amount</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 34.00</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> FEATURE_TEST_2</span><span class="k"> |</span><span class="s"> 48.00</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 3</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 68.00</span><span class="k"> |</span>
+<span class="k">When </span><span class="nf">SIL creates the mixed debt position</span>
+<span class="c"># (1)!</span>
+<span class="k">Then </span><span class="s">3</span><span class="nf"> debt positions having installments with same IUV are in status unpaid configured as follows:</span>
+<span class="k">  |</span><span class="s"> origin</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> total installments</span><span class="k"> |</span><span class="s"> total amount</span><span class="k"> |</span><span class="s"> transfers index</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> SPONTANEOUS_MIXED</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> 102.00</span><span class="k"> |</span><span class="s"> 1 3</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> SPONTANEOUS_MIXED</span><span class="k"> |</span><span class="s"> FEATURE_TEST_2</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> 48.00</span><span class="k"> |</span><span class="s"> 2</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> SPONTANEOUS_SIL</span><span class="k"> |</span><span class="s"> MIXED</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> 150.00</span><span class="k"> |</span><span class="s"> 1 2 3</span><span class="k"> |</span>
+<span class="k">And </span><span class="nf">the notice is present in GPD archive in status valid</span>
+<span class="k">And </span><span class="nf">the check of debt position expiration is scheduled</span>
+</code></pre></div>
+<ol>
+<li>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</li>
+</ol>
 <h2 id="scenario-a-mixed-debt-position-created-by-a-sil-on-gpd-is-reported-after-payment-payment-reporting-and-treasury">Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury</h2>
 <p><strong>Tags:</strong> <code>@debt_position_mixed_classification</code></p>
-<pre><code class="language-gherkin">Given a mixed debt position created by SIL for organization interacting with GPD configured as follows:
-  | transfer index | type org | amount |
-  | 1 | FEATURE_TEST | 43.00 |
-  | 2 | FEATURE_TEST_2 | 30.00 |
-  | 3 | FEATURE_TEST | 77.00 |
-When the citizen pays the installment of mixed debt position
-Then the receipt is processed correctly
-And the mixed debt position and technical ones are in status paid
-And the check of mixed debt position expiration is canceled
-And the classification labels for each transfer are RT_NO_IUF, RT_NO_IUD
-And the assessment classification label for each IUD is PAID
-When the organization uploads the payment reporting file about mixed installment
-Then the payment reporting is processed correctly
-And the mixed debt position and technical ones are in status reported
-And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD
-And the assessment classification label for each IUD is REPORTED
-When the organization uploads the treasury file with amount of 150 euros
-Then the treasury is processed correctly
-And the mixed debt position and technical ones are in status reported
-And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
-And the assessment classification label for each IUD is CASHED
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a mixed debt position created by SIL for organization interacting with GPD configured as follows:</span>
+<span class="k">  |</span><span class="s"> transfer index</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> amount</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 43.00</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> FEATURE_TEST_2</span><span class="k"> |</span><span class="s"> 30.00</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> 3</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 77.00</span><span class="k"> |</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of mixed debt position</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the mixed debt position and technical ones are in status paid</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the check of mixed debt position expiration is canceled</span>
+<span class="k">And </span><span class="nf">the classification labels for each transfer are RT_NO_IUF, RT_NO_IUD</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the assessment classification label for each IUD is PAID</span>
+<span class="c"># (4)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file about mixed installment</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the mixed debt position and technical ones are in status reported</span>
+<span class="c"># (6)!</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the assessment classification label for each IUD is REPORTED</span>
+<span class="c"># (8)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the treasury file with amount of </span><span class="s">150</span><span class="nf"> euros</span>
+<span class="k">Then </span><span class="nf">the treasury is processed correctly</span>
+<span class="c"># (9)!</span>
+<span class="k">And </span><span class="nf">the mixed debt position and technical ones are in status reported</span>
+<span class="c"># (10)!</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD</span>
+<span class="c"># (11)!</span>
+<span class="k">And </span><span class="nf">the assessment classification label for each IUD is CASHED</span>
+<span class="c"># (12)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
+</li>
+<li>
+<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
+</li>
+<li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
+</li>
+<li>
+<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
+</li>
+<li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
+<li>
+<p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
+</li>
+<li>
+<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
+</li>
+<li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
+</ul>
+</li>
+</ol>
 
 
 
@@ -721,7 +817,7 @@ And the assessment classification label for each IUD is CASHED
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>

@@ -632,13 +632,28 @@
 <h1 id="receipts-import-from-a-file">Receipts import from a file</h1>
 <p><strong>Tags:</strong> <code>@receipts_file</code></p>
 <h2 id="scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with">Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with <interaction></h2>
-<pre><code class="language-gherkin">Given organization interacting with &lt;interaction&gt;
-And receipts of non-existent debt positions inserted into an ingestion flow file with version 1_3
-When the organization uploads the receipts file
-Then the receipts file is processed correctly
-And the debt positions are created correctly with origin receipt_file
-And the receipts are created correctly with origin receipt_file
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">organization interacting with </span><span class="nv">&lt;interaction&gt;</span>
+<span class="k">And </span><span class="nf">receipts of non-existent debt positions inserted into an ingestion flow file with version </span><span class="s">1</span><span class="nf">_</span><span class="s">3</span>
+<span class="k">When </span><span class="nf">the organization uploads the receipts file</span>
+<span class="k">Then </span><span class="nf">the receipts file is processed correctly</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the debt positions are created correctly with origin receipt_file</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the receipts are created correctly with origin receipt_file</span>
+<span class="c"># (3)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Checks that the receipts file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>RECEIPT_INGESTION_FLOW</code> workflow completes.</li>
+<li>Runs the <code>the debt position is created correctly</code> checks for every debt position imported from file.</li>
+<li>Runs the <code>the receipt is created correctly</code> checks for every receipt imported from the file.</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -666,14 +681,45 @@ And the receipts are created correctly with origin receipt_file
 </tbody>
 </table>
 <h2 id="scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with">Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with <interaction></h2>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with &lt;interaction&gt;
-And a receipt of a debt position inserted into an ingestion flow file with version 1_3
-When the organization uploads the receipts file
-Then the receipts file is processed correctly
-And the receipt is created correctly with origin receipt_file
-And the installment of payment option 1 is in status paid
-And the debt position is in status paid
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with </span><span class="nv">&lt;interaction&gt;</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">a receipt of a debt position inserted into an ingestion flow file with version </span><span class="s">1</span><span class="nf">_</span><span class="s">3</span>
+<span class="k">When </span><span class="nf">the organization uploads the receipts file</span>
+<span class="k">Then </span><span class="nf">the receipts file is processed correctly</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the receipt is created correctly with origin receipt_file</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the installment of payment option </span><span class="s">1</span><span class="nf"> is in status paid</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Checks that the receipts file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>RECEIPT_INGESTION_FLOW</code> workflow completes.</li>
+<li>
+<p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
+</li>
+<li>
+<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
+</li>
+<li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -749,7 +795,7 @@ And the debt position is in status paid
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>

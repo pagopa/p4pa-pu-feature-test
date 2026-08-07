@@ -611,18 +611,99 @@
 <p><strong>Tags:</strong> <code>@send</code></p>
 <h2 id="scenario-a-simple-debt-position-is-notified-by-send-and-when-it-is-paid-the-amount-is-updated">Scenario: A simple debt position is notified by SEND and when it is paid the amount is updated</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position A for citizen X created by organization interacting with GPD
-And a notification created for the single installment of debt position A
-When the organization requires the notification to be uploaded to SEND
-Then the notification is in status accepted and the IUN is assigned to the installment
-And SEND has set a notification fee
-When the citizen X pays the installment of debt position A
-Then the receipt of debt position A is processed correctly
-And the amount of installment of debt position A is increased by the notification fee
-And the installment of debt position A has balance field populated
-And the assessment related to debt position A is in status closed
-And the assessment detail is created correctly based on balance including notification cost section
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position A for citizen X created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">a notification created for the single installment of debt position A</span>
+<span class="c"># (2)!</span>
+<span class="k">When </span><span class="nf">the organization requires the notification to be uploaded to SEND</span>
+<span class="c"># (3)!</span>
+<span class="k">Then </span><span class="nf">the notification is in status accepted and the IUN is assigned to the installment</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">SEND has set a notification fee</span>
+<span class="c"># (5)!</span>
+<span class="k">When </span><span class="nf">the citizen X pays the installment of debt position A</span>
+<span class="c"># (6)!</span>
+<span class="k">Then </span><span class="nf">the receipt of debt position A is processed correctly</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the amount of installment of debt position A is increased by the notification fee</span>
+<span class="c"># (8)!</span>
+<span class="k">And </span><span class="nf">the installment of debt position A has balance field populated</span>
+<span class="k">And </span><span class="nf">the assessment related to debt position A is in status closed</span>
+<span class="c"># (9)!</span>
+<span class="k">And </span><span class="nf">the assessment detail is created correctly based on balance including notification cost section</span>
+<span class="c"># (10)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Creates a SEND notification for the selected installments. It:</p>
+</li>
+<li>
+<p>builds the notification request (recipients and pagoPA payments) for the given debt positions;</p>
+</li>
+<li>gets a SEND token and posts the notification;</li>
+<li>asserts the call succeeds and the notification is created in status <code>WAITING</code>.</li>
+<li>
+<p>Uploads the notification and payment PDFs to SEND. It:</p>
+</li>
+<li>
+<p>uploads the notification file and one payment file per notified installment;</p>
+</li>
+<li>reads the workflow id from the last upload;</li>
+<li>checks the notification moves to <code>IN_VALIDATION</code> with no IUN yet;</li>
+<li>waits for the upload workflow to complete.</li>
+<li>
+<p>Checks that the notification is valid and the IUN is assigned. It:</p>
+</li>
+<li>
+<p>polls SEND until the notification is valid and asserts it has an IUN;</p>
+</li>
+<li>verifies that every notified installment carries that same IUN.</li>
+<li>Checks that SEND set a notification fee: reads the fee for each notified installment, asserts it is
+present and that all installments share the same fee.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>Checks that the notified installment's amount was increased by the notification fee (both <code>notificationFeeCents</code> and <code>amountCents</code>).</li>
+<li>
+<p>Checks that the assessment for the paid installment is in the expected status. It:</p>
+</li>
+<li>
+<p>reads the installment and its <code>sourceFlowName</code>;</p>
+</li>
+<li>fetches the assessment by that name and asserts it exists and matches the status;</li>
+<li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
+<li>
+<p>Checks that assessment details were created from the balance. It:</p>
+</li>
+<li>
+<p>retrieves the expected balance sections (optionally including a given DPTOBC section);</p>
+</li>
+<li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
+</ul>
+</li>
+</ol>
 
 
 
@@ -672,7 +753,7 @@ And the assessment detail is created correctly based on balance including notifi
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>

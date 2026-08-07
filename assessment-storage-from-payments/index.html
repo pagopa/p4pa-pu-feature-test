@@ -655,33 +655,173 @@
 <p><strong>Tags:</strong> <code>@assessments</code></p>
 <h2 id="scenario-an-assessment-detail-is-created-from-the-installment-balance-after-a-payment">Scenario: An assessment detail is created from the installment balance after a payment</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position with balance created by organization interacting with GPD
-When the citizen pays the installment of payment option 1
-Then the receipt is processed correctly
-And the debt position is in status paid
-And the assessment is in status closed
-And the assessment detail is created correctly based on balance
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position with balance created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the assessment is in status closed</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the assessment detail is created correctly based on balance</span>
+<span class="c"># (5)!</span>
+</code></pre></div>
+<ol>
+<li>Like <code>a simple debt position created by organization...</code>, but with a balance set to the
+    installment; creates it and checks <code>UNPAID</code> status, presence in GPD/ACA and the scheduled expiration workflow.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks that the assessment for the paid installment is in the expected status. It:</p>
+</li>
+<li>
+<p>reads the installment and its <code>sourceFlowName</code>;</p>
+</li>
+<li>fetches the assessment by that name and asserts it exists and matches the status;</li>
+<li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
+<li>
+<p>Checks that assessment details were created from the balance. It:</p>
+</li>
+<li>
+<p>retrieves the expected balance sections (optionally including a given DPTOBC section);</p>
+</li>
+<li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-an-assessment-detail-is-created-from-the-debt-position-type-org-balance-after-a-payment">Scenario: An assessment detail is created from the debt position type org balance after a payment</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with GPD
-When the citizen pays the installment of payment option 1
-Then the receipt is processed correctly
-And the debt position is in status paid
-And the installment has balance field populated
-And the assessment is in status closed
-And the assessment detail is created correctly based on balance
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the installment has balance field populated</span>
+<span class="k">And </span><span class="nf">the assessment is in status closed</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the assessment detail is created correctly based on balance</span>
+<span class="c"># (5)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks that the assessment for the paid installment is in the expected status. It:</p>
+</li>
+<li>
+<p>reads the installment and its <code>sourceFlowName</code>;</p>
+</li>
+<li>fetches the assessment by that name and asserts it exists and matches the status;</li>
+<li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
+<li>
+<p>Checks that assessment details were created from the balance. It:</p>
+</li>
+<li>
+<p>retrieves the expected balance sections (optionally including a given DPTOBC section);</p>
+</li>
+<li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-an-assessment-detail-is-created-from-the-assessment-registry-after-a-payment">Scenario: An assessment detail is created from the assessment registry after a payment</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position of type FEATURE_TEST_2 created by organization interacting with GPD
-When the citizen pays the installment of payment option 1
-Then the receipt is processed correctly
-And the debt position is in status paid
-And the installment has balance field populated
-And the assessment is in status closed
-And the assessment detail is created correctly based on balance
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position of type FEATURE_TEST_</span><span class="s">2</span><span class="nf"> created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the installment has balance field populated</span>
+<span class="k">And </span><span class="nf">the assessment is in status closed</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the assessment detail is created correctly based on balance</span>
+<span class="c"># (5)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks that the assessment for the paid installment is in the expected status. It:</p>
+</li>
+<li>
+<p>reads the installment and its <code>sourceFlowName</code>;</p>
+</li>
+<li>fetches the assessment by that name and asserts it exists and matches the status;</li>
+<li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
+<li>
+<p>Checks that assessment details were created from the balance. It:</p>
+</li>
+<li>
+<p>retrieves the expected balance sections (optionally including a given DPTOBC section);</p>
+</li>
+<li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
+<li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
+</ul>
+</li>
+</ol>
 
 
 
@@ -731,7 +871,7 @@ And the assessment detail is created correctly based on balance
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>

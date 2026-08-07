@@ -787,12 +787,43 @@
 <p><strong>Tags:</strong> <code>@classification</code></p>
 <h2 id="scenario-outline-a-simple-debt-position-created-on-is-paid-after-a-citizen-payment">Scenario Outline: A simple debt position created on <interaction> is paid after a citizen payment</h2>
 <p><strong>Tags:</strong> <code>@payment</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with &lt;interaction&gt;
-When the citizen pays the installment of payment option 1
-Then the receipt is processed correctly
-And the debt position is in status paid
-And the check of debt position expiration is canceled
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with </span><span class="nv">&lt;interaction&gt;</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the check of debt position expiration is canceled</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -820,21 +851,99 @@ And the check of debt position expiration is canceled
 </tbody>
 </table>
 <h2 id="scenario-outline-a-simple-debt-position-created-on-is-reported-after-payment-payment-reporting-and-treasury">Scenario Outline: A simple debt position created on <interaction> is reported after payment, payment reporting and treasury</h2>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with &lt;interaction&gt;
-When the citizen pays the installment of payment option 1
-Then the receipt is processed correctly
-And the debt position is in status paid
-And the check of debt position expiration is canceled
-And the classification labels are RT_NO_IUF, RT_NO_IUD
-When the organization uploads the payment reporting file about installment of payment option 1
-Then the payment reporting is processed correctly
-And the debt position is in status reported
-And the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD
-When the organization uploads the treasury file with amount of 100 euros
-Then the treasury is processed correctly
-And the debt position is in status reported
-And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with </span><span class="nv">&lt;interaction&gt;</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the check of debt position expiration is canceled</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUF, RT_NO_IUD</span>
+<span class="c"># (4)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file about installment of payment option </span><span class="s">1</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_IUF, IUF_NO_TES, RT_NO_IUD</span>
+<span class="c"># (6)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the treasury file with amount of </span><span class="s">100</span><span class="nf"> euros</span>
+<span class="k">Then </span><span class="nf">the treasury is processed correctly</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD</span>
+<span class="c"># (8)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -863,102 +972,509 @@ And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
 </table>
 <h2 id="scenario-a-complex-debt-position-created-on-gpd-is-partially-paid-after-payment-payment-reporting-and-treasury-of-one-installment">Scenario: A complex debt position created on GPD is partially paid after payment, payment reporting and treasury of one installment</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a complex debt position with 2 payment options created by organization interacting with GPD
-When the citizen pays the installment 1 of payment option 1
-Then the receipt is processed correctly
-And the installment 1 of payment option 1 is in status paid
-And the payment option 1 is in status partially_paid
-And the debt position is in status partially_paid
-And the payment option 2 is in status invalid
-And the classification labels are RT_NO_IUF, RT_NO_IUD
-When the organization uploads the payment reporting file about installment 1 of payment option 1
-Then the payment reporting is processed correctly
-And the installment 1 of payment option 1 is in status reported
-And the payment option 1 is in status partially_paid
-And the debt position is in status partially_paid
-And the classification labels are RT_NO_IUD, RT_IUF, IUF_NO_TES
-When the organization uploads the treasury file with amount of installment 1 of payment option 1
-Then the treasury is processed correctly
-And the payment option 1 is in status partially_paid
-And the debt position is in status partially_paid
-And the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a complex debt position with </span><span class="s">2</span><span class="nf"> payment options created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> is in status paid</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the debt position is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">2</span><span class="nf"> is in status invalid</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUF, RT_NO_IUD</span>
+<span class="c"># (4)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file about installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> is in status reported</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the debt position is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUD, RT_IUF, IUF_NO_TES</span>
+<span class="c"># (6)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the treasury file with amount of installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="k">Then </span><span class="nf">the treasury is processed correctly</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the debt position is in status partially_paid</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES</span>
+<span class="c"># (8)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a complex debt position (several payment options with installments) in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the payment options;</li>
+<li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies presence in the GPD/ACA archive and the scheduled expiration workflow.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-a-complex-debt-position-created-on-gpd-is-reported-after-payment-payment-reporting-and-treasury-of-all-installments">Scenario: A complex debt position created on GPD is reported after payment, payment reporting and treasury of all installments</h2>
 <p><strong>Tags:</strong> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a complex debt position with 2 payment options created by organization interacting with GPD
-And the previous payment of installment 1 of payment option 1
-When the citizen pays the installment 2 of payment option 1
-Then the receipt is processed correctly
-And the installment 2 of payment option 1 is in status paid
-And the payment option 1 is in status paid
-And the debt position is in status paid
-And the classification labels are RT_NO_IUF, RT_NO_IUD
-When the organization uploads the payment reporting file about installment 2 of payment option 1
-Then the payment reporting is processed correctly
-And the installment 2 of payment option 1 is in status reported
-And the payment option 1 is in status reported
-And the debt position is in status reported
-And the classification labels are RT_NO_IUD, RT_IUF, IUF_NO_TES
-When the organization uploads the treasury file with amount of installment 2 of payment option 1
-Then the treasury is processed correctly
-And the payment option 1 is in status reported
-And the debt position is in status reported
-And the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a complex debt position with </span><span class="s">2</span><span class="nf"> payment options created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the previous payment of installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="c"># (2)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment </span><span class="s">2</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="c"># (3)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">2</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> is in status paid</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status paid</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUF, RT_NO_IUD</span>
+<span class="c"># (5)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file about installment </span><span class="s">2</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (6)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">2</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> is in status reported</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status reported</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUD, RT_IUF, IUF_NO_TES</span>
+<span class="c"># (7)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the treasury file with amount of installment </span><span class="s">2</span><span class="nf"> of payment option </span><span class="s">1</span>
+<span class="k">Then </span><span class="nf">the treasury is processed correctly</span>
+<span class="c"># (8)!</span>
+<span class="k">And </span><span class="nf">the payment option </span><span class="s">1</span><span class="nf"> is in status reported</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are RT_NO_IUD, RT_IUF, RT_IUF_TES</span>
+<span class="c"># (9)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a complex debt position (several payment options with installments) in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the payment options;</li>
+<li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies presence in the GPD/ACA archive and the scheduled expiration workflow.</li>
+<li>
+<p>Given that plays a full payment-and-reporting cycle for one installment and checks the outcome:</p>
+</li>
+<li>
+<p>pays the installment and checks the receipt is processed;</p>
+</li>
+<li>checks the other payment options become <code>INVALID</code>;</li>
+<li>uploads the payment reporting and checks the installment becomes <code>REPORTED</code>;</li>
+<li>uploads the treasury file and checks it is processed;</li>
+<li>checks the payment option and debt position become <code>PARTIALLY_PAID</code>;</li>
+<li>checks the resulting classification labels.</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+</li>
+<li>
+<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
+</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+</li>
+<li>
+<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-a-debt-position-created-on-gpd-gets-a-receipt-and-is-reported-after-payment-reporting-with-outcome-code-9">Scenario: A debt position created on GPD gets a receipt and is reported after payment reporting with outcome code 9</h2>
 <p><strong>Tags:</strong> <code>@classification_outcome9</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with GPD
-When the organization uploads the payment reporting file about installment of payment option 1 with outcome code 9
-Then the payment reporting with outcome code 9 is processed correctly
-And the receipt is created correctly with origin payments_reporting
-And the installment of payment option 1 is in status reported
-And the debt position is in status reported
-And the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file about installment of payment option </span><span class="s">1</span><span class="nf"> with outcome code </span><span class="s">9</span>
+<span class="k">Then </span><span class="nf">the payment reporting with outcome code </span><span class="s">9</span><span class="nf"> is processed correctly</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the receipt is created correctly with origin payments_reporting</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the installment of payment option </span><span class="s">1</span><span class="nf"> is in status reported</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD</span>
+<span class="c"># (4)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Checks that a payment reporting with outcome code 9 was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
+</li>
+<li>
+<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
+</li>
+<li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-a-debt-position-created-outside-pu-gets-a-receipt-and-is-reported-after-payment-reporting-with-outcome-code-9">Scenario: A debt position created outside PU gets a receipt and is reported after payment reporting with outcome code 9</h2>
 <p><strong>Tags:</strong> <code>@classification_outcome9</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given organization interacting with GPD
-When the organization uploads the payment reporting file with outcome code 9 about a debt position created outside PU
-Then the payment reporting with outcome code 9 is processed correctly
-And the debt position is created correctly
-And the receipt is created correctly with origin payments_reporting
-And the installment of the created debt position is in status reported
-And the debt position is in status reported
-And the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">organization interacting with GPD</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting file with outcome code </span><span class="s">9</span><span class="nf"> about a debt position created outside PU</span>
+<span class="k">Then </span><span class="nf">the payment reporting with outcome code </span><span class="s">9</span><span class="nf"> is processed correctly</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the debt position is created correctly</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the receipt is created correctly with origin payments_reporting</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the installment of the created debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels are IUF_NO_TES, RT_IUF, RT_NO_IUD</span>
+<span class="c"># (4)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Checks that a payment reporting with outcome code 9 was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks that the debt position was created correctly. It:</p>
+</li>
+<li>
+<p>looks it up by NAV and asserts exactly one is found;</p>
+</li>
+<li>verifies its origin and, for receipt-file origin, that it is <code>PAID</code>;</li>
+<li>checks the installment IUV and, for pagopa-reporting origin, the outcome-9 remittance and anonymous debtor.</li>
+<li>
+<p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
+</li>
+<li>
+<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
+</li>
+<li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-an-installment-already-paid-and-reported-is-classified-as-duplicate-doppi-when-a-second-payment-reporting-with-outcome-code-9-arrives">Scenario: An installment already paid and reported is classified as duplicate (DOPPI) when a second payment reporting with outcome code 9 arrives</h2>
 <p><strong>Tags:</strong> <code>@classification_duplicates</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with GPD
-And the successful payment of the installment
-And a payment reporting with outcome code 0 has been successfully processed for the installment
-When the organization uploads a second payment reporting for the installment with outcome code 9
-Then the payment reporting with outcome code 9 is processed correctly
-And the duplicate receipt for the payment reporting with outcome code 9 is created correctly with origin payments_reporting
-And the debt position is in status reported
-And the classification labels related to payment reporting with outcome code 0 are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI
-And the classification labels related to payment reporting with outcome code 9 are IUF_NO_TES, IUV_NO_RT, DOPPI
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">0</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">When </span><span class="nf">the organization uploads a second payment reporting for the installment with outcome code </span><span class="s">9</span>
+<span class="k">Then </span><span class="nf">the payment reporting with outcome code </span><span class="s">9</span><span class="nf"> is processed correctly</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the duplicate receipt for the payment reporting with outcome code </span><span class="s">9</span><span class="nf"> is created correctly with origin payments_reporting</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">0</span><span class="nf"> are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI</span>
+<span class="c"># (6)!</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">9</span><span class="nf"> are IUF_NO_TES, IUV_NO_RT, DOPPI</span>
+<span class="c"># (7)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+</li>
+<li>
+<p>pays the installment,</p>
+</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed, in one step:</p>
+</li>
+<li>
+<p>uploads the file,</p>
+</li>
+<li>checks the debt position becomes <code>REPORTED</code>,</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+<li>
+<p>Checks that a payment reporting with outcome code 9 was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
+<li>Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-an-installment-is-classified-as-duplicate-doppi-when-a-payment-reporting-with-outcome-code-9-arrives-before-the-payment-and-it-is-later-reported">Scenario: An installment is classified as duplicate (DOPPI) when a payment reporting with outcome code 9 arrives before the payment and it is later reported</h2>
 <p><strong>Tags:</strong> <code>@classification_duplicates</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created by organization interacting with GPD
-And a payment reporting with outcome code 9 has been successfully processed for the installment
-And the successful payment of the installment
-When the organization uploads a second payment reporting for the installment with outcome code 0
-Then the payment reporting is processed correctly
-And the debt position is in status reported
-And the classification labels related to payment reporting with outcome code 9 are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI
-And the classification labels related to payment reporting with outcome code 0 are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">9</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">When </span><span class="nf">the organization uploads a second payment reporting for the installment with outcome code </span><span class="s">0</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status reported</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">9</span><span class="nf"> are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">0</span><span class="nf"> are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI</span>
+<span class="c"># (6)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed, in one step:</p>
+</li>
+<li>
+<p>uploads the file,</p>
+</li>
+<li>checks the debt position becomes <code>REPORTED</code>,</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+</li>
+<li>
+<p>pays the installment,</p>
+</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 <h2 id="scenario-an-installment-created-outside-pu-is-classified-as-duplicate-doppi-when-a-payment-reporting-with-outcome-code-9-arrives-before-the-payment-and-it-is-later-reported">Scenario: An installment, created outside PU, is classified as duplicate (DOPPI) when a payment reporting with outcome code 9 arrives before the payment and it is later reported</h2>
 <p><strong>Tags:</strong> <code>@classification_duplicates</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given a simple debt position created on GPD
-And a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU
-And the successful payment of the installment created outside PU
-When the organization uploads a second payment reporting for the installment created outside PU with outcome code 0
-Then the payment reporting is processed correctly
-And the classification labels related to payment reporting with outcome code 9 are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI
-And the classification labels related to payment reporting with outcome code 0 are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created on GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">9</span><span class="nf"> has been successfully processed for the installment created outside PU</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment created outside PU</span>
+<span class="c"># (3)!</span>
+<span class="k">When </span><span class="nf">the organization uploads a second payment reporting for the installment created outside PU with outcome code </span><span class="s">0</span>
+<span class="k">Then </span><span class="nf">the payment reporting is processed correctly</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">9</span><span class="nf"> are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the classification labels related to payment reporting with outcome code </span><span class="s">0</span><span class="nf"> are IUF_NO_TES, RT_IUF, RT_NO_IUD, DOPPI</span>
+<span class="c"># (6)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple debt position directly on GPD/ACA (bypassing PU creation):</p>
+<ul>
+<li>builds the entity and its transfer, generating IUV/NAV/IUPD;</li>
+<li>posts it to GPD/ACA and asserts the call succeeds;</li>
+<li>verifies the notice is present as <code>VALID</code> in the GPD/ACA archive.</li>
+<li>For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
+in one step, that it is processed and that the debt position is created correctly.</li>
+<li>Like <code>the successful payment of the installment</code>, but pays the first installment of a debt
+position created outside PU, then checks the <code>PAID</code> status and that the receipt is processed.</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+</li>
+<li>
+<p>the file reaches status <code>COMPLETED</code>;</p>
+</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+<li>
+<p>Checks the classification labels produced for the installment. It:</p>
+</li>
+<li>
+<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
+</li>
+<li>asserts at least one classification exists;</li>
+<li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
+</ol>
 
 
 
@@ -1008,7 +1524,7 @@ And the classification labels related to payment reporting with outcome code 0 a
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>

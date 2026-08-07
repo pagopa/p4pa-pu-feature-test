@@ -633,22 +633,41 @@
 <p><strong>Tags:</strong> <code>@debt_positions_file</code></p>
 <h2 id="scenario-outline-debt-positions-are-created-from-an-ingestion-flow-file-version-eng-by-an-organization-interacting-with-gpd">Scenario Outline: Debt positions are created from an ingestion flow file version <csv_version>-eng, by an organization interacting with GPD</h2>
 <p><strong>Tags:</strong> <code>@&lt;csv_version&gt;</code> <code>@eng</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given organization interacting with GPD
-And debt positions &lt;identifiers&gt; with the installments configured as follows:
-  | identifier | po index | po type | installment seq | action |
-  | A | 1 | INSTALLMENTS | 1 | I |
-  | A | 1 | INSTALLMENTS | 2 | I |
-  | A | 2 | SINGLE_INSTALLMENT | 1 | I |
-  | B | 1 | INSTALLMENTS | 1 | I |
-  | B | 1 | INSTALLMENTS | 2 | I |
-  | C | 1 | SINGLE_INSTALLMENT | 1 | I |
-And debt positions &lt;identifiers&gt; inserted into an ingestion flow file with version &lt;csv_version&gt;
-When the organization uploads the debt positions file
-Then the ingestion file is processed correctly
-And the debt positions &lt;identifiers&gt; are created in status UNPAID
-And the notices of each debt positions are present in GPD archive in status valid
-And the checks of debt positions expiration are scheduled
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> with the installments configured as follows:</span>
+<span class="k">  |</span><span class="s"> identifier</span><span class="k"> |</span><span class="s"> po index</span><span class="k"> |</span><span class="s"> po type</span><span class="k"> |</span><span class="s"> installment seq</span><span class="k"> |</span><span class="s"> action</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> A</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> INSTALLMENTS</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> A</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> INSTALLMENTS</span><span class="k"> |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> A</span><span class="k"> |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> B</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> INSTALLMENTS</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> B</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> INSTALLMENTS</span><span class="k"> |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> C</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">And </span><span class="nf">debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> inserted into an ingestion flow file with version </span><span class="nv">&lt;csv_version&gt;</span>
+<span class="k">When </span><span class="nf">the organization uploads the debt positions file</span>
+<span class="k">Then </span><span class="nf">the ingestion file is processed correctly</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> are created in status UNPAID</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the notices of each debt positions are present in GPD archive in status valid</span>
+<span class="k">And </span><span class="nf">the checks of debt positions expiration are scheduled</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Checks that the debt-positions ingestion file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
+<li>
+<p>Checks that the debt positions imported from the file were created in the expected status:</p>
+</li>
+<li>
+<p>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</p>
+</li>
+<li>validates each created debt position against its request (fields, payment options, installments).</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -670,19 +689,38 @@ And the checks of debt positions expiration are scheduled
 </table>
 <h2 id="scenario-outline-debt-positions-are-created-from-an-ingestion-flow-file-version-by-an-organization-interacting-with-gpd">Scenario Outline: Debt positions are created from an ingestion flow file version <csv_version>, by an organization interacting with GPD</h2>
 <p><strong>Tags:</strong> <code>@&lt;csv_version&gt;</code> <code>@it</code> <code>@gpd</code></p>
-<pre><code class="language-gherkin">Given organization interacting with GPD
-And debt positions &lt;identifiers&gt; with the installments configured as follows:
-  | identifier | po index | po type | installment seq | action |
-  | A | 1 | SINGLE_INSTALLMENT | 1 | I |
-  | B | 1 | SINGLE_INSTALLMENT | 1 | I |
-  | C | 1 | SINGLE_INSTALLMENT | 1 | I |
-And debt positions &lt;identifiers&gt; inserted into an ingestion flow file with version &lt;csv_version&gt;
-When the organization uploads the debt positions file
-Then the ingestion file is processed correctly
-And the debt positions &lt;identifiers&gt; are created in status UNPAID
-And the notices of each debt positions are present in GPD archive in status valid
-And the checks of debt positions expiration are scheduled
-</code></pre>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> with the installments configured as follows:</span>
+<span class="k">  |</span><span class="s"> identifier</span><span class="k"> |</span><span class="s"> po index</span><span class="k"> |</span><span class="s"> po type</span><span class="k"> |</span><span class="s"> installment seq</span><span class="k"> |</span><span class="s"> action</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> A</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> B</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> C</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">And </span><span class="nf">debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> inserted into an ingestion flow file with version </span><span class="nv">&lt;csv_version&gt;</span>
+<span class="k">When </span><span class="nf">the organization uploads the debt positions file</span>
+<span class="k">Then </span><span class="nf">the ingestion file is processed correctly</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the debt positions </span><span class="nv">&lt;identifiers&gt;</span><span class="nf"> are created in status UNPAID</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the notices of each debt positions are present in GPD archive in status valid</span>
+<span class="k">And </span><span class="nf">the checks of debt positions expiration are scheduled</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Checks that the debt-positions ingestion file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
+<li>
+<p>Checks that the debt positions imported from the file were created in the expected status:</p>
+</li>
+<li>
+<p>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</p>
+</li>
+<li>validates each created debt position against its request (fields, payment options, installments).</li>
+</ul>
+</li>
+</ol>
 <p><strong>Examples</strong></p>
 <table>
 <thead>
@@ -763,7 +801,7 @@ And the checks of debt positions expiration are scheduled
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
