@@ -32,13 +32,49 @@ def render_data_table(table, indent: str = '') -> list[str]:
     return [f'{indent}| ' + ' | '.join(cells) + ' |' for cells in rows]
 
 
-def render_steps(steps) -> list[str]:
-    lines = ['```gherkin']
+def match_step_doc(step_name: str, matchers):
+    for regex, doc in matchers:
+        if regex.match(step_name):
+            return doc
+    return None
+
+
+def render_annotation_item(index: int, doc: str) -> list[str]:
+    # Render the docstring as a Material code-annotation list item: the first
+    # line follows "N.  ", the rest is indented to stay inside the list item.
+    first, *rest = doc.split('\n')
+    out = [f'{index}.  {first}']
+    out += [f'    {line}' if line else '' for line in rest]
+    return out
+
+
+def render_steps(steps, matchers) -> list[str]:
+    """Render a scenario's steps as a gherkin block.
+
+    Steps that match a documented step get a Material code-annotation marker
+    (``# (n)!``); the matching docstrings are appended as an annotation list so
+    the reader can click the marker to see what the step checks.
+    """
+    body = []
+    annotations = []
     for step in steps:
-        lines.append(f'{step.keyword} {step.name}')
+        body.append(f'{step.keyword} {step.name}')
+        doc = match_step_doc(step.name, matchers)
+        if doc is not None:
+            # A full-line Gherkin comment (starting with '#') is the only place
+            # the gherkin lexer tokenises as a comment, which Material needs to
+            # turn the marker into a clickable annotation.
+            annotations.append(doc)
+            body.append(f'# ({len(annotations)})!')
         if step.table:
-            lines.extend(render_data_table(step.table, indent='  '))
-    lines.append('```')
+            body.extend(render_data_table(step.table, indent='  '))
+
+    fence = '```{ .gherkin .annotate }' if annotations else '```gherkin'
+    lines = [fence, *body, '```']
+    if annotations:
+        lines.append('')
+        for index, doc in enumerate(annotations, start=1):
+            lines.extend(render_annotation_item(index, doc))
     return lines
 
 
@@ -55,7 +91,7 @@ def render_examples(examples_list) -> list[str]:
     return lines
 
 
-def render_feature(feature) -> str:
+def render_feature(feature, matchers) -> str:
     lines = [f'# {feature.name}', '']
     if feature.tags:
         lines += [f'**Tags:** {tags_line(feature.tags)}', '']
@@ -65,7 +101,7 @@ def render_feature(feature) -> str:
         lines.append(f'## {scenario.keyword}: {scenario.name}')
         if scenario.tags:
             lines += ['', f'**Tags:** {tags_line(scenario.tags)}']
-        lines += ['', *render_steps(scenario.steps)]
+        lines += ['', *render_steps(scenario.steps, matchers)]
         lines += render_examples(getattr(scenario, 'examples', []) or [])
         lines.append('')
     return '\n'.join(lines) + '\n'
@@ -104,6 +140,21 @@ def extract_step_docs(steps_dir: str):
     return entries
 
 
+def build_step_matchers(entries):
+    """Compile [(regex, docstring), ...] to match concrete Gherkin step text.
+
+    A documented step phrase may contain ``{placeholders}``; they become
+    non-greedy wildcards so the rendered step text (with concrete values or
+    ``<outline>`` parameters) still matches.
+    """
+    matchers = []
+    for _keyword, phrases, doc in entries:
+        for phrase in phrases:
+            pattern = re.sub(r'\\\{.*?\\\}', '(.+?)', re.escape(phrase))
+            matchers.append((re.compile(f'^{pattern}$'), doc))
+    return matchers
+
+
 def render_glossary(entries) -> str:
     lines = [
         '# Steps glossary', '',
@@ -140,13 +191,18 @@ def main() -> None:
     docs_dir = Path(args.docs_dir)
     docs_dir.mkdir(parents=True, exist_ok=True)
 
+    # Documented steps drive both the glossary page and the inline annotations
+    # shown next to matching steps in the scenario pages.
+    glossary_entries = extract_step_docs(args.steps_dir)
+    matchers = build_step_matchers(glossary_entries)
+
     index_entries = []
     for feature_path in sorted(Path(args.root_dir).rglob('*.feature')):
         feature = parse_file(str(feature_path))
         if feature is None:
             continue
         slug = slugify(feature.name or feature_path.stem)
-        (docs_dir / f'{slug}.md').write_text(render_feature(feature), encoding='utf-8')
+        (docs_dir / f'{slug}.md').write_text(render_feature(feature, matchers), encoding='utf-8')
         index_entries.append((feature.name or feature_path.stem, slug, len(feature.scenarios)))
 
     index = [f'# {args.page_name}', '']
@@ -158,7 +214,6 @@ def main() -> None:
 
     # Steps glossary: only steps documented with a docstring end up here, so the
     # trivial ones stay out and the composite ones get their checks explained.
-    glossary_entries = extract_step_docs(args.steps_dir)
     if glossary_entries:
         (docs_dir / 'glossary.md').write_text(render_glossary(glossary_entries), encoding='utf-8')
 
@@ -177,6 +232,12 @@ def main() -> None:
         f'docs_dir: {args.docs_dir}\n'
         'theme:\n'
         '  name: material\n'
+        '  features:\n'
+        '    - content.code.annotate\n'
+        'markdown_extensions:\n'
+        '  - attr_list\n'
+        '  - md_in_html\n'
+        '  - pymdownx.superfences\n'
         + '\n'.join(nav_lines) + '\n',
         encoding='utf-8',
     )
