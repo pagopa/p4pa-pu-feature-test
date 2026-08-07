@@ -1,6 +1,16 @@
 # Feature testing
 A repository designed to collect tests that simulate the features provided by Piattaforma Unitaria.
 
+The tests are written with [behave](https://behave.readthedocs.io/) — a Python BDD
+framework — using the **[Gherkin](https://cucumber.io/docs/gherkin/reference/)** syntax,
+and the scenario catalogue is built with
+[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/).
+In BDD terms:
+
+- a **feature** (a `.feature` file) describes one functionality of the platform;
+- a **scenario** is a concrete example of that feature, written as `Given` / `When` /
+  `Then` steps; each step is backed by a Python function in `bdd/steps/`.
+
 ## Contents
 - [Scenario documentation](#scenario-documentation)
   - [Documenting complex steps](#documenting-complex-steps)
