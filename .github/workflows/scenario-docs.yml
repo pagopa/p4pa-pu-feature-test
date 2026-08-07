@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate scenario docs
         run: |
-          python scenario_parser.py \
+          python script/scenario_parser.py \
             --page-name "Piattaforma Unitaria Functional Testing" \
             --repo-name ${{ github.event.repository.name }} \
             --root-dir bdd/features

@@ -72,7 +72,6 @@ steps:
       searchFolder: $(Build.SourcesDirectory)
       failTaskOnFailedTests: true
       testRunTitle: 'Feature test results: ${{ parameters.tag }}'
-      mergeTestResults: true
     continueOnError: true
   - task: Bash@3
     displayName: 'Send message on Slack'
