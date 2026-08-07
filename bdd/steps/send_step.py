@@ -38,6 +38,12 @@ def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str
 @given("a notification created for the single installment of debt positions {dp_identifiers}")
 @given("a notification created for the {installments_size} installments of debt positions {dp_identifiers}")
 def step_create_send_notification(context, dp_identifiers, installments_size=1):
+    """Creates a SEND notification for the selected installments. It:
+
+    - builds the notification request (recipients and pagoPA payments) for the given debt positions;
+    - gets a SEND token and posts the notification;
+    - asserts the call succeeds and the notification is created in status `WAITING`.
+    """
     org_info = context.org_info
 
     pagopa_int_mode = None
@@ -95,6 +101,13 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
 
 @when("the organization requires the notification to be uploaded to SEND")
 def step_upload_notification_file(context):
+    """Uploads the notification and payment PDFs to SEND. It:
+
+    - uploads the notification file and one payment file per notified installment;
+    - reads the workflow id from the last upload;
+    - checks the notification moves to `IN_VALIDATION` with no IUN yet;
+    - waits for the upload workflow to complete.
+    """
     send_token = context.send_token
     org_id = context.org_info.id
     notification_id = context.send_notification_id
@@ -138,6 +151,11 @@ def step_upload_notification_file(context):
 @then("the notification is in status {status} and the IUN is assigned to the installment")
 @then("the notification is in status {status} and the IUN is assigned to all installments")
 def step_check_iun(context, status):
+    """Checks that the notification is valid and the IUN is assigned. It:
+
+    - polls SEND until the notification is valid and asserts it has an IUN;
+    - verifies that every notified installment carries that same IUN.
+    """
     notification_id = context.send_notification_id
     installments_notified = context.installments_notified
 
@@ -157,6 +175,9 @@ def step_check_iun(context, status):
 
 @then("SEND has set a notification fee")
 def step_check_notification_fee(context):
+    """Checks that SEND set a notification fee:
+    - reads the fee for each notified installment;
+    - asserts it is present and that all installments share the same fee."""
     installments_notified = context.installments_notified
 
     notification_fee = {}
@@ -178,6 +199,7 @@ def step_check_notification_fee(context):
 @then("the amount of installment of debt position {dp_identifier} is increased by the notification fee")
 @then("the amount of installment {seq_num} of debt position {dp_identifier} is increased by the notification fee")
 def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
+    """Checks that the notified installment's amount was increased by the notification fee (both `notificationFeeCents` and `amountCents`)."""
     installments_notified = context.installments_notified
     installment_paid = get_installment_paid(context, dp_identifier)
 

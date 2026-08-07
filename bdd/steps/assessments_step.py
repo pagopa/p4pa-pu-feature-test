@@ -20,6 +20,12 @@ default_send_dptobc_code = 'SEND'
 @then("the assessment is in status {status}")
 @then("the assessment related to debt position {dp_identifier} is in status {status}")
 def step_check_assessment(context, status: str, dp_identifier: str = None):
+    """Checks that the assessment for the paid installment is in the expected status. It:
+
+    - reads the installment and its `sourceFlowName`;
+    - fetches the assessment by that name and asserts it exists and matches the status;
+    - checks the `CREATE_ASSESSMENT` workflow completes.
+    """
     org_info = context.org_info
     installment_paid = get_installment_paid(context, dp_identifier)
     set_installment_paid(context, installment_paid)
@@ -63,6 +69,12 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
 
 @then("the assessment classification label for each IUD is {label}")
 def step_check_assessment_detail_classification_label(context, label):
+    """Checks the assessment-detail classification labels for a mixed debt position. It:
+
+    - asserts the debt position with type ord MIXED has no assessment details/classification;
+    - for each mixed transfer, checks the `CLASSIFY_ASSESSMENT` workflow completes;
+    - verifies one assessment detail per balance section, each with the expected IUR, type org code and label.
+    """
     installment_paid = get_installment_paid(context)
 
     check_dp_with_dpto_mixed_not_classified(context=context, installment_paid=installment_paid)
@@ -99,6 +111,12 @@ def step_check_assessment_detail_classification_label(context, label):
 @then("the assessment detail is created correctly based on balance")
 @then("the assessment detail is created correctly based on balance including {dptobc_type} section")
 def step_check_assessment_detail(context, dptobc_type=None):
+    """Checks that assessment details were created from the balance. It:
+
+    - retrieves the expected balance sections (optionally including a given DPTOBC section);
+    - checks the `CLASSIFY_ASSESSMENT` workflow completes;
+    - verifies one assessment detail per section with matching IUR, `PAID` label, amount and registry codes.
+    """
     assessment_id = context.assessment_id
     installment_paid = get_installment_paid(context)
     dptobc_type = dptobc_type.upper().replace(" ", "_") if dptobc_type is not None else None

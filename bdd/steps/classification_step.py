@@ -17,6 +17,12 @@ from model.debt_position import Status
 @then("the classification labels for each transfer are {labels}")
 @then("the classification labels related to payment reporting with outcome code {outcome_code} are {labels}")
 def step_check_classification(context, labels: str, outcome_code: str = None):
+    """Checks the classification labels produced for the installment. It:
+
+    - queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);
+    - asserts at least one classification exists;
+    - verifies that, for every transfer, the stored labels match the expected set.
+    """
     date_now = datetime.now().strftime('%Y-%m-%d')
 
     if outcome_code is not None:
@@ -55,6 +61,15 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
 @given(
     "the previous payment of installment {seq_num} of payment option {po_index}")
 def step_pay_installment_and_verify(context, seq_num, po_index):
+    """Given that plays a full payment-and-reporting cycle for one installment and checks the outcome:
+
+    - pays the installment and checks the receipt is processed;
+    - checks the other payment options become `INVALID`;
+    - uploads the payment reporting and checks the installment becomes `REPORTED`;
+    - uploads the treasury file and checks it is processed;
+    - checks the payment option and debt position become `PARTIALLY_PAID`;
+    - checks the resulting classification labels.
+    """
     step_installment_payment(context=context, po_index=po_index, seq_num=seq_num)
 
     step_check_receipt_processed(context=context)

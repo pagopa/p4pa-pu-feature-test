@@ -1,5 +1,5 @@
 @send
-Feature: Management of debt position notified by SEND
+Feature: Debt position notification via SEND
 
   @gpd
   Scenario: A simple debt position is notified by SEND and when it is paid the amount is updated

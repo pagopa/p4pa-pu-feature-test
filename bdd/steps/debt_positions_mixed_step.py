@@ -53,6 +53,7 @@ def step_create_dp_mixed_entity(context):
 
 @when("SIL creates the mixed debt position")
 def step_sil_invia_dovuto_mixed(context):
+    """Creates the mixed debt position through SIL (`paaSILInviaDovuti`) and asserts the SOAP outcome is `OK` with a URL to proceed for payment."""
     res = post_sil_invia_dovuto(token=context.token,
                                 traceparent=context.traceparent,
                                 debt_position_mixed=context.debt_position_mixed,
@@ -67,6 +68,11 @@ def step_sil_invia_dovuto_mixed(context):
 
 @then("3 debt positions having installments with same IUV are in status {status} configured as follows")
 def step_check_debt_positions_mixed_created(context, status):
+    """Checks the debt positions generated from a mixed SIL flow (sharing the same IUV). For each configured row it:
+
+    - looks up the `SPONTANEOUS_MIXED` or `SPONTANEOUS_SIL` debt position and asserts they exist as configured;
+    - validates their status, amounts, payment option and installments/transfers against the request.
+    """
     token = context.token
     org_info = context.org_info
     dp_mixed = context.debt_position_mixed
@@ -109,6 +115,13 @@ def step_check_debt_positions_mixed_created(context, status):
 @given(
     "a mixed debt position created by SIL for organization interacting with {pagopa_interaction} configured as follows")
 def step_sil_create_mixed_dp(context, pagopa_interaction):
+    """Creates a mixed debt position via SIL in one step. It:
+
+    - gets the SIL token and builds the mixed entity;
+    - sends it through SIL and retrieves the resulting debt positions by IUV;
+    - validates all data of generated debt positions (status, amounts, expiration workflow, ecc);
+    - verifies presence as `valid` in the GPD/ACA archive.
+    """
     step_get_token_sil(context=context, pagopa_interaction=pagopa_interaction)
     token = context.token
     org_id = context.org_info.id
@@ -130,6 +143,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
 
 @then("the mixed debt position and technical ones are in status {status}")
 def step_check_mixed_and_tech_dp_status(context, status):
+    """Checks that the mixed debt position and its technical (`SPONTANEOUS_MIXED`) ones are all in the expected status."""
     step_check_dp_status(context=context, status=status)
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,

@@ -129,6 +129,13 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
 
 @then("the treasury is processed correctly")
 def step_check_treasury_processed(context):
+    """Checks that the treasury OPI file was processed correctly. It verifies that:
+
+    - the file reaches status `COMPLETED`;
+    - the `TREASURY_OPI_INGESTION` workflow completes;
+    - the `TRANSFER_CLASSIFICATION` workflow completes for each transfer;
+    - the `IUF_CLASSIFICATION` workflow completes.
+    """
     organization_id = context.org_info.id
     installment_paid = get_installment_paid(context)
 

@@ -1,8 +1,8 @@
 @debt_positions
-Feature: An organization creates a debt position
+Feature: Debt position creation
 
   @aca
-  Scenario: Organization interacting with ACA creates a simple debt position
+  Scenario: A simple debt position is created by an organization interacting with ACA
     Given organization interacting with ACA
     And a new debt position of type FEATURE_TEST
     And payment option 1 with single installment of 100 euros with due date set in 2 days
@@ -12,7 +12,7 @@ Feature: An organization creates a debt position
     And the check of debt position expiration is scheduled
 
   @aca
-  Scenario: Organization interacting with ACA creates a complex debt position
+  Scenario: A complex debt position is created by an organization interacting with ACA
     Given organization interacting with ACA
     And a new debt position of type FEATURE_TEST
     And payment option 1 with 2 installments with due date set in 2 days
@@ -23,7 +23,7 @@ Feature: An organization creates a debt position
     And the check of debt position expiration is scheduled
 
   @gpd
-  Scenario: Organization interacting with GPD creates a simple debt position
+  Scenario: A simple debt position is created by an organization interacting with GPD
     Given organization interacting with GPD
     And a new debt position of type FEATURE_TEST
     And payment option 1 with single installment of 100 euros with due date set in 2 days

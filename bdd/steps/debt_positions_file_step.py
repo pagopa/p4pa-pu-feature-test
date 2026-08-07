@@ -131,6 +131,12 @@ def step_uploads_debt_positions_file(context):
 
 @then("the ingestion file is processed correctly")
 def step_debt_position_file_processed(context):
+    """Checks that the debt positions ingestion file was processed correctly. It verifies that:
+
+    - the file reaches `COMPLETED` (or `WARNING` when the organization has no generate-notice API key);
+    - the number of imported rows equals the rows sent and all were imported successfully;
+    - the `DEBT_POSITION_INGESTION_FLOW` workflow completes.
+    """
     organization_id = context.org_info.id
     org_has_generate_notice_api_key: bool = context.org_info.has_generate_notice_api_key
 
@@ -159,6 +165,11 @@ def search_dp_by_inst_iud(list_debt_positions: list[dict], inst_iud: str) -> dic
 
 @then("the debt positions {identifiers} are created in status {status}")
 def step_check_debt_positions_created_from_file(context, identifiers, status):
+    """Checks that the debt positions imported from the file were created in the expected status:
+
+    - fetches the debt positions by ingestion flow id and asserts the count matches the identifiers;
+    - validates each created debt position against its request (fields, payment options, installments).
+    """
     identifiers = identifiers.split()
 
     res = get_debt_positions_by_ingestion_flow_id(token=context.token, traceparent=context.traceparent, ingestion_flow_id=context.debt_positions_file_id)

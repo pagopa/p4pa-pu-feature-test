@@ -1,8 +1,8 @@
 @sil_debt_positions
-Feature: SIL management of debt positions
+Feature: Mixed debt position management by SIL
 
   @debt_position_mixed
-  Scenario: A SIL creates a mixed debt position for organization interacting with GPD
+  Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD
     Given a SIL acting on behalf of an organization interacting with GPD
     And a new mixed debt position configured as follows:
       | transfer index | type org       | amount |
@@ -19,7 +19,7 @@ Feature: SIL management of debt positions
     And the check of debt position expiration is scheduled
 
   @debt_position_mixed_classification
-  Scenario: As a positive result of payment, payment reporting and treasury a mixed debt position, created by SIL on GPD, is reported
+  Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury
     Given a mixed debt position created by SIL for organization interacting with GPD configured as follows:
       | transfer index | type org       | amount |
       | 1              | FEATURE_TEST   | 43.00  |

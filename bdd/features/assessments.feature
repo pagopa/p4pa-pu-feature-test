@@ -1,8 +1,8 @@
 @assessments
-Feature: Storing assessments starting from an installment payment
+Feature: Assessment storage from payments
 
   @gpd
-  Scenario: As a positive result of payment, the assessment detail, about installment with balance information, is created
+  Scenario: An assessment detail is created from the installment balance after a payment
     Given a simple debt position with balance created by organization interacting with GPD
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
@@ -11,7 +11,7 @@ Feature: Storing assessments starting from an installment payment
     And the assessment detail is created correctly based on balance
 
   @gpd
-  Scenario: As a positive result of payment, the assessment detail, about installment with balance information from debt position type org, is created
+  Scenario: An assessment detail is created from the debt position type org balance after a payment
     Given a simple debt position created by organization interacting with GPD
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
@@ -21,7 +21,7 @@ Feature: Storing assessments starting from an installment payment
     And the assessment detail is created correctly based on balance
 
   @gpd
-  Scenario: As a positive result of payment, the assessment detail, about installment with balance information from assessment registry, is created
+  Scenario: An assessment detail is created from the assessment registry after a payment
     Given a simple debt position of type FEATURE_TEST_2 created by organization interacting with GPD
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
