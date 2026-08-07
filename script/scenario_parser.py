@@ -59,15 +59,16 @@ def render_steps(steps, matchers) -> list[str]:
     annotations = []
     for step in steps:
         body.append(f'{step.keyword} {step.name}')
+        if step.table:
+            body.extend(render_data_table(step.table, indent='  '))
         doc = match_step_doc(step.name, matchers)
         if doc is not None:
             # A full-line Gherkin comment (starting with '#') is the only place
             # the gherkin lexer tokenises as a comment, which Material needs to
-            # turn the marker into a clickable annotation.
+            # turn the marker into a clickable annotation. Placed after the data
+            # table (if any) so it does not split the step from its table.
             annotations.append(doc)
             body.append(f'# ({len(annotations)})!')
-        if step.table:
-            body.extend(render_data_table(step.table, indent='  '))
 
     fence = '```{ .gherkin .annotate }' if annotations else '```gherkin'
     lines = [fence, *body, '```']
@@ -75,6 +76,10 @@ def render_steps(steps, matchers) -> list[str]:
         lines.append('')
         for index, doc in enumerate(annotations, start=1):
             lines.extend(render_annotation_item(index, doc))
+            # Blank line between items so Markdown keeps them as separate
+            # top-level list entries (otherwise the next item is absorbed into
+            # the previous one's bullet list and annotations merge).
+            lines.append('')
     return lines
 
 
@@ -155,26 +160,25 @@ def build_step_matchers(entries):
     return matchers
 
 
-def render_glossary(entries) -> str:
-    lines = [
-        '# Steps glossary', '',
-        'Explains the steps that perform several checks internally. Steps that do a '
-        'single, self-explanatory action are intentionally left out.', '',
-    ]
+def group_entries_by_keyword(entries):
     by_keyword = {}
     for keyword, phrases, doc in entries:
         by_keyword.setdefault(keyword, []).append((phrases, doc))
-    for keyword in BEHAVE_KEYWORDS:
-        group = by_keyword.get(keyword)
-        if not group:
-            continue
-        lines += [f'## {KEYWORD_LABELS[keyword]}', '']
-        for phrases, doc in sorted(group, key=lambda item: item[0][0].lower()):
-            primary, *aliases = phrases
-            lines.append(f'### `{primary}`')
-            if aliases:
-                lines += ['', '*also: ' + ', '.join(f'`{alias}`' for alias in aliases) + '*']
-            lines += ['', doc, '']
+    return by_keyword
+
+
+def render_glossary_page(label: str, group) -> str:
+    lines = [
+        f'# {label} steps', '',
+        f'The `{label}` steps below perform several checks internally. Steps that do a '
+        'single, self-explanatory action are intentionally left out.', '',
+    ]
+    for phrases, doc in sorted(group, key=lambda item: item[0][0].lower()):
+        primary, *aliases = phrases
+        lines.append(f'## `{primary}`')
+        if aliases:
+            lines += ['', '*also: ' + ', '.join(f'`{alias}`' for alias in aliases) + '*']
+        lines += ['', doc, '']
     return '\n'.join(lines) + '\n'
 
 
@@ -214,8 +218,17 @@ def main() -> None:
 
     # Steps glossary: only steps documented with a docstring end up here, so the
     # trivial ones stay out and the composite ones get their checks explained.
-    if glossary_entries:
-        (docs_dir / 'glossary.md').write_text(render_glossary(glossary_entries), encoding='utf-8')
+    # One page per keyword (Given/When/Then), each a separate nav entry.
+    glossary_by_keyword = group_entries_by_keyword(glossary_entries)
+    glossary_nav = []
+    for keyword in BEHAVE_KEYWORDS:
+        group = glossary_by_keyword.get(keyword)
+        if not group:
+            continue
+        label = KEYWORD_LABELS[keyword]
+        page = f'glossary-{keyword}.md'
+        (docs_dir / page).write_text(render_glossary_page(label, group), encoding='utf-8')
+        glossary_nav.append((label, page))
 
     # Explicit nav so the sidebar shows one main title (site_name) with the
     # feature pages grouped under a "Features" section, instead of a flat list
@@ -224,8 +237,10 @@ def main() -> None:
     for name, slug, _count in index_entries:
         safe = name.replace('"', '\\"')
         nav_lines.append(f'    - "{safe}": {slug}.md')
-    if glossary_entries:
-        nav_lines.append('  - Steps glossary: glossary.md')
+    if glossary_nav:
+        nav_lines.append('  - Steps glossary:')
+        for label, page in glossary_nav:
+            nav_lines.append(f'    - {label}: {page}')
 
     Path(args.config).write_text(
         f'site_name: {args.page_name}\n'
