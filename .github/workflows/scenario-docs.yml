@@ -4,8 +4,7 @@ name: Publish scenario catalogue
 
 on:
   push:
-    # TODO: remove the test branch before merging — keep only main.
-    branches: [ main, P4ADEV-4975-fix-github-action-for-scenario-docs ]
+    branches: [ main ]
 
 permissions:
   contents: write
