@@ -443,7 +443,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with" class="md-nav__link">
+  <a href="#0-scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
         Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with
@@ -454,7 +454,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with" class="md-nav__link">
+  <a href="#1-scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
         Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with
@@ -499,7 +499,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with" class="md-nav__link">
+  <a href="#0-scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
         Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with
@@ -510,7 +510,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with" class="md-nav__link">
+  <a href="#1-scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
         Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with
@@ -539,7 +539,7 @@
 
 <h1 id="receipts-import-from-a-file">Receipts import from a file</h1>
 <p><strong>Tags:</strong> <code>@receipts_file</code></p>
-<h2 id="scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with">Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with <interaction></h2>
+<h2 id="0-scenario-outline-missing-debt-positions-are-created-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction">Scenario Outline: Missing debt positions are created by importing a receipts file, with an organization interacting with <interaction></h2>
 <pre><code class="language-gherkin">Given organization interacting with &lt;interaction&gt;
 And receipts of non-existent debt positions inserted into an ingestion flow file with version 1_3
 When the organization uploads the receipts file
@@ -573,7 +573,7 @@ And the receipts are created correctly with origin receipt_file
 </tr>
 </tbody>
 </table>
-<h2 id="scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with">Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with <interaction></h2>
+<h2 id="1-scenario-outline-a-debt-position-is-updated-by-importing-a-receipts-file-with-an-organization-interacting-with-interaction">Scenario Outline: A debt position is updated by importing a receipts file, with an organization interacting with <interaction></h2>
 <pre><code class="language-gherkin">Given a simple debt position created by organization interacting with &lt;interaction&gt;
 And a receipt of a debt position inserted into an ingestion flow file with version 1_3
 When the organization uploads the receipts file
