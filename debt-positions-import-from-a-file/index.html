@@ -543,9 +543,20 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -559,7 +570,107 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steps glossary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-given/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Given
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-when/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-then/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Then
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -658,12 +769,12 @@
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the debt positions imported from the file were created in the expected status:</p>
-</li>
-<li>
-<p>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</p>
-</li>
+<ul>
+<li>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</li>
 <li>validates each created debt position against its request (fields, payment options, installments).</li>
 </ul>
 </li>
@@ -711,12 +822,12 @@
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the debt positions imported from the file were created in the expected status:</p>
-</li>
-<li>
-<p>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</p>
-</li>
+<ul>
+<li>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</li>
 <li>validates each created debt position against its request (fields, payment options, installments).</li>
 </ul>
 </li>

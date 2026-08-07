@@ -543,9 +543,20 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -559,7 +570,107 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steps glossary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-given/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Given
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-when/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-then/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Then
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -649,9 +760,13 @@
 <li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>RECEIPT_INGESTION_FLOW</code> workflow completes.</li>
-<li>Runs the <code>the debt position is created correctly</code> checks for every debt position imported from file.</li>
-<li>Runs the <code>the receipt is created correctly</code> checks for every receipt imported from the file.</li>
 </ul>
+</li>
+<li>
+<p>Runs the <code>the debt position is created correctly</code> checks for every debt position imported from file.</p>
+</li>
+<li>
+<p>Runs the <code>the receipt is created correctly</code> checks for every receipt imported from the file.</p>
 </li>
 </ol>
 <p><strong>Examples</strong></p>
@@ -700,20 +815,20 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the receipts file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>RECEIPT_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
-</li>
-<li>
-<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
-</li>
+<ul>
+<li>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</li>
 <li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>

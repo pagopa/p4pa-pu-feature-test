@@ -12,7 +12,7 @@
         <link rel="prev" href="../debt-position-notification-via-send/">
       
       
-        <link rel="next" href="../glossary/">
+        <link rel="next" href="../glossary-given/">
       
       
         
@@ -543,9 +543,20 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -559,7 +570,107 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steps glossary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-given/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Given
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-when/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-then/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Then
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -696,73 +807,79 @@
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
-<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</p>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
-</li>
-<li>
-<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
-</li>
+<ul>
+<li>asserts the debt position with type ord MIXED has no assessment details/classification;</li>
 <li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
-<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</p>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
-</li>
-<li>
-<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
-</li>
+<ul>
+<li>asserts the debt position with type ord MIXED has no assessment details/classification;</li>
 <li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
-<li>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</p>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the assessment-detail classification labels for a mixed debt position. It:</p>
-</li>
-<li>
-<p>asserts the debt position with type ord MIXED has no assessment details/classification;</p>
-</li>
+<ul>
+<li>asserts the debt position with type ord MIXED has no assessment details/classification;</li>
 <li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
 </ul>

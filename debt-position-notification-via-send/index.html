@@ -532,9 +532,20 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -548,7 +559,107 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steps glossary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-given/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Given
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-when/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-then/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Then
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -641,64 +752,68 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Creates a SEND notification for the selected installments. It:</p>
-</li>
-<li>
-<p>builds the notification request (recipients and pagoPA payments) for the given debt positions;</p>
-</li>
+<ul>
+<li>builds the notification request (recipients and pagoPA payments) for the given debt positions;</li>
 <li>gets a SEND token and posts the notification;</li>
 <li>asserts the call succeeds and the notification is created in status <code>WAITING</code>.</li>
+</ul>
+</li>
 <li>
 <p>Uploads the notification and payment PDFs to SEND. It:</p>
-</li>
-<li>
-<p>uploads the notification file and one payment file per notified installment;</p>
-</li>
+<ul>
+<li>uploads the notification file and one payment file per notified installment;</li>
 <li>reads the workflow id from the last upload;</li>
 <li>checks the notification moves to <code>IN_VALIDATION</code> with no IUN yet;</li>
 <li>waits for the upload workflow to complete.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the notification is valid and the IUN is assigned. It:</p>
+<ul>
+<li>polls SEND until the notification is valid and asserts it has an IUN;</li>
+<li>verifies that every notified installment carries that same IUN.</li>
+</ul>
 </li>
 <li>
-<p>polls SEND until the notification is valid and asserts it has an IUN;</p>
+<p>Checks that SEND set a notification fee: reads the fee for each notified installment, asserts it is
+    present and that all installments share the same fee.</p>
 </li>
-<li>verifies that every notified installment carries that same IUN.</li>
-<li>Checks that SEND set a notification fee: reads the fee for each notified installment, asserts it is
-present and that all installments share the same fee.</li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
-</li>
-<li>
-<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
-</li>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
 <li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
 <li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
 <li>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-</li>
-<li>
-<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
-<li>Checks that the notified installment's amount was increased by the notification fee (both <code>notificationFeeCents</code> and <code>amountCents</code>).</li>
+</ul>
+</li>
+<li>
+<p>Checks that the notified installment's amount was increased by the notification fee (both <code>notificationFeeCents</code> and <code>amountCents</code>).</p>
+</li>
 <li>
 <p>Checks that the assessment for the paid installment is in the expected status. It:</p>
-</li>
-<li>
-<p>reads the installment and its <code>sourceFlowName</code>;</p>
-</li>
+<ul>
+<li>reads the installment and its <code>sourceFlowName</code>;</li>
 <li>fetches the assessment by that name and asserts it exists and matches the status;</li>
 <li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that assessment details were created from the balance. It:</p>
-</li>
-<li>
-<p>retrieves the expected balance sections (optionally including a given DPTOBC section);</p>
-</li>
+<ul>
+<li>retrieves the expected balance sections (optionally including a given DPTOBC section);</li>
 <li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
 </ul>

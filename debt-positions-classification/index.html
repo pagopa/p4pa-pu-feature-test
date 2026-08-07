@@ -620,9 +620,20 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -636,7 +647,107 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steps glossary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-given/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Given
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-when/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary-then/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Then
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -804,20 +915,20 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
-</li>
-<li>
-<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
-</li>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
 <li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
 <li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
 <li>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-</li>
-<li>
-<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
@@ -882,63 +993,63 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
-</li>
-<li>
-<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
-</li>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
 <li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
 <li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
 <li>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-</li>
-<li>
-<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1007,63 +1118,63 @@
 <li>gets the organization token and builds the payment options;</li>
 <li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies presence in the GPD/ACA archive and the scheduled expiration workflow.</li>
+</ul>
+</li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
-</li>
-<li>
-<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
-</li>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
 <li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
 <li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
 <li>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-</li>
-<li>
-<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1107,74 +1218,74 @@
 <li>gets the organization token and builds the payment options;</li>
 <li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies presence in the GPD/ACA archive and the scheduled expiration workflow.</li>
+</ul>
+</li>
 <li>
 <p>Given that plays a full payment-and-reporting cycle for one installment and checks the outcome:</p>
-</li>
-<li>
-<p>pays the installment and checks the receipt is processed;</p>
-</li>
+<ul>
+<li>pays the installment and checks the receipt is processed;</li>
 <li>checks the other payment options become <code>INVALID</code>;</li>
 <li>uploads the payment reporting and checks the installment becomes <code>REPORTED</code>;</li>
 <li>uploads the treasury file and checks it is processed;</li>
 <li>checks the payment option and debt position become <code>PARTIALLY_PAID</code>;</li>
 <li>checks the resulting classification labels.</li>
+</ul>
+</li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
-</li>
-<li>
-<p>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</p>
-</li>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
 <li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
 <li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
 <li>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-</li>
-<li>
-<p>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
 <li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the treasury OPI file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>TREASURY_OPI_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUF_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1202,29 +1313,29 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Checks that a payment reporting with outcome code 9 was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
-</li>
-<li>
-<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
-</li>
+<ul>
+<li>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</li>
 <li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1252,29 +1363,29 @@
 <li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the debt position was created correctly. It:</p>
-</li>
-<li>
-<p>looks it up by NAV and asserts exactly one is found;</p>
-</li>
+<ul>
+<li>looks it up by NAV and asserts exactly one is found;</li>
 <li>verifies its origin and, for receipt-file origin, that it is <code>PAID</code>;</li>
 <li>checks the installment IUV and, for pagopa-reporting origin, the outcome-9 remittance and anonymous debtor.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
-</li>
-<li>
-<p>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</p>
-</li>
+<ul>
+<li>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</li>
 <li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1307,45 +1418,47 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Performs a full successful payment in one step:</p>
-</li>
-<li>
-<p>pays the installment,</p>
-</li>
+<ul>
+<li>pays the installment,</li>
 <li>checks the debt position becomes <code>PAID</code></li>
 <li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
 <li>
 <p>Uploads a payment reporting and checks it is processed, in one step:</p>
-</li>
-<li>
-<p>uploads the file,</p>
-</li>
+<ul>
+<li>uploads the file,</li>
 <li>checks the debt position becomes <code>REPORTED</code>,</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
 <li>
 <p>Checks that a payment reporting with outcome code 9 was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
-<li>Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin.</p>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1376,45 +1489,45 @@
 <li>creates it and checks it becomes <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
 <li>
 <p>Uploads a payment reporting and checks it is processed, in one step:</p>
-</li>
-<li>
-<p>uploads the file,</p>
-</li>
+<ul>
+<li>uploads the file,</li>
 <li>checks the debt position becomes <code>REPORTED</code>,</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
 <li>
 <p>Performs a full successful payment in one step:</p>
-</li>
-<li>
-<p>pays the installment,</p>
-</li>
+<ul>
+<li>pays the installment,</li>
 <li>checks the debt position becomes <code>PAID</code></li>
 <li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
@@ -1443,33 +1556,37 @@
 <li>builds the entity and its transfer, generating IUV/NAV/IUPD;</li>
 <li>posts it to GPD/ACA and asserts the call succeeds;</li>
 <li>verifies the notice is present as <code>VALID</code> in the GPD/ACA archive.</li>
-<li>For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
-in one step, that it is processed and that the debt position is created correctly.</li>
-<li>Like <code>the successful payment of the installment</code>, but pays the first installment of a debt
-position created outside PU, then checks the <code>PAID</code> status and that the receipt is processed.</li>
+</ul>
+</li>
+<li>
+<p>For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
+    in one step, that it is processed and that the debt position is created correctly.</p>
+</li>
+<li>
+<p>Like <code>the successful payment of the installment</code>, but pays the first installment of a debt
+    position created outside PU, then checks the <code>PAID</code> status and that the receipt is processed.</p>
+</li>
 <li>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
-</li>
-<li>
-<p>the file reaches status <code>COMPLETED</code>;</p>
-</li>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
+</ul>
+</li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
-</li>
-<li>
-<p>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</p>
-</li>
+<ul>
+<li>queries the classifications for today by IUV (and by IUF/IUR when payment reporting with outcome code specified is uploaded);</li>
 <li>asserts at least one classification exists;</li>
 <li>verifies that, for every transfer, the stored labels match the expected set.</li>
 </ul>
