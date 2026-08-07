@@ -54,29 +54,20 @@ def render_examples(examples_list) -> list[str]:
     return lines
 
 
-def scenario_anchor(index: int, keyword: str, name: str) -> str:
-    # Prefix with the index so duplicate scenario names still get a unique id.
-    return slugify(f'{index}-{keyword}-{name}')
-
-
-def render_feature(feature):
-    """Return (markdown, [(scenario_name, anchor), ...]) for the feature page."""
+def render_feature(feature) -> str:
     lines = [f'# {feature.name}', '']
     if feature.tags:
         lines += [f'**Tags:** {tags_line(feature.tags)}', '']
     if feature.description:
         lines += list(feature.description) + ['']
-    scenarios = []
-    for i, scenario in enumerate(feature.scenarios):
-        anchor = scenario_anchor(i, scenario.keyword, scenario.name)
-        lines.append(f'## {scenario.keyword}: {scenario.name} {{#{anchor}}}')
+    for scenario in feature.scenarios:
+        lines.append(f'## {scenario.keyword}: {scenario.name}')
         if scenario.tags:
             lines += ['', f'**Tags:** {tags_line(scenario.tags)}']
         lines += ['', *render_steps(scenario.steps)]
         lines += render_examples(getattr(scenario, 'examples', []) or [])
         lines.append('')
-        scenarios.append((scenario.name, anchor))
-    return '\n'.join(lines) + '\n', scenarios
+    return '\n'.join(lines) + '\n'
 
 
 def main() -> None:
@@ -97,29 +88,30 @@ def main() -> None:
         if feature is None:
             continue
         slug = slugify(feature.name or feature_path.stem)
-        content, scenarios = render_feature(feature)
-        (docs_dir / f'{slug}.md').write_text(content, encoding='utf-8')
-        index_entries.append((feature.name or feature_path.stem, slug, scenarios))
+        (docs_dir / f'{slug}.md').write_text(render_feature(feature), encoding='utf-8')
+        index_entries.append((feature.name or feature_path.stem, slug, len(feature.scenarios)))
 
     index = [f'# {args.page_name}', '']
     if args.repo_name:
         index += [f'Repository: `{args.repo_name}`', '']
     index += ['## Features', '']
-    for name, slug, scenarios in index_entries:
-        index += ['', f'### [{name}]({slug}.md) — {len(scenarios)} scenario(s)', '']
-        if scenarios:
-            index += [f'- [{sname}]({slug}.md#{anchor})' for sname, anchor in scenarios]
-        else:
-            index += ['_No scenarios._']
+    index += [f'- [{name}]({slug}.md) — {count} scenario(s)' for name, slug, count in index_entries]
     (docs_dir / 'index.md').write_text('\n'.join(index) + '\n', encoding='utf-8')
+
+    # Explicit nav so the sidebar shows one main title (site_name) with the
+    # feature pages grouped under a "Feature" section, instead of a flat list
+    # that repeats the site title as a clickable entry.
+    nav_lines = ['nav:', '  - Panoramica: index.md', '  - Feature:']
+    for name, slug, _count in index_entries:
+        safe = name.replace('"', '\\"')
+        nav_lines.append(f'    - "{safe}": {slug}.md')
 
     Path(args.config).write_text(
         f'site_name: {args.page_name}\n'
         f'docs_dir: {args.docs_dir}\n'
         'theme:\n'
         '  name: material\n'
-        'markdown_extensions:\n'
-        '  - attr_list\n',
+        + '\n'.join(nav_lines) + '\n',
         encoding='utf-8',
     )
 
