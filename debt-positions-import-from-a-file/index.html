@@ -764,7 +764,7 @@
 </code></pre></div>
 <ol>
 <li>
-<p>Checks that the debt-positions ingestion file was processed correctly. It verifies that:</p>
+<p>Checks that the debt positions ingestion file was processed correctly. It verifies that:</p>
 <ul>
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
@@ -774,7 +774,7 @@
 <li>
 <p>Checks that the debt positions imported from the file were created in the expected status:</p>
 <ul>
-<li>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</li>
+<li>fetches the debt positions by ingestion flow id and asserts the count matches the identifiers;</li>
 <li>validates each created debt position against its request (fields, payment options, installments).</li>
 </ul>
 </li>
@@ -817,7 +817,7 @@
 </code></pre></div>
 <ol>
 <li>
-<p>Checks that the debt-positions ingestion file was processed correctly. It verifies that:</p>
+<p>Checks that the debt positions ingestion file was processed correctly. It verifies that:</p>
 <ul>
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
@@ -827,7 +827,7 @@
 <li>
 <p>Checks that the debt positions imported from the file were created in the expected status:</p>
 <ul>
-<li>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</li>
+<li>fetches the debt positions by ingestion flow id and asserts the count matches the identifiers;</li>
 <li>validates each created debt position against its request (fields, payment options, installments).</li>
 </ul>
 </li>

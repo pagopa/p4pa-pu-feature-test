@@ -942,7 +942,7 @@
 <p>The <code>Given</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
 <h2 id="a-complex-debt-position-with-po_size-payment-options-created-by-organization-interacting-with-pagopa_interaction"><code>a complex debt position with {po_size} payment options created by organization interacting with {pagopa_interaction}</code></h2>
 <p><em>also: <code>a debt position {dp_identifier} with {po_size} payment option and {installments_size} installments created by organization interacting with {pagopa_interaction}</code></em></p>
-<p>Creates a complex debt position (several payment options with installments) in one step. It:</p>
+<p>Creates a complex debt position (more than 1 payment options with installments) in one step. It:</p>
 <ul>
 <li>gets the organization token and builds the payment options;</li>
 <li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
@@ -965,13 +965,17 @@
 <li>asserts the call succeeds and the notification is created in status <code>WAITING</code>.</li>
 </ul>
 <h2 id="a-payment-reporting-with-outcome-code-9-has-been-successfully-processed-for-the-installment-created-outside-pu"><code>a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU</code></h2>
-<p>For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
-in one step, that it is processed and that the debt position is created correctly.</p>
-<h2 id="a-payment-reporting-with-outcome-code-outcome_code-has-been-successfully-processed-for-the-installment"><code>a payment reporting with outcome code {outcome_code} has been successfully processed for the installment</code></h2>
-<p>Uploads a payment reporting and checks it is processed, in one step:</p>
+<p>Uploads a payment reporting for an installment created outside PU and checks it is processed:</p>
 <ul>
-<li>uploads the file,</li>
-<li>checks the debt position becomes <code>REPORTED</code>,</li>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and that the debt position is created in PU with origin <code>REPORTING_PAGOPA</code>.</li>
+</ul>
+<h2 id="a-payment-reporting-with-outcome-code-outcome_code-has-been-successfully-processed-for-the-installment"><code>a payment reporting with outcome code {outcome_code} has been successfully processed for the installment</code></h2>
+<p>Uploads a payment reporting and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
 </ul>
 <h2 id="a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction"><code>a simple debt position created by organization interacting with {pagopa_interaction}</code></h2>
@@ -991,8 +995,12 @@ in one step, that it is processed and that the debt position is created correctl
 <li>verifies the notice is present as <code>VALID</code> in the GPD/ACA archive.</li>
 </ul>
 <h2 id="a-simple-debt-position-with-balance-created-by-organization-interacting-with-pagopa_interaction"><code>a simple debt position with balance created by organization interacting with {pagopa_interaction}</code></h2>
-<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the
-installment; creates it and checks <code>UNPAID</code> status, presence in GPD/ACA and the scheduled expiration workflow.</p>
+<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the installment. It:</p>
+<ul>
+<li>creates the debt position and checks it become <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
 <h2 id="the-previous-payment-of-installment-seq_num-of-payment-option-po_index"><code>the previous payment of installment {seq_num} of payment option {po_index}</code></h2>
 <p>Given that plays a full payment-and-reporting cycle for one installment and checks the outcome:</p>
 <ul>

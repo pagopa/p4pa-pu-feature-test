@@ -1113,7 +1113,7 @@
 </code></pre></div>
 <ol>
 <li>
-<p>Creates a complex debt position (several payment options with installments) in one step. It:</p>
+<p>Creates a complex debt position (more than 1 payment options with installments) in one step. It:</p>
 <ul>
 <li>gets the organization token and builds the payment options;</li>
 <li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
@@ -1213,7 +1213,7 @@
 </code></pre></div>
 <ol>
 <li>
-<p>Creates a complex debt position (several payment options with installments) in one step. It:</p>
+<p>Creates a complex debt position (more than 1 payment options with installments) in one step. It:</p>
 <ul>
 <li>gets the organization token and builds the payment options;</li>
 <li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
@@ -1369,8 +1369,8 @@
 <p>Checks that the debt position was created correctly. It:</p>
 <ul>
 <li>looks it up by NAV and asserts exactly one is found;</li>
-<li>verifies its origin and, for receipt-file origin, that it is <code>PAID</code>;</li>
-<li>checks the installment IUV and, for pagopa-reporting origin, the outcome-9 remittance and anonymous debtor.</li>
+<li>verifies its origin and, for <code>RECEIPT_FILE</code> origin, that it is <code>PAID</code>;</li>
+<li>checks the installment IUV and, for <code>REPORTING_PAGOPA</code> origin, the outcome-9 remittance and anonymous debtor.</li>
 </ul>
 </li>
 <li>
@@ -1429,10 +1429,10 @@
 </ul>
 </li>
 <li>
-<p>Uploads a payment reporting and checks it is processed, in one step:</p>
+<p>Uploads a payment reporting and checks it is processed:</p>
 <ul>
-<li>uploads the file,</li>
-<li>checks the debt position becomes <code>REPORTED</code>,</li>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
 </ul>
 </li>
@@ -1445,7 +1445,7 @@
 </ul>
 </li>
 <li>
-<p>Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin.</p>
+<p>Checks that the duplicate receipt for the given payment reporting flow (by outcome code) is created with the expected origin.</p>
 </li>
 <li>
 <p>Checks the classification labels produced for the installment. It:</p>
@@ -1492,10 +1492,10 @@
 </ul>
 </li>
 <li>
-<p>Uploads a payment reporting and checks it is processed, in one step:</p>
+<p>Uploads a payment reporting and checks it is processed:</p>
 <ul>
-<li>uploads the file,</li>
-<li>checks the debt position becomes <code>REPORTED</code>,</li>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
 </ul>
 </li>
@@ -1559,8 +1559,12 @@
 </ul>
 </li>
 <li>
-<p>For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
-    in one step, that it is processed and that the debt position is created correctly.</p>
+<p>Uploads a payment reporting for an installment created outside PU and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and that the debt position is created in PU with origin <code>REPORTING_PAGOPA</code>.</li>
+</ul>
 </li>
 <li>
 <p>Like <code>the successful payment of the installment</code>, but pays the first installment of a debt

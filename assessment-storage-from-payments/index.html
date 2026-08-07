@@ -780,8 +780,12 @@
 </code></pre></div>
 <ol>
 <li>
-<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the
-    installment; creates it and checks <code>UNPAID</code> status, presence in GPD/ACA and the scheduled expiration workflow.</p>
+<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the installment. It:</p>
+<ul>
+<li>creates the debt position and checks it become <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
 </li>
 <li>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>

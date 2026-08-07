@@ -1161,12 +1161,13 @@
 <h2 id="3-debt-positions-having-installments-with-same-iuv-are-in-status-status-configured-as-follows"><code>3 debt positions having installments with same IUV are in status {status} configured as follows</code></h2>
 <p>Checks the debt positions generated from a mixed SIL flow (sharing the same IUV). For each configured row it:</p>
 <ul>
-<li>looks up the spontaneous-mixed or spontaneous-SIL debt position and asserts they exist as configured;</li>
+<li>looks up the <code>SPONTANEOUS_MIXED</code> or <code>SPONTANEOUS_SIL</code> debt position and asserts they exist as configured;</li>
 <li>validates their status, amounts, payment option and installments/transfers against the request.</li>
 </ul>
 <h2 id="send-has-set-a-notification-fee"><code>SEND has set a notification fee</code></h2>
-<p>Checks that SEND set a notification fee: reads the fee for each notified installment, asserts it is
-present and that all installments share the same fee.</p>
+<p>Checks that SEND set a notification fee:
+- reads the fee for each notified installment;
+- asserts it is present and that all installments share the same fee.</p>
 <h2 id="the-amount-of-installment-of-debt-position-dp_identifier-is-increased-by-the-notification-fee"><code>the amount of installment of debt position {dp_identifier} is increased by the notification fee</code></h2>
 <p><em>also: <code>the amount of installment {seq_num} of debt position {dp_identifier} is increased by the notification fee</code></em></p>
 <p>Checks that the notified installment's amount was increased by the notification fee (both <code>notificationFeeCents</code> and <code>amountCents</code>).</p>
@@ -1205,28 +1206,28 @@ present and that all installments share the same fee.</p>
 <p>Checks that the debt position was created correctly. It:</p>
 <ul>
 <li>looks it up by NAV and asserts exactly one is found;</li>
-<li>verifies its origin and, for receipt-file origin, that it is <code>PAID</code>;</li>
-<li>checks the installment IUV and, for pagopa-reporting origin, the outcome-9 remittance and anonymous debtor.</li>
+<li>verifies its origin and, for <code>RECEIPT_FILE</code> origin, that it is <code>PAID</code>;</li>
+<li>checks the installment IUV and, for <code>REPORTING_PAGOPA</code> origin, the outcome-9 remittance and anonymous debtor.</li>
 </ul>
 <h2 id="the-debt-positions-are-created-correctly-with-origin-debt_position_origin"><code>the debt positions are created correctly with origin {debt_position_origin}</code></h2>
 <p>Runs the <code>the debt position is created correctly</code> checks for every debt position imported from file.</p>
 <h2 id="the-debt-positions-identifiers-are-created-in-status-status"><code>the debt positions {identifiers} are created in status {status}</code></h2>
 <p>Checks that the debt positions imported from the file were created in the expected status:</p>
 <ul>
-<li>fetches the debt positions by ingestion-flow id and asserts the count matches the identifiers;</li>
+<li>fetches the debt positions by ingestion flow id and asserts the count matches the identifiers;</li>
 <li>validates each created debt position against its request (fields, payment options, installments).</li>
 </ul>
 <h2 id="the-duplicate-receipt-for-the-payment-reporting-with-outcome-code-outcome_code-is-created-correctly-with-origin-receipt_origin"><code>the duplicate receipt for the payment reporting with outcome code {outcome_code} is created correctly with origin {receipt_origin}</code></h2>
-<p>Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin.</p>
+<p>Checks that the duplicate receipt for the given payment reporting flow (by outcome code) is created with the expected origin.</p>
 <h2 id="the-ingestion-file-is-processed-correctly"><code>the ingestion file is processed correctly</code></h2>
-<p>Checks that the debt-positions ingestion file was processed correctly. It verifies that:</p>
+<p>Checks that the debt positions ingestion file was processed correctly. It verifies that:</p>
 <ul>
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
 </ul>
 <h2 id="the-mixed-debt-position-and-technical-ones-are-in-status-status"><code>the mixed debt position and technical ones are in status {status}</code></h2>
-<p>Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status.</p>
+<p>Checks that the mixed debt position and its technical (<code>SPONTANEOUS_MIXED</code>) ones are all in the expected status.</p>
 <h2 id="the-notification-is-in-status-status-and-the-iun-is-assigned-to-the-installment"><code>the notification is in status {status} and the IUN is assigned to the installment</code></h2>
 <p><em>also: <code>the notification is in status {status} and the IUN is assigned to all installments</code></em></p>
 <p>Checks that the notification is valid and the IUN is assigned. It:</p>
