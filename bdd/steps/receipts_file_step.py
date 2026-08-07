@@ -78,6 +78,12 @@ def step_uploads_receipts_file(context):
 
 @then("the receipts file is processed correctly")
 def step_receipts_file_processed(context):
+    """Checks that the receipts file was processed correctly. It verifies that:
+
+    - the file reaches status `COMPLETED`;
+    - the number of imported rows equals the rows sent and all were imported successfully;
+    - the `RECEIPT_INGESTION_FLOW` workflow completes.
+    """
     file_path_name = FilePathName.RECEIPT
     file_name = context.receipts_file_name
 

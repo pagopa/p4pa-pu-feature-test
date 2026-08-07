@@ -30,6 +30,11 @@ def check_res_ok_and_get_body(response_content, tag_name):
 @when("the citizen pays the installment {seq_num} of debt position {dp_identifier}")
 def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None,
                              installment_to_paid=None):
+    """Simulates the citizen paying the installment through the pagoPA node. It:
+
+    - verifies the payment notice (`verifyPaymentNotice`) and reads amount/due date;
+    - activates the payment notice (`activatePaymentNotice`) and gets a payment token;
+    - sends the payment outcome (`sendPaymentOutcome`), each call expected to return `OK`"""
     citizen_info = secrets.citizen_info.get(citizen_identifier)
     psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
 
@@ -75,6 +80,13 @@ def step_pay_mixed_installment(context):
 @then("the receipt is processed correctly")
 @then("the receipt of debt position {dp_identifier} is processed correctly")
 def step_check_receipt_processed(context, dp_identifier=None, organization_id=None):
+    """Checks that the pagoPA receipt has been fully processed. It verifies that:
+
+    - the receipt file `RT_<nav>.xml` reaches status `COMPLETED`;
+    - the paid installment now has both `IUR` and `receiptId` set;
+    - the async `TRANSFER_CLASSIFICATION` workflow completes;
+    - the async `IUD_CLASSIFICATION` workflow completes."""
+
     installment_paid = get_installment_paid(context, dp_identifier)
     org_id = organization_id if organization_id is not None else context.org_info.id
 
@@ -104,6 +116,7 @@ def step_check_receipt_processed(context, dp_identifier=None, organization_id=No
 
 @then("the receipts are created correctly with origin {receipt_origin}")
 def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
+    """Runs the `the receipt is created correctly` checks for every receipt imported from the file."""
     for i in range(context.receipts_rows_len):
         step_check_receipt_created(context=context, receipt_origin=receipt_origin,
                                    installment_paid=context.imported_installments[i])
@@ -112,6 +125,13 @@ def step_check_receipts_created(context, receipt_origin: str = ReceiptOriginType
 @then("the receipt is created correctly with origin {receipt_origin}")
 def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value,
                                installment_paid=None, is_duplicate: bool = False):
+    """Checks that the receipt for the paid installment was created with the expected origin. It verifies that:
+
+    - the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);
+    - its `receiptOrigin` matches the expected one and it is linked to the installment (`receiptId`);
+    - the `TRANSFER_CLASSIFICATION` workflow completes for each transfer;
+    - the `IUD_CLASSIFICATION` workflow completes."""
+
     installment_paid = installment_paid if installment_paid else get_installment_paid(context)
     receipt_origin = ReceiptOriginType[receipt_origin.upper()].value
     org_info = context.org_info
@@ -154,6 +174,11 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
 
 @given("the successful payment of the installment")
 def step_successful_installment_payment(context):
+    """Performs a full successful payment in one step:
+
+    - pays the installment,
+    - checks the debt position becomes `PAID`
+    - checks the receipt is processed correctly."""
     step_installment_payment(context=context)
     step_check_dp_status(context=context, status=Status.PAID.value)
     step_check_receipt_processed(context=context)
@@ -161,6 +186,8 @@ def step_successful_installment_payment(context):
 
 @given("the successful payment of the installment created outside PU")
 def step_successful_installment_payment_outside_pu(context):
+    """Like `the successful payment of the installment`, but pays the first installment of a debt
+    position created outside PU, then checks the `PAID` status and that the receipt is processed."""
     step_installment_payment(context=context, installment_to_paid=context.debt_position.payment_options[0].installments[0])
     step_check_dp_status(context=context, status=Status.PAID.value)
     step_check_receipt_processed(context=context)
