@@ -164,8 +164,11 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
-    """Like `a simple debt position created by organization...`, but with a balance set to the
-    installment; creates it and checks `UNPAID` status, presence in GPD/ACA and the scheduled expiration workflow."""
+    """Like `a simple debt position created by organization...`, but with a balance set to the installment. It:
+
+    - creates the debt position and checks it become `UNPAID`;
+    - verifies the notice is present as `valid` in the GPD/ACA archive;
+    - checks the expiration workflow is scheduled."""
     step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
     step_create_dp_entity(context=context)
     step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100, expiration_days=3, balance=True)
@@ -180,7 +183,7 @@ def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
 @given(
     "a debt position {dp_identifier} with {po_size} payment option and {installments_size} installments created by organization interacting with {pagopa_interaction}")
 def step_create_complex_debt_position(context, po_size, pagopa_interaction, dp_identifier=None, installments_size=2):
-    """Creates a complex debt position (several payment options with installments) in one step. It:
+    """Creates a complex debt position (more than 1 payment options with installments) in one step. It:
 
     - gets the organization token and builds the payment options;
     - creates the debt position and checks it becomes `UNPAID`;
@@ -216,8 +219,8 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     """Checks that the debt position was created correctly. It:
 
     - looks it up by NAV and asserts exactly one is found;
-    - verifies its origin and, for receipt-file origin, that it is `PAID`;
-    - checks the installment IUV and, for pagopa-reporting origin, the outcome-9 remittance and anonymous debtor.
+    - verifies its origin and, for `RECEIPT_FILE` origin, that it is `PAID`;
+    - checks the installment IUV and, for `REPORTING_PAGOPA` origin, the outcome-9 remittance and anonymous debtor.
     """
     token = context.token
     org_info = context.org_info

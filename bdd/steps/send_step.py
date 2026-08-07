@@ -175,8 +175,9 @@ def step_check_iun(context, status):
 
 @then("SEND has set a notification fee")
 def step_check_notification_fee(context):
-    """Checks that SEND set a notification fee: reads the fee for each notified installment, asserts it is
-    present and that all installments share the same fee."""
+    """Checks that SEND set a notification fee:
+    - reads the fee for each notified installment;
+    - asserts it is present and that all installments share the same fee."""
     installments_notified = context.installments_notified
 
     notification_fee = {}

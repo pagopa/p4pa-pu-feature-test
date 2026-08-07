@@ -212,7 +212,15 @@ def main() -> None:
     index = [f'# {args.page_name}', '']
     if args.repo_name:
         index += [f'Repository: `{args.repo_name}`', '']
-    index += ['## Features', '']
+    if glossary_entries:
+        index += [
+            '',
+            'Inside a scenario, some steps show a **+** icon: click it to read a short '
+            'explanation of what that step checks or does (steps that do a single, '
+            'self-explanatory action have none). The same explanations are collected in '
+            'the **Steps glossary**.',
+        ]
+    index += ['', '## Features', '']
     index += [f'- [{name}]({slug}.md) — {count} scenario(s)' for name, slug, count in index_entries]
     (docs_dir / 'index.md').write_text('\n'.join(index) + '\n', encoding='utf-8')
 

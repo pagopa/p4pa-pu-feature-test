@@ -259,10 +259,10 @@ def step_check_payment_reporting_outcome9_processed(context):
 
 @given("a payment reporting with outcome code {outcome_code} has been successfully processed for the installment")
 def step_successful_payment_reporting_uploading(context, outcome_code='0'):
-    """Uploads a payment reporting and checks it is processed, in one step:
+    """Uploads a payment reporting and checks it is processed:
 
-    - uploads the file,
-    - checks the debt position becomes `REPORTED`,
+    - uploads the file;
+    - checks the debt position becomes `REPORTED`;
     - checks processing and (for outcome 9) that the receipt is created."""
     step_upload_payment_reporting_file(context=context, outcome_code=outcome_code)
     step_check_dp_status(context=context, status=Status.REPORTED.value)
@@ -273,8 +273,11 @@ def step_successful_payment_reporting_uploading(context, outcome_code='0'):
 
 @given("a payment reporting with outcome code 9 has been successfully processed for the installment created outside PU")
 def step_successful_payment_reporting_uploading_outside_pu(context):
-    """For a debt position created outside PU, uploads a payment reporting with outcome code 9 and checks,
-    in one step, that it is processed and that the debt position is created correctly."""
+    """Uploads a payment reporting for an installment created outside PU and checks it is processed:
+
+    - uploads the file;
+    - checks the debt position becomes `REPORTED`;
+    - checks processing and that the debt position is created in PU with origin `REPORTING_PAGOPA`."""
     installment = context.debt_position.payment_options[0].installments[0]
     step_upload_payment_reporting_file_no_debt_position(context=context, outcome_code='9', installment=installment)
     step_check_payment_reporting_outcome9_processed(context=context)
@@ -291,7 +294,7 @@ def step_upload_payment_reporting_file_outside_pu(context, outcome_code='0'):
 @then("the duplicate receipt for the payment reporting with outcome code {outcome_code} is created correctly with origin {receipt_origin}")
 def step_check_duplicate_receipt_created_for_flow(context, outcome_code,
                                                   receipt_origin: str = ReceiptOriginType.PAYMENTS_REPORTING.value):
-    """Checks that the duplicate receipt for the given payment-reporting flow (by outcome code) is created with the expected origin."""
+    """Checks that the duplicate receipt for the given payment reporting flow (by outcome code) is created with the expected origin."""
     flow = get_payment_reporting_flow(context, outcome_code)
     step_check_receipt_created(context=context, receipt_origin=receipt_origin,
                                installment_paid=flow['installment'], is_duplicate=True)

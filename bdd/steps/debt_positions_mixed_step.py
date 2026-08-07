@@ -70,7 +70,7 @@ def step_sil_invia_dovuto_mixed(context):
 def step_check_debt_positions_mixed_created(context, status):
     """Checks the debt positions generated from a mixed SIL flow (sharing the same IUV). For each configured row it:
 
-    - looks up the spontaneous-mixed or spontaneous-SIL debt position and asserts they exist as configured;
+    - looks up the `SPONTANEOUS_MIXED` or `SPONTANEOUS_SIL` debt position and asserts they exist as configured;
     - validates their status, amounts, payment option and installments/transfers against the request.
     """
     token = context.token
@@ -143,7 +143,7 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
 
 @then("the mixed debt position and technical ones are in status {status}")
 def step_check_mixed_and_tech_dp_status(context, status):
-    """Checks that the mixed debt position and its technical (spontaneous-mixed) ones are all in the expected status."""
+    """Checks that the mixed debt position and its technical (`SPONTANEOUS_MIXED`) ones are all in the expected status."""
     step_check_dp_status(context=context, status=status)
 
     res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
