@@ -101,7 +101,7 @@ def main() -> None:
     # Explicit nav so the sidebar shows one main title (site_name) with the
     # feature pages grouped under a "Feature" section, instead of a flat list
     # that repeats the site title as a clickable entry.
-    nav_lines = ['nav:', '  - Panoramica: index.md', '  - Feature:']
+    nav_lines = ['nav:', '  - Overview: index.md', '  - Features:']
     for name, slug, _count in index_entries:
         safe = name.replace('"', '\\"')
         nav_lines.append(f'    - "{safe}": {slug}.md')
