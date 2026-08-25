@@ -95,20 +95,20 @@ During local development you usually just run a scenario (or a tag) and check th
 passes:
 
 ```commandline
-behave --tags @<tag>
+behave --tags=@<tag>
 ```
 
 For example, to run only the scenarios tagged `@debt_positions`:
 
 ```commandline
-behave --tags @debt_positions
+behave --tags=@debt_positions
 ```
 
 You rarely need a report locally — the CI pipeline is the one that produces the JUnit
 report. If you do want one, add `--junit`:
 
 ```commandline
-behave --junit --junit-directory "tests/reports" --tags @debt_positions
+behave --junit --junit-directory "tests/reports" --tags=@debt_positions
 ```
 
 Or produce an HTML report instead:
