@@ -1,13 +1,12 @@
 import json
 
-import requests
-
+from common import http_client
 from config.configuration import secrets
 from config.configuration import settings
 
 
 def post_create_debt_position(token, traceparent: str, debt_position: str, massive: bool = False):
-    return requests.post(
+    return http_client.post(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions',
         headers={
             'Authorization': f'Bearer {token}',
@@ -22,7 +21,7 @@ def post_create_debt_position(token, traceparent: str, debt_position: str, massi
 
 
 def get_debt_position(token, traceparent: str, debt_position_id: int):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/{debt_position_id}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -33,7 +32,7 @@ def get_debt_position(token, traceparent: str, debt_position_id: int):
 
 
 def get_debt_position_by_organization_id_and_installment_nav(token, traceparent: str, organization_id: int, nav: int):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-nav/{organization_id}/{nav}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -44,7 +43,7 @@ def get_debt_position_by_organization_id_and_installment_nav(token, traceparent:
 
 
 def get_installment(token, traceparent: str, installment_id: int):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/installments/{installment_id}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -55,7 +54,7 @@ def get_installment(token, traceparent: str, installment_id: int):
 
 
 def get_debt_positions_by_ingestion_flow_id(token, traceparent: str, ingestion_flow_id: int):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/ingestion-flow-file/{ingestion_flow_id}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -66,7 +65,7 @@ def get_debt_positions_by_ingestion_flow_id(token, traceparent: str, ingestion_f
 
 
 def get_receipt(token, traceparent: str, organization_id, receipt_origin, iuv, iur):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.bff}/organization/{organization_id}/receipts',
         headers={
             'Authorization': f'Bearer {token}',
@@ -81,7 +80,7 @@ def get_receipt(token, traceparent: str, organization_id, receipt_origin, iuv, i
     )
 
 def get_receipt_by_id(token, traceparent: str, receipt_id: int):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/receipts/{receipt_id}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -92,7 +91,7 @@ def get_receipt_by_id(token, traceparent: str, receipt_id: int):
 
 
 def get_receipt_by_iur(token, traceparent: str, iur: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/receipts/search/getByPaymentReceiptId',
         headers={
             'Authorization': f'Bearer {token}',
@@ -106,7 +105,7 @@ def get_receipt_by_iur(token, traceparent: str, iur: str):
 
 
 def get_debt_position_by_iud(token, traceparent: str, organization_id: int, iud: str, debt_position_origin: str = None):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iud/{organization_id}/{iud}',
         headers={
             'Authorization': f'Bearer {token}',
@@ -120,7 +119,7 @@ def get_debt_position_by_iud(token, traceparent: str, organization_id: int, iud:
 
 
 def get_debt_position_by_iuv(token, traceparent: str, organization_id: int, iuv: str, debt_position_origin: str = None):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/by-iuv/{organization_id}/{iuv}',
         headers={
             'Authorization': f'Bearer {token}',

@@ -1,11 +1,10 @@
-import requests
-
+from common import http_client
 from config.configuration import secrets
 from config.configuration import settings
 
 
 def get_workflow_status(token, traceparent: str, workflow_id: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.workflow_hub}/{workflow_id}/status',
         headers={
             'Authorization': f'Bearer {token}',

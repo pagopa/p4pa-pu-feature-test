@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-import requests
-
+from common import http_client
 from config.configuration import settings
 
 
@@ -22,7 +21,7 @@ def verify_payment_notice(psp: PSP,
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, nav=nav)
 
-    return requests.post(
+    return http_client.post(
         url=f'{settings.api.base_path.nodo_psp}',
         headers={
             'Content-Type': 'text/xml',
@@ -44,7 +43,7 @@ def activate_payment_notice(psp: PSP,
     data = data.format(psp_id=psp.id, psp_id_broker=psp.id_broker, psp_id_channel=psp.id_channel,
                        psp_password=psp.password, org_fiscal_code=org_fiscal_code, nav=nav,
                        amount=amount, due_date=due_date)
-    return requests.post(
+    return http_client.post(
         url=f'{settings.api.base_path.nodo_psp}',
         headers={
             'Content-Type': 'text/xml',
@@ -67,7 +66,7 @@ def send_payment_outcome(psp: PSP,
                        psp_password=psp.password, payment_token=payment_token, citizen_fiscal_code=citizen_fiscal_code,
                        citizen_name=citizen_name, citizen_email=citizen_email,
                        current_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-    return requests.post(
+    return http_client.post(
         url=f'{settings.api.base_path.nodo_psp}',
         headers={
             'Content-Type': 'text/xml',

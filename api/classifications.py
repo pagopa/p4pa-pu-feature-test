@@ -1,14 +1,13 @@
 from datetime import datetime
 
-import requests
-
+from common import http_client
 from config.configuration import secrets, settings
 
 
 def get_classification(token, traceparent: str, organization_id: int, iuv: str,
                        last_classification_date_from: str, last_classification_date_to: str,
                        iud: str = None, iuf: str = None, iur: str = None):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/organization/{organization_id}/classifications/treasured',
         headers={
             'Authorization': f'Bearer {token}',
@@ -31,7 +30,7 @@ def get_classification(token, traceparent: str, organization_id: int, iuv: str,
 
 def get_assessment(token, traceparent: str, organization_id: int, debt_position_type_org_code: str,
                        assessment_name: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments/search/findByOrganizationIdAndDebtPositionTypeOrgCodeAndAssessmentName',
         headers={
             'Authorization': f'Bearer {token}',
@@ -47,7 +46,7 @@ def get_assessment(token, traceparent: str, organization_id: int, debt_position_
 
 
 def get_assessment_details(token, traceparent: str, assessment_id: int, iud: str, iuv: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments-details/search/findAssessmentsRowsDetail',
         headers={
             'Authorization': f'Bearer {token}',
@@ -63,7 +62,7 @@ def get_assessment_details(token, traceparent: str, assessment_id: int, iud: str
 
 
 def get_assessment_details_by_iud_and_iuv(token, traceparent: str, organization_id: int, iud: str, iuv: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments-details/search/findAllByOrganizationIdAndIuvAndIud',
         headers={
             'Authorization': f'Bearer {token}',
@@ -79,7 +78,7 @@ def get_assessment_details_by_iud_and_iuv(token, traceparent: str, organization_
 
 
 def get_assessment_registry(token, traceparent: str, organization_id: int, debt_position_type_org_code: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.classifications}/crud/assessments-registries/search/findAssessmentsRegistriesByFilters',
         headers={
             'Authorization': f'Bearer {token}',
