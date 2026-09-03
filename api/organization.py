@@ -1,11 +1,10 @@
-import requests
-
+from common import http_client
 from config.configuration import settings
 from config.configuration import secrets
 
 
 def get_org_by_ipa_code(token, traceparent: str, ipa_code: str):
-    return requests.get(
+    return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.organization_crud}/findByIpaCode',
         params={
             'ipaCode': ipa_code

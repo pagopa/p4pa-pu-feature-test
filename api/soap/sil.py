@@ -1,7 +1,6 @@
 import base64
 
-import requests
-
+from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position_mixed import DebtPositionMixed
 
@@ -31,7 +30,7 @@ def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPosi
         invia_dovuti_data = file.read()
     data = invia_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
 
-    return requests.post(
+    return http_client.post(
         url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
         headers={
             'Content-Type': 'text/xml',

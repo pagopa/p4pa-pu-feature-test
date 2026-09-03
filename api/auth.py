@@ -1,11 +1,10 @@
-import requests
-
+from common import http_client
 from config.configuration import secrets
 from config.configuration import settings
 
 
 def post_auth_token(user_id: str, traceparent: str):
-    return requests.post(
+    return http_client.post(
         url=f'{secrets.base_url}/pu/auth/oauth/token',
         headers={
             'traceparent': f'{traceparent}'
@@ -23,7 +22,7 @@ def post_auth_token(user_id: str, traceparent: str):
 
 
 def post_external_auth_token(client_id: str, client_secret: str, traceparent: str):
-    return requests.post(
+    return http_client.post(
         url=f'{secrets.base_url}/pu/auth/oauth/token',
         headers={
             'traceparent': f'{traceparent}'
