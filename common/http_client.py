@@ -8,9 +8,9 @@ class ApiConnectionError(AssertionError):
     """API unreachable (DNS/connection/timeout)."""
 
 
-def _request(method: str, **kwargs):
+def _request(method: str, *args, **kwargs):
     try:
-        return requests.request(method, **kwargs)
+        return requests.request(method, *args, **kwargs)
     except CONNECTION_ERRORS as exc:
         raise ApiConnectionError(
             f"\nCannot reach the API: {type(exc).__name__}. "
@@ -18,9 +18,9 @@ def _request(method: str, **kwargs):
         ) from None
 
 
-def get(**kwargs):
-    return _request('GET', **kwargs)
+def get(*args, **kwargs):
+    return _request('GET', *args, **kwargs)
 
 
-def post(**kwargs):
-    return _request('POST', **kwargs)
+def post(*args, **kwargs):
+    return _request('POST', *args, **kwargs)
