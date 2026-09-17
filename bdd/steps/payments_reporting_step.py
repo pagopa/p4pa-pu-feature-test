@@ -94,11 +94,11 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
                                                      data_payments=data_payments)
 
     file_version = settings.ingestion_flow_file.base_version
-    xml_file_path = f'{iuf}_{file_version}.xml'
+    xml_file_path = f'{iuf}-{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
 
-    zip_file_path = f'{iuf}_{file_version}.zip'
+    zip_file_path = f'{iuf}-{file_version}.zip'
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
@@ -171,11 +171,11 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
                                                      data_payments=data_payments)
 
     file_version = settings.ingestion_flow_file.base_version
-    xml_file_path = f'{iuf}_{file_version}.xml'
+    xml_file_path = f'{iuf}-{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
 
-    zip_file_path = f'{iuf}_{file_version}.zip'
+    zip_file_path = f'{iuf}-{file_version}.zip'
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 
