@@ -63,11 +63,11 @@ def create_files(context, ingestion_flow_file):
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
     file_version = settings.ingestion_flow_file.base_version
-    xml_file_path = f'GDC-{now}__{file_version}.xml'
+    xml_file_path = f'GDC-{now}-{file_version}.xml'
     with open(xml_file_path, 'w') as file:
         file.write(ingestion_flow_file)
 
-    zip_file_path = f'GDC-{now}__{file_version}.zip'
+    zip_file_path = f'GDC-{now}-{file_version}.zip'
     with ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(xml_file_path)
 

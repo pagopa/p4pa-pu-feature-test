@@ -31,7 +31,7 @@ def step_create_receipts_file_for_non_existent_dp(context, csv_version: str):
 
     dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
-    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}__{csv_version.value}'
+    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}-{csv_version.value}'
     zip_file_path = f'{filename}.zip'
     dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
@@ -51,7 +51,7 @@ def step_create_receipts_file_for_existing_dp(context, csv_version: str):
 
     dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
-    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}__{csv_version.value}'
+    filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}-{csv_version.value}'
     zip_file_path = f'{filename}.zip'
     dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
                              compression=dict(method='zip', archive_name=f'{filename}.csv'))
