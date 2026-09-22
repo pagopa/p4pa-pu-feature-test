@@ -90,6 +90,7 @@ class NotificationRequest:
         default_factory=create_default_document_list)
     notification_fee_policy: str = 'DELIVERY_MODE'
     physical_communication_type: str = 'AR_REGISTERED_LETTER'
+    subject: str = "P4PA feature-test subject"
     sender_denomination: str = None
     sender_tax_id: str = '00000000018'
     amount: int = 0
