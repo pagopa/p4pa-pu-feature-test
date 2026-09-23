@@ -7,7 +7,7 @@ Feature: Export requested by SIL
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
     And the debt position is in status paid
-    When SIL requests the export of paid notices
+    When SIL requests the export of paid notices with version v1.4
     Then the paid notices export completes successfully
     And the paid notice appears in the export with the correct data
 
@@ -17,6 +17,6 @@ Feature: Export requested by SIL
     When the citizen pays the installment of payment option 1
     Then the receipt is processed correctly
     And the debt position is in status paid
-    When SIL requests the incremental export of paid notices with receipt
+    When SIL requests the incremental export of paid notices with receipt and version v1.4
     Then the paid notices export completes successfully
     And the paid notice appears in the export with the correct data

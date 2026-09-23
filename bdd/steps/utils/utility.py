@@ -1,14 +1,20 @@
 import time
-from secrets import token_hex
-
+import xmltodict
 from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification
+from api.soap.sil import post_sil_chiedi_stato_export_flusso
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName
 from model.workflow_hub import WorkflowType, WorkflowStatus
+from secrets import token_hex
+
+EXPORT_STATUS_COMPLETED = 'EXPORT_ESEGUITO'
+EXPORT_STATUS_NO_DATA = 'EXPORT_ESEGUITO_NESSUN_DOVUTO_TROVATO'
+EXPORT_STATUS_IN_PROGRESS = ('LOAD_EXPORT', 'EXPORT_IN_ELAB')
+EXPORT_STATUS_FAILED = ('ERROR_EXPORT', 'EXPORT_CANCELLATO')
 
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
@@ -116,3 +122,36 @@ def generate_traceparent():
     flags = "01" # means sampled trace
 
     return f"00-{trace_id}-{span_id}-{flags}"
+
+
+def check_res_ok_and_get_body(response_content, tag_name):
+  res_parsed = xmltodict.parse(response_content.decode('utf-8'))
+  res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'][f'ns3:{tag_name}']
+  assert res_body.get(
+    'fault') is None, f"SIL {tag_name} returned a fault: {res_body.get('fault')}"
+  return res_body
+
+
+def retry_get_export_status(token, traceparent: str, ipa_code: str,
+    request_token: str, tries=20, delay=4):
+  status = None
+  count = 0
+  while count < tries:
+    count += 1
+    res = post_sil_chiedi_stato_export_flusso(token=token,
+                                              traceparent=traceparent,
+                                              ipa_code=ipa_code,
+                                              request_token=request_token)
+    assert_response_ok(res, "SIL chiedi stato export flusso")
+    res_body = check_res_ok_and_get_body(res.content,
+                                         'paaSILChiediStatoExportFlussoRisposta')
+    status = res_body['stato']
+
+    if status == EXPORT_STATUS_COMPLETED:
+      return
+    assert status not in EXPORT_STATUS_FAILED and status != EXPORT_STATUS_NO_DATA, \
+      f"Export {request_token} reached unexpected terminal status: {status}"
+    assert status in EXPORT_STATUS_IN_PROGRESS, f"Unexpected export status: {status}"
+    time.sleep(delay)
+
+  assert False, f"Export {request_token} did not complete after {tries} tries (last status: {status})"
