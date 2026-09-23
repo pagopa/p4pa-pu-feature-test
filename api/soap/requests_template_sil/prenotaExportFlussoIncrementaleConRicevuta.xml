@@ -1,0 +1,17 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ppt="http://www.regione.veneto.it/pagamenti/ente/ppthead" xmlns:ente="http://www.regione.veneto.it/pagamenti/ente/">
+   <soapenv:Header>
+      <ppt:intestazionePPT>
+         <codIpaEnte>{codice_ipa}</codIpaEnte>
+      </ppt:intestazionePPT>
+   </soapenv:Header>
+   <soapenv:Body>
+      <ente:paaSILPrenotaExportFlussoIncrementaleConRicevuta>
+         <dateFrom>{date_from}</dateFrom>
+         <dateTo>{date_to}</dateTo>
+         <identificativoTipoDovuto>{tipo_dovuto}</identificativoTipoDovuto>
+         <ricevuta>{ricevuta}</ricevuta>
+         <incrementale>{incrementale}</incrementale>
+         <versioneTracciato>{versione_tracciato}</versioneTracciato>
+      </ente:paaSILPrenotaExportFlussoIncrementaleConRicevuta>
+   </soapenv:Body>
+</soapenv:Envelope>

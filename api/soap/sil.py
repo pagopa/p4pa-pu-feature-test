@@ -30,6 +30,40 @@ def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPosi
         invia_dovuti_data = file.read()
     data = invia_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
 
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso(token, traceparent: str, ipa_code: str, date_from: str, date_to: str,
+                                   debt_position_type_org_code: str, version: str = 'v1.0'):
+    with open('./api/soap/requests_template_sil/prenotaExportFlusso.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to,
+                       tipo_dovuto=debt_position_type_org_code, versione_tracciato=version)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso_incrementale_con_ricevuta(token, traceparent: str, ipa_code: str, date_from: str,
+                                                             date_to: str, debt_position_type_org_code: str, receipt: bool,
+                                                             incremental: bool, version: str = 'v1.0'):
+    with open('./api/soap/requests_template_sil/prenotaExportFlussoIncrementaleConRicevuta.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to, tipo_dovuto=debt_position_type_org_code,
+                       ricevuta=str(receipt).lower(), incrementale=str(incremental).lower(),
+                       versione_tracciato=version)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, request_token: str):
+    with open('./api/soap/requests_template_sil/chiediStatoExportFlusso.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_payments(token, traceparent: str, data: str):
     return http_client.post(
         url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
         headers={
