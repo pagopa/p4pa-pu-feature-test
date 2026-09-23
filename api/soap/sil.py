@@ -2,6 +2,7 @@ import base64
 
 from common import http_client
 from config.configuration import settings, secrets
+from model.debt_position import Installment
 from model.debt_position_mixed import DebtPositionMixed
 
 
@@ -64,6 +65,58 @@ def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, 
 
 
 def post_sil_payments(token, traceparent: str, data: str):
+    return http_client.post(
+        url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
+        headers={
+            'Content-Type': 'text/xml',
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        data=data,
+        timeout=settings.default_timeout
+    )
+
+
+def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str, ipa_code: str):
+    with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
+        dati_singolo_versamento_data = file.read()
+    dati_singolo_versamento = dati_singolo_versamento_data.format(iud=installment.iud,
+                                                                  importo="{:.2f}".format(
+                                                                      int(installment.amount_cents) / 100),
+                                                                  tipo_dovuto=debt_position_type_org_code,
+                                                                  dati_specifici_riscossione=installment.legacy_payment_metadata)
+
+
+    with open('./api/soap/requests_template_sil/dovuti.xml', 'r') as file:
+        dovuti_data = file.read()
+    dovuti = dovuti_data.format(codice_fiscale=installment.debtor.fiscal_code,
+                                nome=installment.debtor.full_name,
+                                email=installment.debtor.email,
+                                dati_versamento=dati_singolo_versamento)
+
+    dovuto_base64 = base64.b64encode(dovuti.encode('utf-8')).decode('utf-8')
+
+    with open('./api/soap/requests_template_sil/inviaCarrelloDovuti.xml', 'r') as file:
+        invia_carrello_dovuti_data = file.read()
+    data = invia_carrello_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return http_client.post(
+        url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
+        headers={
+            'Content-Type': 'text/xml',
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        data=data,
+        timeout=settings.default_timeout
+    )
+
+
+def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_id: int, ipa_code: str):
+    with open('./api/soap/requests_template_sil/chiediEsitoCarrelloDovuti.xml', 'r') as file:
+        invia_dovuti_data = file.read()
+    data = invia_dovuti_data.format(codice_ipa=ipa_code, id_session_carrello=installment_id)
+
     return http_client.post(
         url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
         headers={

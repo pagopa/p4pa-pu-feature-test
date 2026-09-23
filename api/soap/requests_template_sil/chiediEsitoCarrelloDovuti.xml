@@ -1,0 +1,9 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ente="http://www.regione.veneto.it/pagamenti/ente/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ente:paaSILChiediEsitoCarrelloDovuti>
+         <codIpaEnte>{codice_ipa}</codIpaEnte>
+         <idSessionCarrello>{id_session_carrello}</idSessionCarrello>
+      </ente:paaSILChiediEsitoCarrelloDovuti>
+   </soapenv:Body>
+</soapenv:Envelope>

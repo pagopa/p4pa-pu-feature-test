@@ -14,14 +14,15 @@ from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, create_debt_position, create_installment, \
     create_payment_option, create_transfer, generate_iuv, fetch_debt_position, get_installment_paid, \
-    set_installment_paid, get_stored_debt_position, store_debt_position_by_id
+    set_installment_paid, get_stored_debt_position, store_debt_position_by_id, retrieve_dp_type_org_by_code, \
+    retrieve_taxonomy_code_by_dp_type_org, build_feature_test_iud
 from bdd.steps.utils.utility import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
 from config.configuration import settings
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
-    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
@@ -378,3 +379,20 @@ def step_create_dp_on_gpd(context, pagopa_interaction):
 
     step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction,
                                                      status='VALID')
+
+
+@given("a citizen requests a spontaneous debt position of type {debt_position_type_org_code} with single installment of {amount} euros")
+def create_installment_entity_of_spontaneous_dp(context, debt_position_type_org_code, amount):
+    debt_position_type_org = retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent,
+                                                          organization_id=context.org_info.id,
+                                                          debt_position_type_org_code=debt_position_type_org_code)
+    taxonomy_code = retrieve_taxonomy_code_by_dp_type_org(token=context.token, traceparent=context.traceparent,
+                                                          debt_position_type_id=debt_position_type_org[
+                                                              'debtPositionTypeId'])
+
+    iud = build_feature_test_iud(seq_num=1)
+    installment = Installment(iud=iud, amount_cents=(int(amount) * 100), remittance_information='Test ' + iud,
+                              debtor=Debtor(), legacy_payment_metadata=taxonomy_code)
+
+    context.debt_position_type_org_code = debt_position_type_org_code
+    context.installment = installment

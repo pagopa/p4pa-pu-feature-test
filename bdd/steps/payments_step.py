@@ -28,6 +28,7 @@ def check_res_ok_and_get_body(response_content, tag_name):
 @when("the citizen pays the installment {seq_num} of payment option {po_index}")
 @when("the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}")
 @when("the citizen pays the installment {seq_num} of debt position {dp_identifier}")
+@when("the citizen pays the installment")
 def step_installment_payment(context, po_index='1', seq_num='1', citizen_identifier='X', dp_identifier=None,
                              installment_to_paid=None):
     """Simulates the citizen paying the installment through the pagoPA node. It:
@@ -93,8 +94,12 @@ def step_check_receipt_processed(context, dp_identifier=None, organization_id=No
     file_path_name = FilePathName.RECEIPT_PAGOPA
     file_name = 'RT_' + installment_paid.nav + '.xml'
 
-    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=org_id,
-                                  file_path_name=file_path_name, file_name=file_name, status=FileStatus.COMPLETED)
+    ingestion_flow_file = retry_get_process_file_status(token=context.token, traceparent=context.traceparent,
+                                                        organization_id=org_id,
+                                                        file_path_name=file_path_name, file_name=file_name,
+                                                        status=FileStatus.COMPLETED)
+
+    context.ingestion_flow_file_id = ingestion_flow_file["ingestionFlowFileId"]
 
     res = get_installment(token=context.token, traceparent=context.traceparent,
                           installment_id=installment_paid.installment_id)
@@ -188,6 +193,7 @@ def step_successful_installment_payment(context):
 def step_successful_installment_payment_outside_pu(context):
     """Like `the successful payment of the installment`, but pays the first installment of a debt
     position created outside PU, then checks the `PAID` status and that the receipt is processed."""
-    step_installment_payment(context=context, installment_to_paid=context.debt_position.payment_options[0].installments[0])
+    step_installment_payment(context=context,
+                             installment_to_paid=context.debt_position.payment_options[0].installments[0])
     step_check_dp_status(context=context, status=Status.PAID.value)
     step_check_receipt_processed(context=context)

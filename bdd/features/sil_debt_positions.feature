@@ -2,14 +2,15 @@
 Feature: Mixed debt position management by SIL
 
   @debt_position_mixed
-  Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD
+  @sil_invia_dovuti
+  Scenario: A mixed debt position is created by a SIL via 'InviaDovuti' for an organization interacting with GPD
     Given a SIL acting on behalf of an organization interacting with GPD
     And a new mixed debt position configured as follows:
       | transfer index | type org       | amount |
       | 1              | FEATURE_TEST   | 34.00  |
       | 2              | FEATURE_TEST_2 | 48.00  |
       | 3              | FEATURE_TEST   | 68.00  |
-    When SIL creates the mixed debt position
+    When SIL creates the mixed debt position via the 'InviaDovuti'
     Then 3 debt positions having installments with same IUV are in status unpaid configured as follows:
       | origin            | type org       | total installments | total amount | transfers index |
       | SPONTANEOUS_MIXED | FEATURE_TEST   | 2                  | 102.00       | 1 3             |
@@ -19,7 +20,7 @@ Feature: Mixed debt position management by SIL
     And the check of debt position expiration is scheduled
 
   @debt_position_mixed_classification
-  Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury
+  Scenario: A mixed debt position created by a SIL via 'InviaDovuti' on GPD is reported after payment, payment reporting and treasury
     Given a mixed debt position created by SIL for organization interacting with GPD configured as follows:
       | transfer index | type org       | amount |
       | 1              | FEATURE_TEST   | 43.00  |
@@ -41,4 +42,17 @@ Feature: Mixed debt position management by SIL
     And the mixed debt position and technical ones are in status reported
     And the classification labels are RT_IUF, RT_IUF_TES, RT_NO_IUD
     And the assessment classification label for each IUD is CASHED
+
+  @sil_invia_carrello
+  Scenario: A spontaneous debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment
+    Given a SIL acting on behalf of an organization interacting with GPD
+    And a citizen requests a spontaneous debt position of type FEATURE_TEST with single installment of 50 euros
+    When SIL creates the spontaneous debt position via the 'InviaCarrello'
+    Then 'ChiediEsitoCarrello' reports the outcome as 'NUOVO_CARRELLO'
+    And the debt position is in status unpaid
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And 'ChiediEsitoCarrello' reports the outcome as 'PAGATO'
+    And the RT returned by 'ChiediEsitoCarrello' matches the expected data
 
