@@ -21,3 +21,14 @@ def post_upload_file(token, traceparent: str, organization_id: int, ingestion_fl
         },
         timeout=settings.default_timeout
     )
+
+
+def get_export_file(token, traceparent: str, organization_id: int, export_file_id):
+    return http_client.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.fileshare}/organization/{organization_id}/exportfiles/{export_file_id}',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        timeout=settings.default_timeout
+    )
