@@ -638,10 +638,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sil-creates-the-mixed-debt-position" class="md-nav__link">
+  <a href="#sil-creates-the-mixed-debt-position-via-the-inviadovuti" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL creates the mixed debt position
+        SIL creates the mixed debt position via the 'InviaDovuti'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-the-spontaneous-debt-position-via-the-soap_action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates the spontaneous debt position via the '{soap_action}'
       
     </span>
   </a>
@@ -774,10 +785,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sil-creates-the-mixed-debt-position" class="md-nav__link">
+  <a href="#sil-creates-the-mixed-debt-position-via-the-inviadovuti" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL creates the mixed debt position
+        SIL creates the mixed debt position via the 'InviaDovuti'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-the-spontaneous-debt-position-via-the-soap_action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates the spontaneous debt position via the '{soap_action}'
       
     </span>
   </a>
@@ -858,8 +880,10 @@
 
 <h1 id="when-steps">When steps</h1>
 <p>The <code>When</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
-<h2 id="sil-creates-the-mixed-debt-position"><code>SIL creates the mixed debt position</code></h2>
+<h2 id="sil-creates-the-mixed-debt-position-via-the-inviadovuti"><code>SIL creates the mixed debt position via the 'InviaDovuti'</code></h2>
 <p>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-creates-the-spontaneous-debt-position-via-the-soap_action"><code>SIL creates the spontaneous debt position via the '{soap_action}'</code></h2>
+<p>Creates the mixed debt position through SIL (<code>paaSILInviaCarrello</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
 <h2 id="sil-requests-the-export-of-paid-notices-with-version-version"><code>SIL requests the export of paid notices with version {version}</code></h2>
 <p>Requests a paid-notices export through SIL (<code>paaSILPrenotaExportFlusso</code>)</p>
 <ul>
@@ -871,7 +895,7 @@
 <li>requests the export for a <code>dateTime</code> window around today, filtered by the debt position type org</li>
 </ul>
 <h2 id="the-citizen-pays-the-installment-of-payment-option-po_index"><code>the citizen pays the installment of payment option {po_index}</code></h2>
-<p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code></em></p>
+<p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code>, <code>the citizen pays the installment</code></em></p>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
 <ul>
 <li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>

@@ -500,10 +500,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scenario-a-mixed-debt-position-is-created-by-a-sil-for-an-organization-interacting-with-gpd" class="md-nav__link">
+  <a href="#scenario-a-mixed-debt-position-is-created-by-a-sil-via-inviadovuti-for-an-organization-interacting-with-gpd" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD
+        Scenario: A mixed debt position is created by a SIL via 'InviaDovuti' for an organization interacting with GPD
       
     </span>
   </a>
@@ -511,10 +511,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scenario-a-mixed-debt-position-created-by-a-sil-on-gpd-is-reported-after-payment-payment-reporting-and-treasury" class="md-nav__link">
+  <a href="#scenario-a-mixed-debt-position-created-by-a-sil-via-inviadovuti-on-gpd-is-reported-after-payment-payment-reporting-and-treasury" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury
+        Scenario: A mixed debt position created by a SIL via 'InviaDovuti' on GPD is reported after payment, payment reporting and treasury
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-created-by-sil-via-inviacarrello-on-gpd-is-paid-after-a-citizen-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment
       
     </span>
   </a>
@@ -730,10 +741,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scenario-a-mixed-debt-position-is-created-by-a-sil-for-an-organization-interacting-with-gpd" class="md-nav__link">
+  <a href="#scenario-a-mixed-debt-position-is-created-by-a-sil-via-inviadovuti-for-an-organization-interacting-with-gpd" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD
+        Scenario: A mixed debt position is created by a SIL via 'InviaDovuti' for an organization interacting with GPD
       
     </span>
   </a>
@@ -741,10 +752,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scenario-a-mixed-debt-position-created-by-a-sil-on-gpd-is-reported-after-payment-payment-reporting-and-treasury" class="md-nav__link">
+  <a href="#scenario-a-mixed-debt-position-created-by-a-sil-via-inviadovuti-on-gpd-is-reported-after-payment-payment-reporting-and-treasury" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury
+        Scenario: A mixed debt position created by a SIL via 'InviaDovuti' on GPD is reported after payment, payment reporting and treasury
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-created-by-sil-via-inviacarrello-on-gpd-is-paid-after-a-citizen-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment
       
     </span>
   </a>
@@ -770,15 +792,15 @@
 
 <h1 id="mixed-debt-position-management-by-sil">Mixed debt position management by SIL</h1>
 <p><strong>Tags:</strong> <code>@sil_debt_positions</code></p>
-<h2 id="scenario-a-mixed-debt-position-is-created-by-a-sil-for-an-organization-interacting-with-gpd">Scenario: A mixed debt position is created by a SIL for an organization interacting with GPD</h2>
-<p><strong>Tags:</strong> <code>@debt_position_mixed</code></p>
+<h2 id="scenario-a-mixed-debt-position-is-created-by-a-sil-via-inviadovuti-for-an-organization-interacting-with-gpd">Scenario: A mixed debt position is created by a SIL via 'InviaDovuti' for an organization interacting with GPD</h2>
+<p><strong>Tags:</strong> <code>@debt_position_mixed</code> <code>@sil_invia_dovuti</code></p>
 <div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
 <span class="k">And </span><span class="nf">a new mixed debt position configured as follows:</span>
 <span class="k">  |</span><span class="s"> transfer index</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> amount</span><span class="k"> |</span>
 <span class="k">  |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 34.00</span><span class="k"> |</span>
 <span class="k">  |</span><span class="s"> 2</span><span class="k"> |</span><span class="s"> FEATURE_TEST_2</span><span class="k"> |</span><span class="s"> 48.00</span><span class="k"> |</span>
 <span class="k">  |</span><span class="s"> 3</span><span class="k"> |</span><span class="s"> FEATURE_TEST</span><span class="k"> |</span><span class="s"> 68.00</span><span class="k"> |</span>
-<span class="k">When </span><span class="nf">SIL creates the mixed debt position</span>
+<span class="k">When </span><span class="nf">SIL creates the mixed debt position via the 'InviaDovuti'</span>
 <span class="c"># (1)!</span>
 <span class="k">Then </span><span class="s">3</span><span class="nf"> debt positions having installments with same IUV are in status unpaid configured as follows:</span>
 <span class="k">  |</span><span class="s"> origin</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> total installments</span><span class="k"> |</span><span class="s"> total amount</span><span class="k"> |</span><span class="s"> transfers index</span><span class="k"> |</span>
@@ -791,7 +813,7 @@
 <ol>
 <li>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</li>
 </ol>
-<h2 id="scenario-a-mixed-debt-position-created-by-a-sil-on-gpd-is-reported-after-payment-payment-reporting-and-treasury">Scenario: A mixed debt position created by a SIL on GPD is reported after payment, payment reporting and treasury</h2>
+<h2 id="scenario-a-mixed-debt-position-created-by-a-sil-via-inviadovuti-on-gpd-is-reported-after-payment-payment-reporting-and-treasury">Scenario: A mixed debt position created by a SIL via 'InviaDovuti' on GPD is reported after payment, payment reporting and treasury</h2>
 <p><strong>Tags:</strong> <code>@debt_position_mixed_classification</code></p>
 <div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a mixed debt position created by SIL for organization interacting with GPD configured as follows:</span>
 <span class="k">  |</span><span class="s"> transfer index</span><span class="k"> |</span><span class="s"> type org</span><span class="k"> |</span><span class="s"> amount</span><span class="k"> |</span>
@@ -911,6 +933,48 @@
 <li>for each mixed transfer, checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per balance section, each with the expected IUR, type org code and label.</li>
 </ul>
+</li>
+</ol>
+<h2 id="scenario-a-spontaneous-debt-position-created-by-sil-via-inviacarrello-on-gpd-is-paid-after-a-citizen-payment">Scenario: A spontaneous debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment</h2>
+<p><strong>Tags:</strong> <code>@sil_invia_carrello</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">a citizen requests a spontaneous debt position of type FEATURE_TEST with single installment of </span><span class="s">50</span><span class="nf"> euros</span>
+<span class="k">When </span><span class="nf">SIL creates the spontaneous debt position via the 'InviaCarrello'</span>
+<span class="c"># (1)!</span>
+<span class="k">Then </span><span class="nf">'ChiediEsitoCarrello' reports the outcome as 'NUOVO_CARRELLO'</span>
+<span class="k">And </span><span class="nf">the debt position is in status unpaid</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">'ChiediEsitoCarrello' reports the outcome as 'PAGATO'</span>
+<span class="k">And </span><span class="nf">the RT returned by 'ChiediEsitoCarrello' matches the expected data</span>
+<span class="c"># (4)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates the mixed debt position through SIL (<code>paaSILInviaCarrello</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+<li>
+<p>Checks if the RT returned by 'ChiediEsitoCarrello' matches the same RT ingested by PU from PagoPA</p>
 </li>
 </ol>
 
