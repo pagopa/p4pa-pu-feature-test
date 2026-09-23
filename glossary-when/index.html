@@ -459,6 +459,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export-requested-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export requested by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -621,6 +649,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-requests-the-export-of-paid-notices-with-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the export of paid notices with version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-requests-the-incremental-export-of-paid-notices-with-receipt-and-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the incremental export of paid notices with receipt and version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-citizen-pays-the-installment-of-payment-option-po_index" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -735,6 +785,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-requests-the-export-of-paid-notices-with-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the export of paid notices with version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-requests-the-incremental-export-of-paid-notices-with-receipt-and-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the incremental export of paid notices with receipt and version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-citizen-pays-the-installment-of-payment-option-po_index" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -788,6 +860,16 @@
 <p>The <code>When</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
 <h2 id="sil-creates-the-mixed-debt-position"><code>SIL creates the mixed debt position</code></h2>
 <p>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-requests-the-export-of-paid-notices-with-version-version"><code>SIL requests the export of paid notices with version {version}</code></h2>
+<p>Requests a paid-notices export through SIL (<code>paaSILPrenotaExportFlusso</code>)</p>
+<ul>
+<li>requests the export for a date window around today, filtered by the debt position type org</li>
+</ul>
+<h2 id="sil-requests-the-incremental-export-of-paid-notices-with-receipt-and-version-version"><code>SIL requests the incremental export of paid notices with receipt and version {version}</code></h2>
+<p>Requests an incremental paid-notices export with receipt through SIL (<code>paaSILPrenotaExportFlussoIncrementaleConRicevuta</code>)</p>
+<ul>
+<li>requests the export for a <code>dateTime</code> window around today, filtered by the debt position type org</li>
+</ul>
 <h2 id="the-citizen-pays-the-installment-of-payment-option-po_index"><code>the citizen pays the installment of payment option {po_index}</code></h2>
 <p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code></em></p>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>

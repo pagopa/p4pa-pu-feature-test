@@ -457,6 +457,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export-requested-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export requested by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -790,6 +818,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-paid-notice-appears-in-the-export-with-the-correct-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the paid notice appears in the export with the correct data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-paid-notices-export-completes-successfully" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the paid notices export completes successfully
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-payment-reporting-is-processed-correctly" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1063,6 +1113,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-paid-notice-appears-in-the-export-with-the-correct-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the paid notice appears in the export with the correct data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-paid-notices-export-completes-successfully" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the paid notices export completes successfully
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-payment-reporting-is-processed-correctly" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1234,6 +1306,19 @@
 <ul>
 <li>polls SEND until the notification is valid and asserts it has an IUN;</li>
 <li>verifies that every notified installment carries that same IUN.</li>
+</ul>
+<h2 id="the-paid-notice-appears-in-the-export-with-the-correct-data"><code>the paid notice appears in the export with the correct data</code></h2>
+<p>Downloads the exported CSV and verifies the paid installment row</p>
+<ul>
+<li>fetches the export file from the fileshare service using the export request token</li>
+<li>locates the row matching the paid installment IUV/IUD</li>
+<li>asserts that the amount, debt position type org, IUR, IUV and IUD of that row matches the expected values</li>
+</ul>
+<h2 id="the-paid-notices-export-completes-successfully"><code>the paid notices export completes successfully</code></h2>
+<p>Polls the export status (<code>paaSILChiediStatoExportFlusso</code>) until it reaches <code>EXPORT_ESEGUITO</code></p>
+<ul>
+<li>retries while the export is <code>LOAD_EXPORT</code> / <code>EXPORT_IN_ELAB</code></li>
+<li>fails on an error/cancelled/no-data terminal status</li>
 </ul>
 <h2 id="the-payment-reporting-is-processed-correctly"><code>the payment reporting is processed correctly</code></h2>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
