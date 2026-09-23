@@ -17,6 +17,7 @@ api:
     classifications: "/p4paclassification"
     fileshare: "/p4pafileshare"
     send_notification: "/p4pasendnotification/p4pasend"
+    sil: "/pu/sil"
     sil_payments: "/pu/sil/soap/payments/PagamentiTelematiciDovutiPagati"
     payments_node: "/p4papagopapayments/soap/node/wsdl/paForNode"
     organization: "/p4paorganization"
