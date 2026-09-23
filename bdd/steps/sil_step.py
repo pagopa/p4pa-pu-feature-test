@@ -1,22 +1,15 @@
 import base64
 import re
-import xml.etree.ElementTree as ET
 
 import xmltodict
 from behave import when, then
 
 from api.debt_positions import get_debt_position_by_iud
 from api.fileshare import get_ingestion_flow_file
-from api.soap.sil import post_sil_invia_carrello_dovuti, post_sil_chiedi_esito_carrello_dovuti
+from api.soap.sil import post_sil_invia_carrello_dovuti, post_sil_chiedi_esito_carrello_dovuti, checkout_url_pattern
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.utility import xml_elements_equal
-from config.configuration import settings, secrets
 from model.debt_position import DebtPosition, DebtPositionOrigin
-
-
-def checkout_url_pattern(org_fiscal_code: str) -> str:
-    base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
-    return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
 
 
 @when("SIL creates the spontaneous debt position via the '{soap_action}'")
@@ -46,8 +39,10 @@ def step_sil_create_spontaneous(context, soap_action):
 
         context.installment.installment_id = res_body['idSessionCarrello']
 
-        res = get_debt_position_by_iud(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
-                                       iud=installment.iud, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_SIL.value)
+        res = get_debt_position_by_iud(token=context.token, traceparent=context.traceparent,
+                                       organization_id=org_info.id,
+                                       iud=installment.iud,
+                                       debt_position_origin=DebtPositionOrigin.SPONTANEOUS_SIL.value)
         assert_response_ok(res, "Get debt position by installment id")
         context.debt_position = DebtPosition.from_dict(res.json()[0])
 
@@ -62,7 +57,9 @@ def step_sil_chiedi_esito_carrello(context, status):
 
     res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL invia chiedi esito carrello")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILChiediEsitoCarrelloDovutiRisposta']['listaCarrelli']['rispostaCarrello']
+    res_body = \
+    res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILChiediEsitoCarrelloDovutiRisposta']['listaCarrelli'][
+        'rispostaCarrello']
     assert res_body['esito'] == status
 
     context.chiedi_esito_carrello_response = res_body
@@ -93,15 +90,3 @@ def step_chiedi_esito_carrello_rt_matches(context):
         xml_b=expected_rt_xml,
         xpath_b='.//{*}receipt',
     ), "The RT returned by 'ChiediEsitoCarrello' does not match the expected RT ingested from PagoPA"
-
-
-def _xml_equal(xml_actual: str, xml_expected: str) -> bool:
-    actual_receipt = ET.fromstring(xml_actual)
-    expected_receipt = ET.fromstring(xml_expected).find('.//{*}receipt')
-
-    assert expected_receipt is not None, "Element 'receipt' not found in expected XML"
-
-    actual_canon = [ET.canonicalize(ET.tostring(child, encoding='unicode')) for child in actual_receipt]
-    expected_canon = [ET.canonicalize(ET.tostring(child, encoding='unicode')) for child in expected_receipt]
-
-    return actual_canon == expected_canon

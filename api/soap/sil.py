@@ -1,9 +1,15 @@
 import base64
+import re
 
 from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position import Installment
 from model.debt_position_mixed import DebtPositionMixed
+
+
+def checkout_url_pattern(org_fiscal_code: str) -> str:
+    base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
+    return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
 
 
 def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
@@ -12,7 +18,8 @@ def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPosi
         with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
             dati_singolo_versamento_data = file.read()
         dati_singolo_versamento = dati_singolo_versamento_data.format(iud=transfer_mixed.iud,
-                                                                      importo="{:.2f}".format(int(transfer_mixed.amount_cents) / 100),
+                                                                      importo="{:.2f}".format(
+                                                                          int(transfer_mixed.amount_cents) / 100),
                                                                       tipo_dovuto=transfer_mixed.debt_position_type_org_code,
                                                                       dati_specifici_riscossione=transfer_mixed.legacy_payment_metadata)
 
@@ -45,11 +52,13 @@ def post_sil_prenota_export_flusso(token, traceparent: str, ipa_code: str, date_
 
 
 def post_sil_prenota_export_flusso_incrementale_con_ricevuta(token, traceparent: str, ipa_code: str, date_from: str,
-                                                             date_to: str, debt_position_type_org_code: str, receipt: bool,
+                                                             date_to: str, debt_position_type_org_code: str,
+                                                             receipt: bool,
                                                              incremental: bool, version: str = 'v1.0'):
     with open('./api/soap/requests_template_sil/prenotaExportFlussoIncrementaleConRicevuta.xml', 'r') as file:
         data = file.read()
-    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to, tipo_dovuto=debt_position_type_org_code,
+    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to,
+                       tipo_dovuto=debt_position_type_org_code,
                        ricevuta=str(receipt).lower(), incrementale=str(incremental).lower(),
                        versione_tracciato=version)
 
@@ -64,20 +73,8 @@ def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 
 
-def post_sil_payments(token, traceparent: str, data: str):
-    return http_client.post(
-        url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
-        headers={
-            'Content-Type': 'text/xml',
-            'Authorization': f'Bearer {token}',
-            'traceparent': f'{traceparent}'
-        },
-        data=data,
-        timeout=settings.default_timeout
-    )
-
-
-def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str, ipa_code: str):
+def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                                   ipa_code: str):
     with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
         dati_singolo_versamento_data = file.read()
     dati_singolo_versamento = dati_singolo_versamento_data.format(iud=installment.iud,
@@ -85,7 +82,6 @@ def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Install
                                                                       int(installment.amount_cents) / 100),
                                                                   tipo_dovuto=debt_position_type_org_code,
                                                                   dati_specifici_riscossione=installment.legacy_payment_metadata)
-
 
     with open('./api/soap/requests_template_sil/dovuti.xml', 'r') as file:
         dovuti_data = file.read()
@@ -100,16 +96,7 @@ def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Install
         invia_carrello_dovuti_data = file.read()
     data = invia_carrello_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
 
-    return http_client.post(
-        url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
-        headers={
-            'Content-Type': 'text/xml',
-            'Authorization': f'Bearer {token}',
-            'traceparent': f'{traceparent}'
-        },
-        data=data,
-        timeout=settings.default_timeout
-    )
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
 
 
 def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_id: int, ipa_code: str):
@@ -117,6 +104,10 @@ def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_i
         invia_dovuti_data = file.read()
     data = invia_dovuti_data.format(codice_ipa=ipa_code, id_session_carrello=installment_id)
 
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_payments(token, traceparent: str, data: str):
     return http_client.post(
         url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
         headers={

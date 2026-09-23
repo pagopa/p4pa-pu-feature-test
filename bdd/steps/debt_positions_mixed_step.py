@@ -8,11 +8,10 @@ import xmltodict
 from behave import given, when, then
 
 from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
-from api.soap.sil import post_sil_invia_dovuto
+from api.soap.sil import post_sil_invia_dovuto, checkout_url_pattern
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
-from bdd.steps.sil_step import checkout_url_pattern
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
 from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
