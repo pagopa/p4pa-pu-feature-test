@@ -50,6 +50,15 @@ def find_installment_by_iuv(debt_position: DebtPosition, iuv: str) -> Installmen
     return installment
 
 
+def find_installment_by_iud(debt_position: DebtPosition, iud: str) -> Installment:
+    installment = None
+    for po in debt_position.payment_options:
+        for inst in po.installments:
+            if inst.iud == iud:
+                installment = inst
+    return installment
+
+
 def find_payment_option_by_po_index(debt_position: DebtPosition, po_index: int) -> PaymentOption:
     payment_option = None
     for po in debt_position.payment_options:

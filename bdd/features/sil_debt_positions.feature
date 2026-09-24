@@ -1,5 +1,5 @@
 @sil_debt_positions
-Feature: Mixed debt position management by SIL
+Feature: Debt position management by SIL
 
   @debt_position_mixed
   @sil_invia_dovuti
@@ -56,3 +56,17 @@ Feature: Mixed debt position management by SIL
     And 'ChiediEsitoCarrello' reports the outcome as 'PAGATO'
     And the RT returned by 'ChiediEsitoCarrello' matches the expected data
 
+  @sil_invia_carrello
+  Scenario: A spontaneous multi-beneficiary debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment
+    Given a SIL acting on behalf of an organization interacting with GPD
+    And a citizen requests a spontaneous debt position of type FEATURE_TEST with single installment of 50 euros
+    And a second beneficiary 'Ente Locale' is added to the installment with an amount of 20 euros
+    When SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'
+    Then 'ChiediEsitoCarrello' reports the outcome as 'NUOVO_CARRELLO'
+    And the debt position is in status unpaid
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And 'ChiediEsitoCarrello' reports the outcome as 'PAGATO'
+    And the RT returned by 'ChiediEsitoCarrello' matches the expected data
+    And a debt position with origin secondary_org is created for organization 'Ente Locale' in status paid

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DovutiEntiSecondari xmlns="http://www.regione.veneto.it/schemas/2012/Pagamenti/Ente/">
+  <versioneOggetto>1.0</versioneOggetto>
+  <datiVersamentoEntiSecondari>
+    <codiceFiscaleBeneficiario>{codice_fiscale_ente_secondario}</codiceFiscaleBeneficiario>
+    <denominazioneBeneficiario>{nome_ente_secondario}</denominazioneBeneficiario>
+    <ibanAccreditoBeneficiario>{iban_ente_secondario}</ibanAccreditoBeneficiario>
+    <causaleVersamento>{causale_ente_secondario}</causaleVersamento>
+    <datiSpecificiRiscossione>{dati_specifici_riscossione_ente_secondario}</datiSpecificiRiscossione>
+    <importoSingoloVersamento>{importo_ente_secondario}</importoSingoloVersamento>
+  </datiVersamentoEntiSecondari>
+</DovutiEntiSecondari>

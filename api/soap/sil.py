@@ -3,7 +3,7 @@ import re
 
 from common import http_client
 from config.configuration import settings, secrets
-from model.debt_position import Installment
+from model.debt_position import Installment, Transfer
 from model.debt_position_mixed import DebtPositionMixed
 
 
@@ -73,28 +73,66 @@ def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 
 
-def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
-                                   ipa_code: str):
+def _build_dovuto_base64(installment: Installment, debt_position_type_org_code: str) -> str:
     with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
         dati_singolo_versamento_data = file.read()
-    dati_singolo_versamento = dati_singolo_versamento_data.format(iud=installment.iud,
-                                                                  importo="{:.2f}".format(
-                                                                      int(installment.amount_cents) / 100),
-                                                                  tipo_dovuto=debt_position_type_org_code,
-                                                                  dati_specifici_riscossione=installment.legacy_payment_metadata)
+    dati_singolo_versamento = dati_singolo_versamento_data.format(
+        iud=installment.iud,
+        importo="{:.2f}".format(int(installment.amount_cents) / 100),
+        tipo_dovuto=debt_position_type_org_code,
+        dati_specifici_riscossione=installment.legacy_payment_metadata,
+    )
 
     with open('./api/soap/requests_template_sil/dovuti.xml', 'r') as file:
         dovuti_data = file.read()
-    dovuti = dovuti_data.format(codice_fiscale=installment.debtor.fiscal_code,
-                                nome=installment.debtor.full_name,
-                                email=installment.debtor.email,
-                                dati_versamento=dati_singolo_versamento)
+    dovuti = dovuti_data.format(
+        codice_fiscale=installment.debtor.fiscal_code,
+        nome=installment.debtor.full_name,
+        email=installment.debtor.email,
+        dati_versamento=dati_singolo_versamento,
+    )
 
-    dovuto_base64 = base64.b64encode(dovuti.encode('utf-8')).decode('utf-8')
+    return base64.b64encode(dovuti.encode('utf-8')).decode('utf-8')
+
+
+def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
+    with open('./api/soap/requests_template_sil/dovutiEntiSecondari.xml', 'r') as file:
+        dovuti_enti_secondari_data = file.read()
+    dovuti_enti_secondari = dovuti_enti_secondari_data.format(
+        codice_fiscale_ente_secondario=second_transfer.org_fiscal_code,
+        nome_ente_secondario=second_transfer.org_name,
+        iban_ente_secondario=second_transfer.iban,
+        causale_ente_secondario=second_transfer.remittance_information,
+        dati_specifici_riscossione_ente_secondario=second_transfer.category,
+        importo_ente_secondario="{:.2f}".format(int(second_transfer.amount_cents) / 100),
+    )
+
+    return base64.b64encode(dovuti_enti_secondari.encode('utf-8')).decode('utf-8')
+
+
+def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                                   ipa_code: str):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
 
     with open('./api/soap/requests_template_sil/inviaCarrelloDovuti.xml', 'r') as file:
         invia_carrello_dovuti_data = file.read()
     data = invia_carrello_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_invia_carrello_dovuti_enti_secondari(token, traceparent: str, installment: Installment, ipa_code: str,
+                                                  second_transfer: Transfer, debt_position_type_org_code: str):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
+    dovuto_secondario_base64 = _build_dovuto_secondario_base64(second_transfer)
+
+    with open('./api/soap/requests_template_sil/inviaCarrelloDovuti_entiSecondari.xml', 'r') as file:
+        invia_carrello_dovuti_data = file.read()
+    data = invia_carrello_dovuti_data.format(
+        dovuto=dovuto_base64,
+        dovuto_secondario=dovuto_secondario_base64,
+        codice_ipa=ipa_code,
+    )
 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 
