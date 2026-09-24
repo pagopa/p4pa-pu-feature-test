@@ -438,14 +438,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mixed-debt-position-management-by-sil/" class="md-nav__link">
+      <a href="../debt-position-management-by-sil/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Mixed debt position management by SIL
+    Debt position management by SIL
   
 
     
@@ -649,10 +649,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sil-creates-the-spontaneous-debt-position-via-the-soap_action" class="md-nav__link">
+  <a href="#sil-creates-the-spontaneous-debt-position-via-the-inviacarrello" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL creates the spontaneous debt position via the '{soap_action}'
+        SIL creates the spontaneous debt position via the 'InviaCarrello'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-the-spontaneous-multi-beneficiary-debt-position-via-the-inviacarrello" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'
       
     </span>
   </a>
@@ -796,10 +807,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sil-creates-the-spontaneous-debt-position-via-the-soap_action" class="md-nav__link">
+  <a href="#sil-creates-the-spontaneous-debt-position-via-the-inviacarrello" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL creates the spontaneous debt position via the '{soap_action}'
+        SIL creates the spontaneous debt position via the 'InviaCarrello'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-the-spontaneous-multi-beneficiary-debt-position-via-the-inviacarrello" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'
       
     </span>
   </a>
@@ -882,8 +904,12 @@
 <p>The <code>When</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
 <h2 id="sil-creates-the-mixed-debt-position-via-the-inviadovuti"><code>SIL creates the mixed debt position via the 'InviaDovuti'</code></h2>
 <p>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
-<h2 id="sil-creates-the-spontaneous-debt-position-via-the-soap_action"><code>SIL creates the spontaneous debt position via the '{soap_action}'</code></h2>
-<p>Creates the mixed debt position through SIL (<code>paaSILInviaCarrello</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-creates-the-spontaneous-debt-position-via-the-inviacarrello"><code>SIL creates the spontaneous debt position via the 'InviaCarrello'</code></h2>
+<p>Creates the spontaneous debt position through SIL (<code>paaSILInviaCarrello</code>) and
+asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-creates-the-spontaneous-multi-beneficiary-debt-position-via-the-inviacarrello"><code>SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'</code></h2>
+<p>Creates the spontaneous multi-beneficiary debt position through SIL (<code>paaSILInviaCarrello</code>) and
+asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
 <h2 id="sil-requests-the-export-of-paid-notices-with-version-version"><code>SIL requests the export of paid notices with version {version}</code></h2>
 <p>Requests a paid-notices export through SIL (<code>paaSILPrenotaExportFlusso</code>)</p>
 <ul>

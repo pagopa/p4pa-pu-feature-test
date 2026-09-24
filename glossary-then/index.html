@@ -436,14 +436,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mixed-debt-position-management-by-sil/" class="md-nav__link">
+      <a href="../debt-position-management-by-sil/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Mixed debt position management by SIL
+    Debt position management by SIL
   
 
     
@@ -668,6 +668,17 @@
     <span class="md-ellipsis">
       
         3 debt positions having installments with same IUV are in status {status} configured as follows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-debt-position-with-origin-secondary_org-is-created-for-organization-org_name-in-status-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a debt position with origin secondary_org is created for organization '{org_name}' in status paid
       
     </span>
   </a>
@@ -981,6 +992,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-debt-position-with-origin-secondary_org-is-created-for-organization-org_name-in-status-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a debt position with origin secondary_org is created for organization '{org_name}' in status paid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#send-has-set-a-notification-fee" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1257,6 +1279,13 @@
 <ul>
 <li>looks up the <code>SPONTANEOUS_MIXED</code> or <code>SPONTANEOUS_SIL</code> debt position and asserts they exist as configured;</li>
 <li>validates their status, amounts, payment option and installments/transfers against the request.</li>
+</ul>
+<h2 id="a-debt-position-with-origin-secondary_org-is-created-for-organization-org_name-in-status-paid"><code>a debt position with origin secondary_org is created for organization '{org_name}' in status paid</code></h2>
+<p>Checks that the debt position of secondary organization was created correctly. It:</p>
+<ul>
+<li>checks if it exists with origin <code>SECONDARY_ORG</code></li>
+<li>validates the structure data</li>
+<li>checks if it has status <code>PAID</code> and debt position type org of type <code>UNKNOWN</code></li>
 </ul>
 <h2 id="send-has-set-a-notification-fee"><code>SEND has set a notification fee</code></h2>
 <p>Checks that SEND set a notification fee:
