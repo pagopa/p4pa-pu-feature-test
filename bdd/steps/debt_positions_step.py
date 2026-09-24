@@ -449,7 +449,6 @@ def step_check_secondary_org_dp(context, org_name):
 
     secondary_dp = DebtPosition.from_dict(res.json()[0])
 
-    print(secondary_dp)
     assert secondary_dp.status == Status.PAID
     assert len(secondary_dp.payment_options) == 1
     assert len(secondary_dp.payment_options[0].installments) == 1
