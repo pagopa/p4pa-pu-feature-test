@@ -18,6 +18,18 @@ def get_debt_position_type_org_by_code(token, traceparent: str, organization_id:
     )
 
 
+def get_debt_position_type_org_by_id(token, traceparent: str, debt_position_type_org_id: int):
+    return http_client.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/debt-position-type-orgs/{debt_position_type_org_id}',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
+
 def get_debt_position_type_by_id(token, traceparent: str, debt_position_type_id: int):
     return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/crud/debt-position-types/{debt_position_type_id}',
