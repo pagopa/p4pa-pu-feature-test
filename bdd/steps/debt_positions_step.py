@@ -460,7 +460,7 @@ def step_check_secondary_org_dp(context, org_name):
     assert transfer_res.amount_cents == second_transfer_req.amount_cents
     assert transfer_res.org_fiscal_code == second_transfer_req.org_fiscal_code
     assert transfer_res.iban == second_transfer_req.iban
-    #assert transfer_res.category == second_transfer_req.category
+    #assert transfer_res.category == second_transfer_req.category #TODO check correctness of taxonomy category mapping, see P4ADEV-4530
     assert transfer_res.transfer_index == 2
 
     res_dpto = get_debt_position_type_org_by_id(token=context.token, traceparent=context.traceparent,
