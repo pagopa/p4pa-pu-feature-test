@@ -1,24 +1,18 @@
 import time
 import xml.etree.ElementTree as ET
-from secrets import token_hex
-from typing import Optional
-
 import xmltodict
-
 from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification
-from api.soap.sil import post_sil_chiedi_stato_export_flusso
+from api.soap.sil import post_sil_chiedi_stato_export_flusso, post_sil_chiedi_stato_import_flusso_tesoreria, \
+    post_sil_chiedi_stato_export_flusso_riconciliazione
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.assertions import assert_response_ok
-from model.file import FileStatus, FilePathName
+from model.file import FileStatus, FilePathName, SilExportStatus, SilImportStatus
 from model.workflow_hub import WorkflowType, WorkflowStatus
-
-EXPORT_STATUS_COMPLETED = 'EXPORT_ESEGUITO'
-EXPORT_STATUS_NO_DATA = 'EXPORT_ESEGUITO_NESSUN_DOVUTO_TROVATO'
-EXPORT_STATUS_IN_PROGRESS = ('LOAD_EXPORT', 'EXPORT_IN_ELAB')
-EXPORT_STATUS_FAILED = ('ERROR_EXPORT', 'EXPORT_CANCELLATO')
+from secrets import token_hex
+from typing import Optional
 
 
 def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
@@ -158,12 +152,12 @@ def retry_get_export_status(token, traceparent: str, ipa_code: str,
                                              'paaSILChiediStatoExportFlussoRisposta')
         status = res_body['stato']
 
-        if status == EXPORT_STATUS_COMPLETED:
+    if status == SilExportStatus.EXPORT_STATUS_COMPLETED:
             return
-        assert status not in EXPORT_STATUS_FAILED and status != EXPORT_STATUS_NO_DATA, \
+    assert status not in SilExportStatus.EXPORT_STATUS_FAILED and status != SilExportStatus.EXPORT_STATUS_NO_DATA, \
             f"Export {request_token} reached unexpected terminal status: {status}"
-        assert status in EXPORT_STATUS_IN_PROGRESS, f"Unexpected export status: {status}"
-        time.sleep(delay)
+    assert status in SilExportStatus.EXPORT_STATUS_IN_PROGRESS, f"Unexpected export status: {status}"
+    time.sleep(delay)
 
     assert False, f"Export {request_token} did not complete after {tries} tries (last status: {status})"
 
@@ -205,3 +199,43 @@ def _resolve_element(xml_str: str, xpath: Optional[str]) -> ET.Element:
 
 def _local_name(tag: str) -> str:
     return tag.split('}')[-1]
+
+def retry_get_import_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
+  status = None
+  count = 0
+  while count < tries:
+    count += 1
+    res = post_sil_chiedi_stato_import_flusso_tesoreria(token=token, traceparent=traceparent, ipa_code=ipa_code,
+                                                        request_token=request_token)
+    assert_response_ok(res, "SIL chiedi stato import flusso tesoreria")
+    res_body = check_res_ok_and_get_body(res.content, 'pivotSILChiediStatoImportFlussoTesoreriaRisposta')
+    status = res_body['stato']
+
+    if status == SilImportStatus.IMPORT_STATUS_COMPLETED:
+      return
+    assert status != SilImportStatus.IMPORT_STATUS_FAILED, \
+      f"Import {request_token} reached unexpected terminal status: {status}"
+    assert status in SilImportStatus.IMPORT_STATUS_IN_PROGRESS, f"Unexpected import status: {status}"
+    time.sleep(delay)
+
+  assert False, f"Import {request_token} did not complete after {tries} tries (last status: {status})"
+
+def retry_get_reconciliation_export_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
+  status = None
+  count = 0
+  while count < tries:
+    count += 1
+    res = post_sil_chiedi_stato_export_flusso_riconciliazione(token=token, traceparent=traceparent, ipa_code=ipa_code,
+                                                              request_token=request_token)
+    assert_response_ok(res, "SIL chiedi stato export flusso riconciliazione")
+    res_body = check_res_ok_and_get_body(res.content, 'pivotSILChiediStatoExportFlussoRiconciliazioneRisposta')
+    status = res_body['stato']
+
+    if status == SilExportStatus.EXPORT_STATUS_COMPLETED:
+      return
+    assert status not in SilExportStatus.EXPORT_STATUS_FAILED and status != SilExportStatus.EXPORT_STATUS_NO_DATA, \
+      f"Reconciliation export {request_token} reached unexpected terminal status: {status}"
+    assert status in SilExportStatus.EXPORT_STATUS_IN_PROGRESS, f"Unexpected reconciliation export status: {status}"
+    time.sleep(delay)
+
+  assert False, f"Reconciliation export {request_token} did not complete after {tries} tries (last status: {status})"
