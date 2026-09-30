@@ -45,8 +45,7 @@ parameters:
       - classification_duplicates
       - assessments
       - sil_debt_positions
-      - sil_export
-      - sil_reconciliation
+      - sil_classification
 
 variables:
   # Python version: 3.x
