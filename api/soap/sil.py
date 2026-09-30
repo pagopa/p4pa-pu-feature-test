@@ -12,7 +12,7 @@ def checkout_url_pattern(org_fiscal_code: str) -> str:
     return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
 
 
-def post_sil_invia_dovuto(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
+def post_sil_invia_dovuto_eterogeneo(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
     dati_versamento = ""
     for transfer_mixed in debt_position_mixed.transfers:
         with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
@@ -139,8 +139,35 @@ def post_sil_invia_carrello_dovuti_enti_secondari(token, traceparent: str, insta
 
 def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_id: int, ipa_code: str):
     with open('./api/soap/requests_template_sil/chiediEsitoCarrelloDovuti.xml', 'r') as file:
+        chiedi_esito_carrello = file.read()
+    data = chiedi_esito_carrello.format(codice_ipa=ipa_code, id_session_carrello=installment_id)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_invia_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                          ipa_code: str):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
+
+    with open('./api/soap/requests_template_sil/inviaDovuti.xml', 'r') as file:
         invia_dovuti_data = file.read()
-    data = invia_dovuti_data.format(codice_ipa=ipa_code, id_session_carrello=installment_id)
+    data = invia_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_pagati(token, traceparent: str, installment_id: int, ipa_code: str):
+    with open('./api/soap/requests_template_sil/chiediPagati.xml', 'r') as file:
+        chiedi_pagati_data = file.read()
+    data = chiedi_pagati_data.format(codice_ipa=ipa_code, id_session=installment_id)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_pagati_con_ricevuta(token, traceparent: str, installment_id: int, ipa_code: str):
+    with open('./api/soap/requests_template_sil/chiediPagatiConRicevuta.xml', 'r') as file:
+        chiedi_pagati_data = file.read()
+    data = chiedi_pagati_data.format(codice_ipa=ipa_code, id_session=installment_id)
 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 

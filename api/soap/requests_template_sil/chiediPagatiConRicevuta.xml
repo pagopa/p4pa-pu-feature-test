@@ -1,0 +1,9 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ente="http://www.regione.veneto.it/pagamenti/ente/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ente:paaSILChiediPagatiConRicevuta>
+         <codIpaEnte>{codice_ipa}</codIpaEnte>
+         <idSession>{id_session}</idSession>
+      </ente:paaSILChiediPagatiConRicevuta>
+   </soapenv:Body>
+</soapenv:Envelope>
