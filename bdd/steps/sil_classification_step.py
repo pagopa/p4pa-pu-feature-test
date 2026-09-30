@@ -46,7 +46,7 @@ def step_sil_prenota_export_flusso_incrementale(context, version):
     step_get_token_sil(context=context, pagopa_interaction=context.org_info.pagopa_interaction)
 
     date_from = (datetime.now() - timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S')
-    date_to = (datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S')
+    date_to = (datetime.now() + timedelta(hours=2)).strftime('%Y-%m-%dT%H:%M:%S')
 
     res = post_sil_prenota_export_flusso_incrementale_con_ricevuta(
         token=context.token, traceparent=context.traceparent, ipa_code=context.org_info.ipa_code,
