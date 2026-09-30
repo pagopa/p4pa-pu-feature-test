@@ -173,8 +173,51 @@ def post_sil_chiedi_pagati_con_ricevuta(token, traceparent: str, installment_id:
 
 
 def post_sil_payments(token, traceparent: str, data: str):
+    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
+                          path=settings.api.ingress_path.sil_payments)
+
+
+def post_sil_autorizza_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, flow_type: str = 'O'):
+    with open('./api/soap/requests_template_sil/autorizzaImportFlussoTesoreria.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, tipo_flusso=flow_type)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, request_token: str):
+    with open('./api/soap/requests_template_sil/chiediStatoImportFlussoTesoreria.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, iuv: str,
+                                                    classification_label: str, version: str = 'v1.4'):
+    with open('./api/soap/requests_template_sil/prenotaExportFlussoRiconciliazione.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, classificazione=classification_label, iuv=iuv, versione_tracciato=version)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
+    with open('./api/soap/requests_template_sil/chiediStatoExportFlussoRiconciliazione.xml', 'r') as file:
+        data = file.read()
+    data = data.format(codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_reconciliation(token, traceparent: str, data: str):
+    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
+                          path=settings.api.ingress_path.sil_reconciliation)
+
+
+def _post_sil_soap(token, traceparent: str, data: str, path: str):
     return http_client.post(
-        url=f'{secrets.base_url}{settings.api.ingress_path.sil_payments}',
+        url=f'{secrets.base_url}{path}',
         headers={
             'Content-Type': 'text/xml',
             'Authorization': f'Bearer {token}',
