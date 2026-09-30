@@ -134,61 +134,82 @@ def step_sil_import_treasury_flow(context, flow_type):
     os.remove(xml_file_path)
 
 
-    @then("the treasury import completes successfully")
-    def step_check_treasury_import_status(context):
-        """Polls the treasury import status (`pivotSILChiediStatoImportFlussoTesoreria`) until it reaches `FILE_CARICATO`"""
-        retry_get_import_status(token=context.token, traceparent=context.traceparent, ipa_code=context.org_info.ipa_code,
-                                request_token=context.import_request_token)
+@then("the treasury import completes successfully")
+def step_check_treasury_import_status(context):
+    """Polls the treasury import status (`pivotSILChiediStatoImportFlussoTesoreria`) until it reaches `FILE_CARICATO`"""
+    retry_get_import_status(token=context.token, traceparent=context.traceparent, ipa_code=context.org_info.ipa_code,
+                            request_token=context.import_request_token)
 
 
-    @when("SIL requests the reconciliation export for classification label {classification_label} with version {version}")
-    def step_sil_prenota_reconciliation_export(context, classification_label, version):
-        """Requests a reconciliation export through SIL (`pivotSILPrenotaExportFlussoRiconciliazione`)
+@when("SIL requests the reconciliation export for classification label {classification_label} with version {version}")
+def step_sil_prenota_reconciliation_export(context, classification_label, version):
+    """Requests a reconciliation export through SIL (`pivotSILPrenotaExportFlussoRiconciliazione`)
 
-        - requests the export filtered by the paid notice IUV and the given classification"""
-        installment = get_installment_paid(context)
+    - requests the export filtered by the paid notice IUV and the given classification"""
+    installment = get_installment_paid(context)
 
-        res = post_sil_prenota_export_flusso_riconciliazione(token=context.token, traceparent=context.traceparent,
-                                                             ipa_code=context.org_info.ipa_code, iuv=installment.iuv,
-                                                             classification_label=classification_label, version=version)
-        assert_response_ok(res, "SIL prenota export flusso riconciliazione")
-        res_body = check_res_ok_and_get_body(res.content, 'pivotSILPrenotaExportFlussoRiconciliazioneRisposta')
+    res = post_sil_prenota_export_flusso_riconciliazione(token=context.token, traceparent=context.traceparent,
+                                                         ipa_code=context.org_info.ipa_code, iuv=installment.iuv,
+                                                         classification_label=classification_label, version=version)
+    assert_response_ok(res, "SIL prenota export flusso riconciliazione")
+    res_body = check_res_ok_and_get_body(res.content, 'pivotSILPrenotaExportFlussoRiconciliazioneRisposta')
 
-        context.export_request_token = res_body['requestToken']
-        assert context.export_request_token is not None, "No requestToken returned by the reconciliation export reservation"
-
-
-    @then("the reconciliation export completes successfully")
-    def step_check_reconciliation_export_status(context):
-        """Polls the reconciliation export status (`pivotSILChiediStatoExportFlussoRiconciliazione`) until `EXPORT_ESEGUITO`"""
-        retry_get_reconciliation_export_status(token=context.token, traceparent=context.traceparent,
-                                               ipa_code=context.org_info.ipa_code,
-                                               request_token=context.export_request_token)
+    context.export_request_token = res_body['requestToken']
+    assert context.export_request_token is not None, "No requestToken returned by the reconciliation export reservation"
 
 
-    @then("the paid notice appears in the reconciliation export with classification label {classification_label}")
-    def step_check_notice_in_reconciliation_export(context, classification_label):
-        """Downloads the reconciliation export CSV and verifies the paid notice row
+@then("the reconciliation export completes successfully")
+def step_check_reconciliation_export_status(context):
+    """Polls the reconciliation export status (`pivotSILChiediStatoExportFlussoRiconciliazione`) until `EXPORT_ESEGUITO`"""
+    retry_get_reconciliation_export_status(token=context.token, traceparent=context.traceparent,
+                                           ipa_code=context.org_info.ipa_code,
+                                           request_token=context.export_request_token)
 
-        - fetches the export file from the fileshare service using the export request token
-        - locates the row matching the paid installment IUV/IUD
-        - asserts that the IUR, IUF and classification label of that row matches the expected values"""
-        installment = get_installment_paid(context)
 
-        res = get_export_file(token=context.token, traceparent=context.traceparent,
-                              organization_id=context.org_info.id, export_file_id=context.export_request_token)
-        assert_response_ok(res, "Download reconciliation export file")
+@then("the paid notice appears in the reconciliation export with classification label {classification_label} without iur and iuf")
+def step_check_notice_in_reconciliation_export(context, classification_label):
+    """Downloads the reconciliation export CSV and verifies the paid notice row
 
-        export_rows = pandas.read_csv(io.BytesIO(res.content), compression='zip', sep=';', dtype=str, keep_default_na=False)
+                  - fetches the export file from the fileshare service using the export request token
+                  - locates the row matching the paid installment IUV/IUD
+                  - asserts that the classification label of that row matches the expected value"""
+    check_notice_in_reconciliation_export(context, classification_label, has_iur_and_iuf=False)
 
-        matching = export_rows[(export_rows['cod_rp_silinviarp_id_univoco_versamento_e'] == installment.iuv) & (export_rows['cod_iud_e'] == installment.iud)]
-        assert len(matching) == 1, \
-            f"Expected exactly 1 reconciliation row for IUV {installment.iuv} / IUD {installment.iud}, got {len(matching)}"
-        row = matching.iloc[0]
 
-        assert row['cod_dati_sing_pagam_identificativo_univoco_riscossione_r'] == installment.iur, \
-            f"iur mismatch: expected {installment.iur}, got {row['cod_dati_sing_pagam_identificativo_univoco_riscossione_r']}"
-        assert row['cod_identificativo_flusso_r'] == installment.iuf, \
-            f"iuf mismatch: expected {installment.iuf}, got {row['cod_identificativo_flusso_r']}"
-        assert row['classificazione_completezza'] == classification_label, \
-            f"classification label mismatch: expected {classification_label}, got {row['classificazione_completezza']}"
+@then("the paid notice appears in the reconciliation export with classification label {classification_label}")
+def step_check_notice_in_reconciliation_export(context, classification_label):
+    """Downloads the reconciliation export CSV and verifies the paid notice row
+
+                    - fetches the export file from the fileshare service using the export request token
+                    - locates the row matching the paid installment IUV/IUD
+                    - asserts that the IUR, IUF and classification label of that row matches the expected values"""
+    check_notice_in_reconciliation_export(context, classification_label, has_iur_and_iuf=True)
+
+
+def check_notice_in_reconciliation_export(context, classification_label, has_iur_and_iuf: bool):
+    installment = get_installment_paid(context)
+
+    res = get_export_file(token=context.token,
+                          traceparent=context.traceparent,
+                          organization_id=context.org_info.id,
+                          export_file_id=context.export_request_token)
+    assert_response_ok(res, "Download reconciliation export file")
+
+    export_rows = pandas.read_csv(io.BytesIO(res.content), compression='zip',
+                                  sep=';', dtype=str, keep_default_na=False)
+
+    matching = export_rows[(export_rows[
+                              'cod_rp_silinviarp_id_univoco_versamento_e'] == installment.iuv) & (
+                                 export_rows['cod_iud_e'] == installment.iud)]
+    assert len(matching) == 1, \
+      f"Expected exactly 1 reconciliation row for IUV {installment.iuv} / IUD {installment.iud}, got {len(matching)}"
+    row = matching.iloc[0]
+
+    if has_iur_and_iuf:
+      assert row[
+               'cod_dati_sing_pagam_identificativo_univoco_riscossione_r'] == installment.iur, \
+        f"iur mismatch: expected {installment.iur}, got {row['cod_dati_sing_pagam_identificativo_univoco_riscossione_r']}"
+      assert row['cod_identificativo_flusso_r'] == installment.iuf, \
+        f"iuf mismatch: expected {installment.iuf}, got {row['cod_identificativo_flusso_r']}"
+    assert row['classificazione_completezza'] == classification_label, \
+      f"classification label mismatch: expected {classification_label}, got {row['classificazione_completezza']}"
