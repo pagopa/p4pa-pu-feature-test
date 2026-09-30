@@ -34,6 +34,23 @@ def get_ingestion_flow_file(token, traceparent: str, organization_id: int, inges
     )
 
 
+def post_upload_file_to_url(url: str, token, traceparent: str, file_name: str):
+    return http_client.post(
+        url=url,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        params={
+            'fileName': file_name
+        },
+        files={
+            'ingestionFlowFile': (file_name, open(file_name, 'rb'))
+        },
+        timeout=settings.default_timeout
+    )
+
+
 def get_export_file(token, traceparent: str, organization_id: int, export_file_id):
     return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.fileshare}/organization/{organization_id}/exportfiles/{export_file_id}',

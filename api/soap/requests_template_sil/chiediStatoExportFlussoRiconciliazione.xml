@@ -1,0 +1,12 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ppt="http://www.regione.veneto.it/pagamenti/pivot/ente/ppthead" xmlns:ente="http://www.regione.veneto.it/pagamenti/pivot/ente/">
+   <soapenv:Header>
+      <ppt:intestazionePPT>
+         <codIpaEnte>{codice_ipa}</codIpaEnte>
+      </ppt:intestazionePPT>
+   </soapenv:Header>
+   <soapenv:Body>
+      <ente:pivotSILChiediStatoExportFlussoRiconciliazione>
+         <requestToken>{request_token}</requestToken>
+      </ente:pivotSILChiediStatoExportFlussoRiconciliazione>
+   </soapenv:Body>
+</soapenv:Envelope>
