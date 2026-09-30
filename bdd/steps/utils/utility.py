@@ -152,12 +152,12 @@ def retry_get_export_status(token, traceparent: str, ipa_code: str,
                                              'paaSILChiediStatoExportFlussoRisposta')
         status = res_body['stato']
 
-    if status == SilExportStatus.EXPORT_STATUS_COMPLETED:
-            return
-    assert status not in SilExportStatus.EXPORT_STATUS_FAILED and status != SilExportStatus.EXPORT_STATUS_NO_DATA, \
-            f"Export {request_token} reached unexpected terminal status: {status}"
-    assert status in SilExportStatus.EXPORT_STATUS_IN_PROGRESS, f"Unexpected export status: {status}"
-    time.sleep(delay)
+        if status == SilExportStatus.EXPORT_STATUS_COMPLETED:
+                return
+        assert status not in SilExportStatus.EXPORT_STATUS_FAILED and status != SilExportStatus.EXPORT_STATUS_NO_DATA, \
+                f"Export {request_token} reached unexpected terminal status: {status}"
+        assert status in SilExportStatus.EXPORT_STATUS_IN_PROGRESS, f"Unexpected export status: {status}"
+        time.sleep(delay)
 
     assert False, f"Export {request_token} did not complete after {tries} tries (last status: {status})"
 
