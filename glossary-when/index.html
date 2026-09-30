@@ -438,14 +438,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../debt-position-management-by-sil/" class="md-nav__link">
+      <a href="../export-requested-by-sil/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Debt position management by SIL
+    Export requested by SIL
   
 
     
@@ -466,14 +466,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../export-requested-by-sil/" class="md-nav__link">
+      <a href="../debt-position-management-by-sil/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Export requested by SIL
+    Debt position management by SIL
   
 
     
@@ -671,6 +671,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-imports-the-treasury-flow-of-type-flow_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL imports the treasury flow of type {flow_type}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-requests-the-export-of-paid-notices-with-version-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -686,6 +697,17 @@
     <span class="md-ellipsis">
       
         SIL requests the incremental export of paid notices with receipt and version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the reconciliation export for classification label {classification_label} with version {version}
       
     </span>
   </a>
@@ -829,6 +851,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-imports-the-treasury-flow-of-type-flow_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL imports the treasury flow of type {flow_type}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-requests-the-export-of-paid-notices-with-version-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -844,6 +877,17 @@
     <span class="md-ellipsis">
       
         SIL requests the incremental export of paid notices with receipt and version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL requests the reconciliation export for classification label {classification_label} with version {version}
       
     </span>
   </a>
@@ -910,6 +954,12 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <h2 id="sil-creates-the-spontaneous-multi-beneficiary-debt-position-via-the-inviacarrello"><code>SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'</code></h2>
 <p>Creates the spontaneous multi-beneficiary debt position through SIL (<code>paaSILInviaCarrello</code>) and
 asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-imports-the-treasury-flow-of-type-flow_type"><code>SIL imports the treasury flow of type {flow_type}</code></h2>
+<p>Imports a treasury flow through SIL (<code>pivotSILAutorizzaImportFlussoTesoreria</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>builds the treasury OPI zip and uploads it to the returned URL</li>
+</ul>
 <h2 id="sil-requests-the-export-of-paid-notices-with-version-version"><code>SIL requests the export of paid notices with version {version}</code></h2>
 <p>Requests a paid-notices export through SIL (<code>paaSILPrenotaExportFlusso</code>)</p>
 <ul>
@@ -919,6 +969,11 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <p>Requests an incremental paid-notices export with receipt through SIL (<code>paaSILPrenotaExportFlussoIncrementaleConRicevuta</code>)</p>
 <ul>
 <li>requests the export for a <code>dateTime</code> window around today, filtered by the debt position type org</li>
+</ul>
+<h2 id="sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version"><code>SIL requests the reconciliation export for classification label {classification_label} with version {version}</code></h2>
+<p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
+<ul>
+<li>requests the export filtered by the paid notice IUV and the given classification</li>
 </ul>
 <h2 id="the-citizen-pays-the-installment-of-payment-option-po_index"><code>the citizen pays the installment of payment option {po_index}</code></h2>
 <p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code>, <code>the citizen pays the installment</code></em></p>

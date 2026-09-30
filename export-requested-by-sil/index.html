@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../debt-position-management-by-sil/">
+        <link rel="prev" href="../debt-position-notification-via-send/">
       
       
-        <link rel="next" href="../glossary-given/">
+        <link rel="next" href="../debt-position-management-by-sil/">
       
       
         
@@ -437,34 +437,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../debt-position-management-by-sil/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Debt position management by SIL
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -549,10 +521,71 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-sil-requests-the-reconciliation-export-for-a-paid-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL requests the reconciliation export for a paid notice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-requests-the-reconciliation-export-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL requests the reconciliation export and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-imports-a-treasury-flow-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL imports a treasury flow and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debt-position-management-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debt position management by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -751,6 +784,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-sil-requests-the-reconciliation-export-for-a-paid-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL requests the reconciliation export for a paid notice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-requests-the-reconciliation-export-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL requests the reconciliation export and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-imports-a-treasury-flow-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL imports a treasury flow and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -769,22 +835,19 @@
 
 
 <h1 id="export-requested-by-sil">Export requested by SIL</h1>
-<p><strong>Tags:</strong> <code>@sil_export</code></p>
+<p><strong>Tags:</strong> <code>@sil_classification</code></p>
 <h2 id="scenario-sil-requests-the-export-of-paid-notices">Scenario: SIL requests the export of paid notices</h2>
 <p><strong>Tags:</strong> <code>@sil_export_paid</code></p>
 <div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
 <span class="c"># (1)!</span>
-<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
 <span class="c"># (2)!</span>
-<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
-<span class="c"># (3)!</span>
-<span class="k">And </span><span class="nf">the debt position is in status paid</span>
 <span class="k">When </span><span class="nf">SIL requests the export of paid notices with version v</span><span class="s">1.4</span>
-<span class="c"># (4)!</span>
+<span class="c"># (3)!</span>
 <span class="k">Then </span><span class="nf">the paid notices export completes successfully</span>
-<span class="c"># (5)!</span>
+<span class="c"># (4)!</span>
 <span class="k">And </span><span class="nf">the paid notice appears in the export with the correct data</span>
-<span class="c"># (6)!</span>
+<span class="c"># (5)!</span>
 </code></pre></div>
 <ol>
 <li>
@@ -797,20 +860,11 @@
 </ul>
 </li>
 <li>
-<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<p>Performs a full successful payment in one step:</p>
 <ul>
-<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
-<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
-<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
-</ul>
-</li>
-<li>
-<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-<ul>
-<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
-<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
-<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
-<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
 </ul>
 </li>
 <li>
@@ -839,17 +893,14 @@
 <p><strong>Tags:</strong> <code>@sil_export_paid</code></p>
 <div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
 <span class="c"># (1)!</span>
-<span class="k">When </span><span class="nf">the citizen pays the installment of payment option </span><span class="s">1</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
 <span class="c"># (2)!</span>
-<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
-<span class="c"># (3)!</span>
-<span class="k">And </span><span class="nf">the debt position is in status paid</span>
 <span class="k">When </span><span class="nf">SIL requests the incremental export of paid notices with receipt and version v</span><span class="s">1.4</span>
-<span class="c"># (4)!</span>
+<span class="c"># (3)!</span>
 <span class="k">Then </span><span class="nf">the paid notices export completes successfully</span>
-<span class="c"># (5)!</span>
+<span class="c"># (4)!</span>
 <span class="k">And </span><span class="nf">the paid notice appears in the export with the correct data</span>
-<span class="c"># (6)!</span>
+<span class="c"># (5)!</span>
 </code></pre></div>
 <ol>
 <li>
@@ -862,20 +913,11 @@
 </ul>
 </li>
 <li>
-<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<p>Performs a full successful payment in one step:</p>
 <ul>
-<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
-<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
-<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
-</ul>
-</li>
-<li>
-<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
-<ul>
-<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
-<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
-<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
-<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
 </ul>
 </li>
 <li>
@@ -897,6 +939,187 @@
 <li>fetches the export file from the fileshare service using the export request token</li>
 <li>locates the row matching the paid installment IUV/IUD</li>
 <li>asserts that the amount, debt position type org, IUR, IUV and IUD of that row matches the expected values</li>
+</ul>
+</li>
+</ol>
+<h2 id="scenario-sil-requests-the-reconciliation-export-for-a-paid-notice">Scenario: SIL requests the reconciliation export for a paid notice</h2>
+<p><strong>Tags:</strong> <code>@sil_export_reconciliation</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">When </span><span class="nf">SIL requests the reconciliation export for classification label RT_NO_IUD with version v</span><span class="s">1.4</span>
+<span class="c"># (3)!</span>
+<span class="k">Then </span><span class="nf">the reconciliation export completes successfully</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the paid notice appears in the reconciliation export with classification label RT_NO_IUD without iur and iuf</span>
+<span class="c"># (5)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
+<ul>
+<li>requests the export filtered by the paid notice IUV and the given classification</li>
+</ul>
+</li>
+<li>
+<p>Polls the reconciliation export status (<code>pivotSILChiediStatoExportFlussoRiconciliazione</code>) until <code>EXPORT_ESEGUITO</code></p>
+</li>
+<li>
+<p>Downloads the reconciliation export CSV and verifies the paid notice row</p>
+<ul>
+<li>fetches the export file from the fileshare service using the export request token</li>
+<li>locates the row matching the paid installment IUV/IUD</li>
+<li>asserts that the classification label of that row matches the expected value</li>
+</ul>
+</li>
+</ol>
+<h2 id="scenario-sil-requests-the-reconciliation-export-and-the-paid-notice-is-correctly-reconciled">Scenario: SIL requests the reconciliation export and the paid notice is correctly reconciled</h2>
+<p><strong>Tags:</strong> <code>@sil_export_reconciliation</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">0</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">When </span><span class="nf">SIL requests the reconciliation export for classification label RT_IUF with version v</span><span class="s">1.4</span>
+<span class="c"># (4)!</span>
+<span class="k">Then </span><span class="nf">the reconciliation export completes successfully</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the paid notice appears in the reconciliation export with classification label RT_IUF</span>
+<span class="c"># (6)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
+<li>
+<p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
+<ul>
+<li>requests the export filtered by the paid notice IUV and the given classification</li>
+</ul>
+</li>
+<li>
+<p>Polls the reconciliation export status (<code>pivotSILChiediStatoExportFlussoRiconciliazione</code>) until <code>EXPORT_ESEGUITO</code></p>
+</li>
+<li>
+<p>Downloads the reconciliation export CSV and verifies the paid notice row</p>
+<ul>
+<li>fetches the export file from the fileshare service using the export request token</li>
+<li>locates the row matching the paid installment IUV/IUD</li>
+<li>asserts that the IUR, IUF and classification label of that row matches the expected values</li>
+</ul>
+</li>
+</ol>
+<h2 id="scenario-sil-imports-a-treasury-flow-and-the-paid-notice-is-correctly-reconciled">Scenario: SIL imports a treasury flow and the paid notice is correctly reconciled</h2>
+<p><strong>Tags:</strong> <code>@sil_export_reconciliation</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">0</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">When </span><span class="nf">SIL imports the treasury flow of type O</span>
+<span class="c"># (4)!</span>
+<span class="k">Then </span><span class="nf">the treasury import completes successfully</span>
+<span class="c"># (5)!</span>
+<span class="k">When </span><span class="nf">SIL requests the reconciliation export for classification label RT_IUF_TES with version v</span><span class="s">1.4</span>
+<span class="c"># (6)!</span>
+<span class="k">Then </span><span class="nf">the reconciliation export completes successfully</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the paid notice appears in the reconciliation export with classification label RT_IUF_TES</span>
+<span class="c"># (8)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
+<li>
+<p>Imports a treasury flow through SIL (<code>pivotSILAutorizzaImportFlussoTesoreria</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>builds the treasury OPI zip and uploads it to the returned URL</li>
+</ul>
+</li>
+<li>
+<p>Polls the treasury import status (<code>pivotSILChiediStatoImportFlussoTesoreria</code>) until it reaches <code>FILE_CARICATO</code></p>
+</li>
+<li>
+<p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
+<ul>
+<li>requests the export filtered by the paid notice IUV and the given classification</li>
+</ul>
+</li>
+<li>
+<p>Polls the reconciliation export status (<code>pivotSILChiediStatoExportFlussoRiconciliazione</code>) until <code>EXPORT_ESEGUITO</code></p>
+</li>
+<li>
+<p>Downloads the reconciliation export CSV and verifies the paid notice row</p>
+<ul>
+<li>fetches the export file from the fileshare service using the export request token</li>
+<li>locates the row matching the paid installment IUV/IUD</li>
+<li>asserts that the IUR, IUF and classification label of that row matches the expected values</li>
 </ul>
 </li>
 </ol>
