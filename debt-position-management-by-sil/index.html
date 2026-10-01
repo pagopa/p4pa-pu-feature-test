@@ -571,6 +571,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-created-by-sil-via-inviadovuti-on-gpd-is-paid-after-a-citizen-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position created by SIL via 'InviaDovuti' on GPD is paid after a citizen payment
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -789,6 +800,17 @@
     <span class="md-ellipsis">
       
         Scenario: A spontaneous multi-beneficiary debt position created by SIL via 'InviaCarrello' on GPD is paid after a citizen payment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-created-by-sil-via-inviadovuti-on-gpd-is-paid-after-a-citizen-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position created by SIL via 'InviaDovuti' on GPD is paid after a citizen payment
       
     </span>
   </a>
@@ -1052,6 +1074,48 @@
 <li>validates the structure data</li>
 <li>checks if it has status <code>PAID</code> and debt position type org of type <code>UNKNOWN</code></li>
 </ul>
+</li>
+</ol>
+<h2 id="scenario-a-spontaneous-debt-position-created-by-sil-via-inviadovuti-on-gpd-is-paid-after-a-citizen-payment">Scenario: A spontaneous debt position created by SIL via 'InviaDovuti' on GPD is paid after a citizen payment</h2>
+<p><strong>Tags:</strong> <code>@sil_invia_dovuti</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">a citizen requests a spontaneous debt position of type FEATURE_TEST with single installment of </span><span class="s">50</span><span class="nf"> euros</span>
+<span class="k">When </span><span class="nf">SIL creates the spontaneous debt position via the 'InviaDovuti'</span>
+<span class="c"># (1)!</span>
+<span class="k">Then </span><span class="nf">'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'</span>
+<span class="k">And </span><span class="nf">the debt position is in status unpaid</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the debt position is in status paid</span>
+<span class="k">And </span><span class="nf">the RT returned by 'ChiediPagatiConRicevuta' matches the expected data</span>
+<span class="c"># (4)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates the spontaneous debt position through SIL (<code>paaSILInviaDovuti</code>) and
+    asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+<li>
+<p>Checks if the RT returned by 'ChiediPagatiConRicevuta' matches the same RT ingested by PU from PagoPA</p>
 </li>
 </ol>
 
