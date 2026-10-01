@@ -8,7 +8,7 @@ import xmltodict
 from behave import given, when, then
 
 from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
-from api.soap.sil import post_sil_invia_dovuto, checkout_url_pattern
+from api.soap.sil import post_sil_invia_dovuto_eterogeneo, checkout_url_pattern
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
@@ -55,10 +55,10 @@ def step_create_dp_mixed_entity(context):
 @when("SIL creates the mixed debt position via the 'InviaDovuti'")
 def step_sil_invia_dovuto_mixed(context):
     """Creates the mixed debt position through SIL (`paaSILInviaDovuti`) and asserts the SOAP outcome is `OK` with a URL to proceed for payment."""
-    res = post_sil_invia_dovuto(token=context.token,
-                                traceparent=context.traceparent,
-                                debt_position_mixed=context.debt_position_mixed,
-                                ipa_code=context.org_info.ipa_code)
+    res = post_sil_invia_dovuto_eterogeneo(token=context.token,
+                                           traceparent=context.traceparent,
+                                           debt_position_mixed=context.debt_position_mixed,
+                                           ipa_code=context.org_info.ipa_code)
 
     res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL invia dovuto")

@@ -70,3 +70,15 @@ Feature: Debt position management by SIL
     And 'ChiediEsitoCarrello' reports the outcome as 'PAGATO'
     And the RT returned by 'ChiediEsitoCarrello' matches the expected data
     And a debt position with origin secondary_org is created for organization 'Ente Locale' in status paid
+
+  @sil_invia_dovuti
+  Scenario: A spontaneous debt position created by SIL via 'InviaDovuti' on GPD is paid after a citizen payment
+    Given a SIL acting on behalf of an organization interacting with GPD
+    And a citizen requests a spontaneous debt position of type FEATURE_TEST with single installment of 50 euros
+    When SIL creates the spontaneous debt position via the 'InviaDovuti'
+    Then 'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'
+    And the debt position is in status unpaid
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
