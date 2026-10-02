@@ -132,6 +132,7 @@ def step_sil_invia_dovuti(context):
         installment=installment,
         debt_position_type_org_code=context.debt_position_type_org_code,
         ipa_code=org_info.ipa_code,
+        marca_bollo=getattr(context, 'stamp', None)
     )
 
     _process_response(context, 'InviaDovuti', res, org_info, installment)

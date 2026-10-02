@@ -23,7 +23,7 @@ from config.configuration import settings
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
-    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 
@@ -413,6 +413,9 @@ def step_create_installment_entity_of_spontaneous_dp(context, debt_position_type
     context.debt_position_type_org_code = debt_position_type_org_code
     context.installment = installment
 
+    if debt_position_type_org_code == settings.debt_position_type_org_code.feature_test_bollo:
+        context.stamp = Stamp()
+
 
 @given("a second beneficiary '{org_name}' is added to the installment with an amount of {amount} euros")
 def step_create_second_transfer_entity(context, org_name, amount):
@@ -468,4 +471,17 @@ def step_check_secondary_org_dp(context, org_name):
 
     assert_response_ok(res_dpto, "Get debt position type org by id")
     assert res_dpto.json()['debtPositionTypeId'] == -1
+
+
+@then('the transfer is created with stamp data instead of iban')
+def step_check_transfer_data(context):
+    debt_position = context.debt_position
+    stamp_data = context.stamp
+
+    transfer = debt_position.payment_options[0].installments[0].transfers[0]
+
+    assert transfer.iban is None
+    assert transfer.stamp_type == stamp_data.stamp_type
+    assert transfer.stamp_hash_document == stamp_data.stamp_hash_document
+    assert transfer.stamp_provincial_residence == stamp_data.stamp_provincial_residence
 

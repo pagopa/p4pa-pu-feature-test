@@ -1,218 +1,88 @@
 import base64
 import re
+from typing import Optional
 
 from common import http_client
 from config.configuration import settings, secrets
-from model.debt_position import Installment, Transfer
+from model.debt_position import Installment, Transfer, Stamp
 from model.debt_position_mixed import DebtPositionMixed
 
-
-def checkout_url_pattern(org_fiscal_code: str) -> str:
-    base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
-    return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
+TEMPLATE_DIR = './api/soap/requests_template_sil'
 
 
-def post_sil_invia_dovuto_eterogeneo(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
-    dati_versamento = ""
-    for transfer_mixed in debt_position_mixed.transfers:
-        with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
-            dati_singolo_versamento_data = file.read()
-        dati_singolo_versamento = dati_singolo_versamento_data.format(iud=transfer_mixed.iud,
-                                                                      importo="{:.2f}".format(
-                                                                          int(transfer_mixed.amount_cents) / 100),
-                                                                      tipo_dovuto=transfer_mixed.debt_position_type_org_code,
-                                                                      dati_specifici_riscossione=transfer_mixed.legacy_payment_metadata)
-
-        dati_versamento += dati_singolo_versamento
-
-    with open('./api/soap/requests_template_sil/dovuti.xml', 'r') as file:
-        dovuti_data = file.read()
-    dovuti = dovuti_data.format(codice_fiscale=debt_position_mixed.debtor.fiscal_code,
-                                nome=debt_position_mixed.debtor.full_name,
-                                email=debt_position_mixed.debtor.email,
-                                dati_versamento=dati_versamento)
-
-    dovuto_base64 = base64.b64encode(dovuti.encode('utf-8')).decode('utf-8')
-
-    with open('./api/soap/requests_template_sil/inviaDovuti.xml', 'r') as file:
-        invia_dovuti_data = file.read()
-    data = invia_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+def _render(template_name: str, **values) -> str:
+    with open(f'{TEMPLATE_DIR}/{template_name}', 'r') as file:
+        return file.read().format(**values)
 
 
-def post_sil_prenota_export_flusso(token, traceparent: str, ipa_code: str, date_from: str, date_to: str,
-                                   debt_position_type_org_code: str, version: str = 'v1.0'):
-    with open('./api/soap/requests_template_sil/prenotaExportFlusso.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to,
-                       tipo_dovuto=debt_position_type_org_code, versione_tracciato=version)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+def _format_amount(amount_cents) -> str:
+    return "{:.2f}".format(int(amount_cents) / 100)
 
 
-def post_sil_prenota_export_flusso_incrementale_con_ricevuta(token, traceparent: str, ipa_code: str, date_from: str,
-                                                             date_to: str, debt_position_type_org_code: str,
-                                                             receipt: bool,
-                                                             incremental: bool, version: str = 'v1.0'):
-    with open('./api/soap/requests_template_sil/prenotaExportFlussoIncrementaleConRicevuta.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, date_from=date_from, date_to=date_to,
-                       tipo_dovuto=debt_position_type_org_code,
-                       ricevuta=str(receipt).lower(), incrementale=str(incremental).lower(),
-                       versione_tracciato=version)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+def _to_base64(value: str) -> str:
+    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
 
 
-def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, request_token: str):
-    with open('./api/soap/requests_template_sil/chiediStatoExportFlusso.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, request_token=request_token)
+def _build_marca_bollo(stamp: Optional[Stamp]) -> str:
+    if stamp is None:
+        return ''
+    stamp_fields = (stamp.stamp_type, stamp.stamp_hash_document, stamp.stamp_provincial_residence)
+    if not all(stamp_fields):
+        raise ValueError(f'MdB data incomplete: {stamp_fields}')
+    return _render(
+        'datiMarcaBolloDigitale.xml',
+        tipo_bollo=stamp.stamp_type,
+        hash_documento=stamp.stamp_hash_document,
+        provincia=stamp.stamp_provincial_residence,
+    )
 
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+def _build_dati_singolo_versamento(iud: str, amount_cents, tipo_dovuto: str, dati_specifici_riscossione: str,
+                                   marca_bollo: Stamp = None) -> str:
+    return _render(
+        'datiVersamento.xml',
+        iud=iud,
+        importo=_format_amount(amount_cents),
+        tipo_dovuto=tipo_dovuto,
+        dati_specifici_riscossione=dati_specifici_riscossione,
+        dati_marca_bollo=_build_marca_bollo(marca_bollo),
+    )
 
 
-def _build_dovuto_base64(installment: Installment, debt_position_type_org_code: str) -> str:
-    with open('./api/soap/requests_template_sil/datiVersamento.xml', 'r') as file:
-        dati_singolo_versamento_data = file.read()
-    dati_singolo_versamento = dati_singolo_versamento_data.format(
+def _build_dovuti_base64(debtor, dati_versamento: str) -> str:
+    dovuti = _render(
+        'dovuti.xml',
+        codice_fiscale=debtor.fiscal_code,
+        nome=debtor.full_name,
+        email=debtor.email,
+        dati_versamento=dati_versamento,
+    )
+    return _to_base64(dovuti)
+
+
+def _build_dovuto_base64(installment: Installment, debt_position_type_org_code: str,
+                         stamp: Stamp = None) -> str:
+    dati_singolo_versamento = _build_dati_singolo_versamento(
         iud=installment.iud,
-        importo="{:.2f}".format(int(installment.amount_cents) / 100),
+        amount_cents=installment.amount_cents,
         tipo_dovuto=debt_position_type_org_code,
         dati_specifici_riscossione=installment.legacy_payment_metadata,
+        marca_bollo=stamp,
     )
-
-    with open('./api/soap/requests_template_sil/dovuti.xml', 'r') as file:
-        dovuti_data = file.read()
-    dovuti = dovuti_data.format(
-        codice_fiscale=installment.debtor.fiscal_code,
-        nome=installment.debtor.full_name,
-        email=installment.debtor.email,
-        dati_versamento=dati_singolo_versamento,
-    )
-
-    return base64.b64encode(dovuti.encode('utf-8')).decode('utf-8')
+    return _build_dovuti_base64(installment.debtor, dati_singolo_versamento)
 
 
 def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
-    with open('./api/soap/requests_template_sil/dovutiEntiSecondari.xml', 'r') as file:
-        dovuti_enti_secondari_data = file.read()
-    dovuti_enti_secondari = dovuti_enti_secondari_data.format(
+    dovuti_enti_secondari = _render(
+        'dovutiEntiSecondari.xml',
         codice_fiscale_ente_secondario=second_transfer.org_fiscal_code,
         nome_ente_secondario=second_transfer.org_name,
         iban_ente_secondario=second_transfer.iban,
         causale_ente_secondario=second_transfer.remittance_information,
         dati_specifici_riscossione_ente_secondario=second_transfer.category,
-        importo_ente_secondario="{:.2f}".format(int(second_transfer.amount_cents) / 100),
+        importo_ente_secondario=_format_amount(second_transfer.amount_cents),
     )
-
-    return base64.b64encode(dovuti_enti_secondari.encode('utf-8')).decode('utf-8')
-
-
-def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
-                                   ipa_code: str):
-    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
-
-    with open('./api/soap/requests_template_sil/inviaCarrelloDovuti.xml', 'r') as file:
-        invia_carrello_dovuti_data = file.read()
-    data = invia_carrello_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_invia_carrello_dovuti_enti_secondari(token, traceparent: str, installment: Installment, ipa_code: str,
-                                                  second_transfer: Transfer, debt_position_type_org_code: str):
-    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
-    dovuto_secondario_base64 = _build_dovuto_secondario_base64(second_transfer)
-
-    with open('./api/soap/requests_template_sil/inviaCarrelloDovuti_entiSecondari.xml', 'r') as file:
-        invia_carrello_dovuti_data = file.read()
-    data = invia_carrello_dovuti_data.format(
-        dovuto=dovuto_base64,
-        dovuto_secondario=dovuto_secondario_base64,
-        codice_ipa=ipa_code,
-    )
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_id: int, ipa_code: str):
-    with open('./api/soap/requests_template_sil/chiediEsitoCarrelloDovuti.xml', 'r') as file:
-        chiedi_esito_carrello = file.read()
-    data = chiedi_esito_carrello.format(codice_ipa=ipa_code, id_session_carrello=installment_id)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_invia_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
-                          ipa_code: str):
-    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code)
-
-    with open('./api/soap/requests_template_sil/inviaDovuti.xml', 'r') as file:
-        invia_dovuti_data = file.read()
-    data = invia_dovuti_data.format(dovuto=dovuto_base64, codice_ipa=ipa_code)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_chiedi_pagati(token, traceparent: str, installment_id: int, ipa_code: str):
-    with open('./api/soap/requests_template_sil/chiediPagati.xml', 'r') as file:
-        chiedi_pagati_data = file.read()
-    data = chiedi_pagati_data.format(codice_ipa=ipa_code, id_session=installment_id)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_chiedi_pagati_con_ricevuta(token, traceparent: str, installment_id: int, ipa_code: str):
-    with open('./api/soap/requests_template_sil/chiediPagatiConRicevuta.xml', 'r') as file:
-        chiedi_pagati_data = file.read()
-    data = chiedi_pagati_data.format(codice_ipa=ipa_code, id_session=installment_id)
-
-    return post_sil_payments(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_payments(token, traceparent: str, data: str):
-    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
-                          path=settings.api.ingress_path.sil_payments)
-
-
-def post_sil_autorizza_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, flow_type: str = 'O'):
-    with open('./api/soap/requests_template_sil/autorizzaImportFlussoTesoreria.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, tipo_flusso=flow_type)
-
-    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_chiedi_stato_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, request_token: str):
-    with open('./api/soap/requests_template_sil/chiediStatoImportFlussoTesoreria.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, request_token=request_token)
-
-    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, iuv: str,
-                                                    classification_label: str, version: str = 'v1.4'):
-    with open('./api/soap/requests_template_sil/prenotaExportFlussoRiconciliazione.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, classificazione=classification_label, iuv=iuv, versione_tracciato=version)
-
-    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
-    with open('./api/soap/requests_template_sil/chiediStatoExportFlussoRiconciliazione.xml', 'r') as file:
-        data = file.read()
-    data = data.format(codice_ipa=ipa_code, request_token=request_token)
-
-    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
-
-
-def post_sil_reconciliation(token, traceparent: str, data: str):
-    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
-                          path=settings.api.ingress_path.sil_reconciliation)
+    return _to_base64(dovuti_enti_secondari)
 
 
 def _post_sil_soap(token, traceparent: str, data: str, path: str):
@@ -226,3 +96,160 @@ def _post_sil_soap(token, traceparent: str, data: str, path: str):
         data=data,
         timeout=settings.default_timeout
     )
+
+
+def post_sil_payments(token, traceparent: str, data: str):
+    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
+                          path=settings.api.ingress_path.sil_payments)
+
+
+def post_sil_reconciliation(token, traceparent: str, data: str):
+    return _post_sil_soap(token=token, traceparent=traceparent, data=data,
+                          path=settings.api.ingress_path.sil_reconciliation)
+
+
+def checkout_url_pattern(org_fiscal_code: str) -> str:
+    base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
+    return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
+
+
+# ---------------------------------------------------------------------------
+# Payments
+# ---------------------------------------------------------------------------
+
+def post_sil_invia_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                          ipa_code: str, marca_bollo: Optional[Stamp] = None):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code, marca_bollo)
+    data = _render('inviaDovuti.xml', dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_invia_dovuto_eterogeneo(token, traceparent: str, debt_position_mixed: DebtPositionMixed, ipa_code: str):
+    dati_versamento = "".join(
+        _build_dati_singolo_versamento(
+            iud=transfer_mixed.iud,
+            amount_cents=transfer_mixed.amount_cents,
+            tipo_dovuto=transfer_mixed.debt_position_type_org_code,
+            dati_specifici_riscossione=transfer_mixed.legacy_payment_metadata,
+        )
+        for transfer_mixed in debt_position_mixed.transfers
+    )
+    dovuto_base64 = _build_dovuti_base64(debt_position_mixed.debtor, dati_versamento)
+    data = _render('inviaDovuti.xml', dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_invia_carrello_dovuti(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                                   ipa_code: str, marca_bollo: Optional[Stamp] = None):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code, marca_bollo)
+    data = _render('inviaCarrelloDovuti.xml', dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_invia_carrello_dovuti_enti_secondari(token, traceparent: str, installment: Installment, ipa_code: str,
+                                                  second_transfer: Transfer, debt_position_type_org_code: str,
+                                                  marca_bollo: Optional[Stamp] = None):
+    dovuto_base64 = _build_dovuto_base64(installment, debt_position_type_org_code, marca_bollo)
+    dovuto_secondario_base64 = _build_dovuto_secondario_base64(second_transfer)
+    data = _render(
+        'inviaCarrelloDovuti_entiSecondari.xml',
+        dovuto=dovuto_base64,
+        dovuto_secondario=dovuto_secondario_base64,
+        codice_ipa=ipa_code,
+    )
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_esito_carrello_dovuti(token, traceparent: str, installment_id: int, ipa_code: str):
+    data = _render('chiediEsitoCarrelloDovuti.xml', codice_ipa=ipa_code, id_session_carrello=installment_id)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_pagati(token, traceparent: str, installment_id: int, ipa_code: str):
+    data = _render('chiediPagati.xml', codice_ipa=ipa_code, id_session=installment_id)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_pagati_con_ricevuta(token, traceparent: str, installment_id: int, ipa_code: str):
+    data = _render('chiediPagatiConRicevuta.xml', codice_ipa=ipa_code, id_session=installment_id)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso(token, traceparent: str, ipa_code: str, date_from: str, date_to: str,
+                                   debt_position_type_org_code: str, version: str = 'v1.0'):
+    data = _render(
+        'prenotaExportFlusso.xml',
+        codice_ipa=ipa_code,
+        date_from=date_from,
+        date_to=date_to,
+        tipo_dovuto=debt_position_type_org_code,
+        versione_tracciato=version,
+    )
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso_incrementale_con_ricevuta(token, traceparent: str, ipa_code: str, date_from: str,
+                                                             date_to: str, debt_position_type_org_code: str,
+                                                             receipt: bool,
+                                                             incremental: bool, version: str = 'v1.0'):
+    data = _render(
+        'prenotaExportFlussoIncrementaleConRicevuta.xml',
+        codice_ipa=ipa_code,
+        date_from=date_from,
+        date_to=date_to,
+        tipo_dovuto=debt_position_type_org_code,
+        ricevuta=str(receipt).lower(),
+        incrementale=str(incremental).lower(),
+        versione_tracciato=version,
+    )
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoExportFlusso.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+# ---------------------------------------------------------------------------
+# Reconciliation
+# ---------------------------------------------------------------------------
+
+def post_sil_autorizza_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, flow_type: str = 'O'):
+    data = _render('autorizzaImportFlussoTesoreria.xml', codice_ipa=ipa_code, tipo_flusso=flow_type)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_import_flusso_tesoreria(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoImportFlussoTesoreria.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, iuv: str,
+                                                   classification_label: str, version: str = 'v1.4'):
+    data = _render(
+        'prenotaExportFlussoRiconciliazione.xml',
+        codice_ipa=ipa_code,
+        classificazione=classification_label,
+        iuv=iuv,
+        versione_tracciato=version,
+    )
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoExportFlussoRiconciliazione.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 from dataclasses_json import dataclass_json, LetterCase
 from config.configuration import secrets
@@ -50,6 +51,14 @@ class Debtor:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
+class Stamp:
+    stamp_type: str = '01'
+    stamp_hash_document: str = 'SGFzaCBkb2N1bWVudG8gbWFuY2FudGU='
+    stamp_provincial_residence: str = 'MI'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
 class Transfer:
     transfer_index: int
     org_fiscal_code: str
@@ -61,6 +70,9 @@ class Transfer:
     installment_id: int = None
     org_name: str = None
     flag_owner: bool = False
+    stamp_type: str = None
+    stamp_hash_document: str = None
+    stamp_provincial_residence: str = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

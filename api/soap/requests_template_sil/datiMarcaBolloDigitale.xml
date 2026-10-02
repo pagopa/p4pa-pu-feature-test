@@ -1,0 +1,5 @@
+<datiMarcaBolloDigitale>
+    <tipoBollo>{tipo_bollo}</tipoBollo>
+    <hashDocumento>{hash_documento}</hashDocumento>
+    <provinciaResidenza>{provincia}</provinciaResidenza>
+</datiMarcaBolloDigitale>
