@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../export-requested-by-sil/">
+        <link rel="prev" href="../debt-positions-classification-by-sil/">
       
       
         <link rel="next" href="../glossary-given/">
@@ -23,7 +23,7 @@
     
     
       
-        <title>Debt position management by SIL - Piattaforma Unitaria Functional Testing</title>
+        <title>Debt positions management by SIL - Piattaforma Unitaria Functional Testing</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#debt-position-management-by-sil" class="md-skip">
+        <a href="#debt-positions-management-by-sil" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Debt position management by SIL
+              Debt positions management by SIL
             
           </span>
         </div>
@@ -328,14 +328,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../debt-position-creation/" class="md-nav__link">
+      <a href="../debt-positions-management/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Debt position creation
+    Debt positions management
   
 
     
@@ -440,14 +440,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../export-requested-by-sil/" class="md-nav__link">
+      <a href="../debt-positions-classification-by-sil/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Export requested by SIL
+    Debt positions classification by SIL
   
 
     
@@ -484,7 +484,7 @@
   <span class="md-ellipsis">
     
   
-    Debt position management by SIL
+    Debt positions management by SIL
   
 
     
@@ -502,7 +502,7 @@
   <span class="md-ellipsis">
     
   
-    Debt position management by SIL
+    Debt positions management by SIL
   
 
     
@@ -576,6 +576,17 @@
     <span class="md-ellipsis">
       
         Scenario: A spontaneous debt position created by SIL via 'InviaDovuti' on GPD is paid after a citizen payment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-with-stamp-is-created-by-sil-via-inviadovuti-on-gpd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position with stamp is created by SIL via 'InviaDovuti' on GPD
       
     </span>
   </a>
@@ -817,6 +828,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-a-spontaneous-debt-position-with-stamp-is-created-by-sil-via-inviadovuti-on-gpd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A spontaneous debt position with stamp is created by SIL via 'InviaDovuti' on GPD
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -834,7 +856,7 @@
 
 
 
-<h1 id="debt-position-management-by-sil">Debt position management by SIL</h1>
+<h1 id="debt-positions-management-by-sil">Debt positions management by SIL</h1>
 <p><strong>Tags:</strong> <code>@sil_debt_positions</code></p>
 <h2 id="scenario-a-mixed-debt-position-is-created-by-a-sil-via-inviadovuti-for-an-organization-interacting-with-gpd">Scenario: A mixed debt position is created by a SIL via 'InviaDovuti' for an organization interacting with GPD</h2>
 <p><strong>Tags:</strong> <code>@debt_position_mixed</code> <code>@sil_invia_dovuti</code></p>
@@ -1117,6 +1139,20 @@
 <li>
 <p>Checks if the RT returned by 'ChiediPagatiConRicevuta' matches the same RT ingested by PU from PagoPA</p>
 </li>
+</ol>
+<h2 id="scenario-a-spontaneous-debt-position-with-stamp-is-created-by-sil-via-inviadovuti-on-gpd">Scenario: A spontaneous debt position with stamp is created by SIL via 'InviaDovuti' on GPD</h2>
+<p><strong>Tags:</strong> <code>@sil_invia_dovuti</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">a citizen requests a spontaneous debt position of type FEATURE_TEST_BOLLO with single installment of </span><span class="s">16</span><span class="nf"> euros</span>
+<span class="k">When </span><span class="nf">SIL creates the spontaneous debt position via the 'InviaDovuti'</span>
+<span class="c"># (1)!</span>
+<span class="k">Then </span><span class="nf">'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'</span>
+<span class="k">And </span><span class="nf">the debt position is in status unpaid</span>
+<span class="k">And </span><span class="nf">the transfer is created with stamp data instead of iban</span>
+</code></pre></div>
+<ol>
+<li>Creates the spontaneous debt position through SIL (<code>paaSILInviaDovuti</code>) and
+    asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</li>
 </ol>
 
 
