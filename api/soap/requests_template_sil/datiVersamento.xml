@@ -4,4 +4,5 @@
     <identificativoTipoDovuto>{tipo_dovuto}</identificativoTipoDovuto>
     <causaleVersamento>Test {iud}</causaleVersamento>
     <datiSpecificiRiscossione>{dati_specifici_riscossione}</datiSpecificiRiscossione>
+    {dati_marca_bollo}
 </datiSingoloVersamento>

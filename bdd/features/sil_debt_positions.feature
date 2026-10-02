@@ -82,3 +82,12 @@ Feature: Debt position management by SIL
     Then the receipt is processed correctly
     And the debt position is in status paid
     And the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+
+  @sil_invia_dovuti
+  Scenario: A spontaneous debt position with stamp is created by SIL via 'InviaDovuti' on GPD
+    Given a SIL acting on behalf of an organization interacting with GPD
+    And a citizen requests a spontaneous debt position of type FEATURE_TEST_BOLLO with single installment of 16 euros
+    When SIL creates the spontaneous debt position via the 'InviaDovuti'
+    Then 'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'
+    And the debt position is in status unpaid
+    And the transfer is created with stamp data instead of iban
