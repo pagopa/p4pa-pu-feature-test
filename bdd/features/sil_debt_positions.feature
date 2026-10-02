@@ -1,5 +1,5 @@
 @sil_debt_positions
-Feature: Debt position management by SIL
+Feature: Debt positions management by SIL
 
   @debt_position_mixed
   @sil_invia_dovuti

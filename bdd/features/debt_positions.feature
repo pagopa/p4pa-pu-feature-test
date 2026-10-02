@@ -1,5 +1,5 @@
 @debt_positions
-Feature: Debt position creation
+Feature: Debt positions management
 
   @aca
   Scenario: A simple debt position is created by an organization interacting with ACA
