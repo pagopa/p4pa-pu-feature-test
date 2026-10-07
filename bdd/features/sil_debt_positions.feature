@@ -91,3 +91,49 @@ Feature: Debt positions management by SIL
     Then 'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'
     And the debt position is in status unpaid
     And the transfer is created with stamp data instead of iban
+
+  @sil_importa_dovuto
+  Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD has a printable notice and is paid after a citizen payment
+    Given a SIL acting on behalf of an organization interacting with GPD
+    When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
+    Then the debt position is in status unpaid
+    And the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
+    And 'VerificaAvviso' returns the checkout URL to start the payment
+    And 'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And 'ChiediPagati' reports the installment as paid
+    And the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+
+  @sil_importa_dovuto
+  Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD is updated via 'ImportaDovuto' and paid after a citizen payment
+    Given a SIL acting on behalf of an organization interacting with GPD
+    When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
+    Then the debt position is in status unpaid
+    And the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
+    And 'VerificaAvviso' returns the checkout URL to start the payment
+    When SIL updates the installment amount to 70 euros through SIL 'ImportaDovuto'
+    Then the debt position is in status unpaid
+    And the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
+    And 'VerificaAvviso' returns the checkout URL to start the payment
+    And 'ChiediPagati' reports the outcome as 'PAA_PAGAMENTO_NON_INIZIATO'
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the debt position is in status paid
+    And 'ChiediPagati' reports the installment as paid
+    And the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+
+  @sil_importa_dovuto
+  Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD is cancelled via 'ImportaDovuto' and is no longer payable
+    Given a SIL acting on behalf of an organization interacting with GPD
+    When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
+    Then the debt position is in status unpaid
+    And 'VerificaAvviso' returns the checkout URL to start the payment
+    When SIL cancels the debt position through SIL 'ImportaDovuto'
+    Then the debt position is in status cancelled
+    And the installment of payment option 1 is in status cancelled
+    And the payment notice PDF returned by 'ImportaDovuto' is no longer available
+    And 'VerificaAvviso' reports the outcome as 'PAA_IUV_NON_VALIDO'
+    And 'ChiediPagati' reports the outcome as 'PAA_DOVUTO_NON_PAGABILE'
+    And the citizen cannot pay the installment

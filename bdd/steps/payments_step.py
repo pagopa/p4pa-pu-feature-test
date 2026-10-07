@@ -1,6 +1,4 @@
 import xmltodict
-from behave import given, when, then
-
 from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
 from bdd.steps.debt_positions_step import step_check_dp_status
@@ -9,6 +7,7 @@ from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_an
     get_installment_paid, set_installment_paid, get_stored_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
+from behave import given, when, then
 from config.configuration import secrets
 from model.debt_position import Status
 from model.file import FilePathName, FileStatus, ReceiptOriginType
@@ -17,9 +16,13 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 psp_info = secrets.payment_info.psp
 
 
-def check_res_ok_and_get_body(response_content, tag_name):
+def get_res_body(response_content, tag_name):
     res_parsed = xmltodict.parse(response_content.decode('utf-8'))
-    res_body = res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
+    return res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
+
+
+def check_res_ok_and_get_body(response_content, tag_name):
+    res_body = get_res_body(response_content, tag_name)
     assert res_body['outcome'] == 'OK'
     return res_body
 
@@ -197,3 +200,17 @@ def step_successful_installment_payment_outside_pu(context):
                              installment_to_paid=context.debt_position.payment_options[0].installments[0])
     step_check_dp_status(context=context, status=Status.PAID.value)
     step_check_receipt_processed(context=context)
+
+
+@then("the citizen cannot pay the installment")
+def step_installment_not_payable(context):
+    """Checks through the pagoPA node (`verifyPaymentNotice`) that the installment can no longer be paid."""
+    psp = PSP(id=psp_info.id, id_broker=psp_info.id_broker, id_channel=psp_info.id_channel, password=psp_info.password)
+    installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_position, po_index=1, seq_num=1)
+
+    res = verify_payment_notice(psp=psp, org_fiscal_code=context.org_info.fiscal_code, nav=installment.nav)
+
+    assert_response_ok(res, "Verify payment notice")
+    res_body = get_res_body(res.content, tag_name='verifyPaymentNoticeRes')
+    assert res_body['outcome'] == 'KO', \
+        f"outcome mismatch: expected KO, got {res_body['outcome']}"
