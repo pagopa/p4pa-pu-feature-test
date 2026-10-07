@@ -664,6 +664,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#chiedipagati-reports-the-installment-as-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'ChiediPagati' reports the installment as paid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaavviso-reports-the-outcome-as-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'VerificaAvviso' reports the outcome as '{status}'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaavviso-returns-the-checkout-url-to-start-the-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'VerificaAvviso' returns the checkout URL to start the payment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#3-debt-positions-having-installments-with-same-iuv-are-in-status-status-configured-as-follows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -734,6 +767,17 @@
     <span class="md-ellipsis">
       
         the assessment is in status {status}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-citizen-cannot-pay-the-installment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the citizen cannot pay the installment
       
     </span>
   </a>
@@ -866,6 +910,28 @@
     <span class="md-ellipsis">
       
         the paid notices export completes successfully
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notice-pdf-returned-by-importadovuto-contains-the-debt-position-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notice-pdf-returned-by-importadovuto-is-no-longer-available" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notice PDF returned by 'ImportaDovuto' is no longer available
       
     </span>
   </a>
@@ -1036,6 +1102,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#chiedipagati-reports-the-installment-as-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'ChiediPagati' reports the installment as paid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaavviso-reports-the-outcome-as-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'VerificaAvviso' reports the outcome as '{status}'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaavviso-returns-the-checkout-url-to-start-the-payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        'VerificaAvviso' returns the checkout URL to start the payment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#3-debt-positions-having-installments-with-same-iuv-are-in-status-status-configured-as-follows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1106,6 +1205,17 @@
     <span class="md-ellipsis">
       
         the assessment is in status {status}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-citizen-cannot-pay-the-installment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the citizen cannot pay the installment
       
     </span>
   </a>
@@ -1238,6 +1348,28 @@
     <span class="md-ellipsis">
       
         the paid notices export completes successfully
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notice-pdf-returned-by-importadovuto-contains-the-debt-position-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notice-pdf-returned-by-importadovuto-is-no-longer-available" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notice PDF returned by 'ImportaDovuto' is no longer available
       
     </span>
   </a>
@@ -1384,6 +1516,12 @@
 
 <h1 id="then-steps">Then steps</h1>
 <p>The <code>Then</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
+<h2 id="chiedipagati-reports-the-installment-as-paid"><code>'ChiediPagati' reports the installment as paid</code></h2>
+<p>Checks the payment through SIL (<code>paaSILChiediPagati</code>)</p>
+<h2 id="verificaavviso-reports-the-outcome-as-status"><code>'VerificaAvviso' reports the outcome as '{status}'</code></h2>
+<p>Verifies that SIL (<code>paaSILVerificaAvviso</code>) returns the expected status as fault code</p>
+<h2 id="verificaavviso-returns-the-checkout-url-to-start-the-payment"><code>'VerificaAvviso' returns the checkout URL to start the payment</code></h2>
+<p>Verifies the payment notice through SIL (<code>paaSILVerificaAvviso</code>)</p>
 <h2 id="3-debt-positions-having-installments-with-same-iuv-are-in-status-status-configured-as-follows"><code>3 debt positions having installments with same IUV are in status {status} configured as follows</code></h2>
 <p>Checks the debt positions generated from a mixed SIL flow (sharing the same IUV). For each configured row it:</p>
 <ul>
@@ -1427,6 +1565,8 @@
 <li>fetches the assessment by that name and asserts it exists and matches the status;</li>
 <li>checks the <code>CREATE_ASSESSMENT</code> workflow completes.</li>
 </ul>
+<h2 id="the-citizen-cannot-pay-the-installment"><code>the citizen cannot pay the installment</code></h2>
+<p>Checks through the pagoPA node (<code>verifyPaymentNotice</code>) that the installment can no longer be paid.</p>
 <h2 id="the-classification-labels-are-labels"><code>the classification labels are {labels}</code></h2>
 <p><em>also: <code>the classification labels for each transfer are {labels}</code>, <code>the classification labels related to payment reporting with outcome code {outcome_code} are {labels}</code></em></p>
 <p>Checks the classification labels produced for the installment. It:</p>
@@ -1495,6 +1635,14 @@
 <li>retries while the export is <code>LOAD_EXPORT</code> / <code>EXPORT_IN_ELAB</code></li>
 <li>fails on an error/cancelled/no-data terminal status</li>
 </ul>
+<h2 id="the-payment-notice-pdf-returned-by-importadovuto-contains-the-debt-position-data"><code>the payment notice PDF returned by 'ImportaDovuto' contains the debt position data</code></h2>
+<p>Downloads the payment notice from the URL returned by 'ImportaDovuto'.</p>
+<p>It verifies that:
+- the downloaded file is a PDF;
+- the PDF reports the remittance information, the creditor organization fiscal code and name, the debtor name,
+  the amount, the due date and the NAV of the installment, and a valid CBILL code.</p>
+<h2 id="the-payment-notice-pdf-returned-by-importadovuto-is-no-longer-available"><code>the payment notice PDF returned by 'ImportaDovuto' is no longer available</code></h2>
+<p>Verifies that the payment notice download is no longer available through the URL returned by 'ImportaDovuto'</p>
 <h2 id="the-payment-reporting-is-processed-correctly"><code>the payment reporting is processed correctly</code></h2>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
 <ul>

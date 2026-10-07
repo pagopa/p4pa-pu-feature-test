@@ -638,6 +638,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sil-cancels-the-debt-position-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL cancels the debt position through SIL 'ImportaDovuto'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-a-debt-position-of-type-debt_position_type_org_code-with-single-installment-of-amount-euros-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates a debt position of type {debt_position_type_org_code} with single installment of {amount} euros through SIL 'ImportaDovuto'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-creates-the-mixed-debt-position-via-the-inviadovuti" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -719,6 +741,17 @@
     <span class="md-ellipsis">
       
         SIL requests the reconciliation export for classification label {classification_label} with version {version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-updates-the-installment-amount-to-amount-euros-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL updates the installment amount to {amount} euros through SIL 'ImportaDovuto'
       
     </span>
   </a>
@@ -829,6 +862,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sil-cancels-the-debt-position-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL cancels the debt position through SIL 'ImportaDovuto'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sil-creates-a-debt-position-of-type-debt_position_type_org_code-with-single-installment-of-amount-euros-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL creates a debt position of type {debt_position_type_org_code} with single installment of {amount} euros through SIL 'ImportaDovuto'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-creates-the-mixed-debt-position-via-the-inviadovuti" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -917,6 +972,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-updates-the-installment-amount-to-amount-euros-through-sil-importadovuto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL updates the installment amount to {amount} euros through SIL 'ImportaDovuto'
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-citizen-pays-the-installment-of-payment-option-po_index" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -968,6 +1034,11 @@
 
 <h1 id="when-steps">When steps</h1>
 <p>The <code>When</code> steps below perform several checks internally. Steps that do a single, self-explanatory action are intentionally left out.</p>
+<h2 id="sil-cancels-the-debt-position-through-sil-importadovuto"><code>SIL cancels the debt position through SIL 'ImportaDovuto'</code></h2>
+<p>Cancels the debt position through SIL (<code>paaSILImportaDovuto</code> with action <code>A</code>) and asserts the SOAP outcome is
+<code>OK</code> with the same IUV and no payment notice URL.</p>
+<h2 id="sil-creates-a-debt-position-of-type-debt_position_type_org_code-with-single-installment-of-amount-euros-through-sil-importadovuto"><code>SIL creates a debt position of type {debt_position_type_org_code} with single installment of {amount} euros through SIL 'ImportaDovuto'</code></h2>
+<p>Creates the debt position through SIL (<code>paaSILImportaDovuto</code>)</p>
 <h2 id="sil-creates-the-mixed-debt-position-via-the-inviadovuti"><code>SIL creates the mixed debt position via the 'InviaDovuti'</code></h2>
 <p>Creates the mixed debt position through SIL (<code>paaSILInviaDovuti</code>) and asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
 <h2 id="sil-creates-the-spontaneous-debt-position-via-the-inviacarrello"><code>SIL creates the spontaneous debt position via the 'InviaCarrello'</code></h2>
@@ -999,6 +1070,12 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
 <ul>
 <li>requests the export filtered by the paid notice IUV and the given classification</li>
+</ul>
+<h2 id="sil-updates-the-installment-amount-to-amount-euros-through-sil-importadovuto"><code>SIL updates the installment amount to {amount} euros through SIL 'ImportaDovuto'</code></h2>
+<p>Updates the installment amount through SIL (<code>paaSILImportaDovuto</code> with action <code>M</code>).</p>
+<ul>
+<li>asserts the SOAP outcome is <code>OK</code> with the same IUV and the URL of the updated payment notice PDF;</li>
+<li>checks the debt position has been updated with the new amount.</li>
 </ul>
 <h2 id="the-citizen-pays-the-installment-of-payment-option-po_index"><code>the citizen pays the installment of payment option {po_index}</code></h2>
 <p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code>, <code>the citizen pays the installment</code></em></p>
