@@ -1,11 +1,10 @@
 import base64
 import re
-from typing import Optional
-
 from common import http_client
 from config.configuration import settings, secrets
-from model.debt_position import Installment, Transfer, Stamp
+from model.debt_position import Installment, Transfer, Stamp, SilDebtPositionAction
 from model.debt_position_mixed import DebtPositionMixed
+from typing import Optional
 
 TEMPLATE_DIR = './api/soap/requests_template_sil'
 
@@ -85,6 +84,31 @@ def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
     return _to_base64(dovuti_enti_secondari)
 
 
+def _build_iuv_element(iuv: Optional[str]) -> str:
+    if iuv is None:
+        return ''
+    return f'<identificativoUnivocoVersamento>{iuv}</identificativoUnivocoVersamento>'
+
+
+def _build_versamento_base64(installment: Installment, debt_position_type_org_code: str,
+                             action: SilDebtPositionAction) -> str:
+    versamento = _render(
+        'versamento.xml',
+        codice_fiscale=installment.debtor.fiscal_code,
+        nome=installment.debtor.full_name,
+        email=installment.debtor.email,
+        data_esecuzione_pagamento=installment.due_date,
+        identificativo_univoco_versamento=_build_iuv_element(installment.iuv),
+        iud=installment.iud,
+        importo=_format_amount(installment.amount_cents),
+        tipo_dovuto=debt_position_type_org_code,
+        causale=installment.remittance_information,
+        dati_specifici_riscossione=installment.legacy_payment_metadata,
+        azione=action.value,
+    )
+    return _to_base64(versamento)
+
+
 def _post_sil_soap(token, traceparent: str, data: str, path: str):
     return http_client.post(
         url=f'{secrets.base_url}{path}',
@@ -111,6 +135,17 @@ def post_sil_reconciliation(token, traceparent: str, data: str):
 def checkout_url_pattern(org_fiscal_code: str) -> str:
     base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
     return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
+
+
+def get_sil_print_payment_notice(token, traceparent: str, url: str):
+    return http_client.get(
+        url=url,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        timeout=settings.default_timeout
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +195,20 @@ def post_sil_invia_carrello_dovuti_enti_secondari(token, traceparent: str, insta
         dovuto_secondario=dovuto_secondario_base64,
         codice_ipa=ipa_code,
     )
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_importa_dovuto(token, traceparent: str, installment: Installment, debt_position_type_org_code: str,
+                            ipa_code: str, action: SilDebtPositionAction = SilDebtPositionAction.INSERT):
+    dovuto_base64 = _build_versamento_base64(installment, debt_position_type_org_code, action)
+    data = _render('importaDovuto.xml', dovuto=dovuto_base64, codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_verifica_avviso(token, traceparent: str, iuv: str, ipa_code: str):
+    data = _render('verificaAvviso.xml', codice_ipa=ipa_code, iuv=iuv)
 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 

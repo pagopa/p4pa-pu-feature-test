@@ -1,9 +1,8 @@
+from config.configuration import secrets
 from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, LetterCase
 from enum import Enum
 from typing import Optional
-
-from dataclasses_json import dataclass_json, LetterCase
-from config.configuration import secrets
 
 ANONYMOUS_DEBTOR_FISCAL_CODE = 'ANONIMO'
 PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE = 'CODE_9_PAYMENTS_REPORTING'
@@ -47,6 +46,12 @@ class Debtor:
     province: str = "RM"
     nation: str = "IT"
     email: str = secrets.citizen_info.X.email
+
+
+class SilDebtPositionAction(Enum):
+    INSERT = 'I'
+    UPDATE = 'M'
+    CANCEL = 'A'
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

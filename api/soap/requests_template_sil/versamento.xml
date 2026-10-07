@@ -1,0 +1,27 @@
+<Versamento xmlns="http://www.regione.veneto.it/schemas/2012/Pagamenti/Ente/">
+	<versioneOggetto>6.0</versioneOggetto>
+	<soggettoPagatore>
+		<identificativoUnivocoPagatore>
+			<tipoIdentificativoUnivoco>F</tipoIdentificativoUnivoco>
+			<codiceIdentificativoUnivoco>{codice_fiscale}</codiceIdentificativoUnivoco>
+		</identificativoUnivocoPagatore>
+		<anagraficaPagatore>{nome}</anagraficaPagatore>
+        <indirizzoPagatore>Via Test</indirizzoPagatore>
+        <civicoPagatore>123</civicoPagatore>
+        <capPagatore>00000</capPagatore>
+        <localitaPagatore>Roma</localitaPagatore>
+        <provinciaPagatore>RM</provinciaPagatore>
+        <nazionePagatore>IT</nazionePagatore>
+        <e-mailPagatore>{email}</e-mailPagatore>
+	</soggettoPagatore>
+	<datiVersamento>
+		<dataEsecuzionePagamento>{data_esecuzione_pagamento}</dataEsecuzionePagamento>
+		{identificativo_univoco_versamento}
+		<identificativoUnivocoDovuto>{iud}</identificativoUnivocoDovuto>
+		<importoSingoloVersamento>{importo}</importoSingoloVersamento>
+		<identificativoTipoDovuto>{tipo_dovuto}</identificativoTipoDovuto>
+		<causaleVersamento>{causale}</causaleVersamento>
+		<datiSpecificiRiscossione>{dati_specifici_riscossione}</datiSpecificiRiscossione>
+	</datiVersamento>
+	<azione>{azione}</azione>
+</Versamento>
