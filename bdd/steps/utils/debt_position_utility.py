@@ -200,3 +200,6 @@ def fetch_debt_position(context, debt_position_id=None) -> DebtPosition:
 
     assert_response_ok(res, "Get debt position by id")
     return DebtPosition.from_dict(res.json())
+
+def format_amount(amount_cents) -> str:
+    return "{:.2f}".format(int(amount_cents) / 100)

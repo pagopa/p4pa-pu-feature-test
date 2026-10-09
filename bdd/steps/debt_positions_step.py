@@ -168,6 +168,31 @@ def step_create_simple_debt_position(context, pagopa_interaction, dp_identifier=
         store_debt_position_by_id(context, dp_identifier)
 
 
+@given("simple debt positions {identifiers} created by organization interacting with {pagopa_interaction}")
+def step_create_multiple_debt_positions(context, identifiers, pagopa_interaction,
+                                        dp_type_org_code=settings.debt_position_type_org_code.feature_test):
+    """Creates multiple simple, single-installment debt positions in one step, one for each identifier. It:
+
+    - gets the organization token;
+    - for each debt position builds the entity, creates it and checks it becomes `UNPAID`;
+    - verifies the notices are present as `valid` in the GPD/ACA archive;
+    - checks the expiration workflows are scheduled.
+    """
+    step_get_token_org(context=context, pagopa_interaction=pagopa_interaction)
+
+    for dp_identifier in identifiers.split():
+        dp_identifier = dp_identifier.strip()
+        step_create_dp_entity(context=context, debt_position_type_org_code=dp_type_org_code)
+        step_create_po_and_single_inst_entities(context=context, po_index=1, amount=100,
+                                                expiration_days=3)
+        step_create_dp(context=context)
+        step_check_dp_status(context=context, status=Status.UNPAID.value)
+        step_verify_presence_debt_position_in_gpd_or_aca(context=context, pagopa_interaction=pagopa_interaction,
+                                                         status='valid')
+        step_debt_position_workflow_check_expiration(context=context, status="scheduled")
+
+        store_debt_position_by_id(context, dp_identifier)
+
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
     """Like `a simple debt position created by organization...`, but with a balance set to the installment. It:
@@ -463,7 +488,7 @@ def step_check_secondary_org_dp(context, org_name):
     assert transfer_res.amount_cents == second_transfer_req.amount_cents
     assert transfer_res.org_fiscal_code == second_transfer_req.org_fiscal_code
     assert transfer_res.iban == second_transfer_req.iban
-    #assert transfer_res.category == second_transfer_req.category #TODO check correctness of taxonomy category mapping, see P4ADEV-4530
+    # assert transfer_res.category == second_transfer_req.category #TODO check correctness of taxonomy category mapping, see P4ADEV-4530
     assert transfer_res.transfer_index == 2
 
     res_dpto = get_debt_position_type_org_by_id(token=context.token, traceparent=context.traceparent,
@@ -484,4 +509,3 @@ def step_check_transfer_data(context):
     assert transfer.stamp_type == stamp_data.stamp_type
     assert transfer.stamp_hash_document == stamp_data.stamp_hash_document
     assert transfer.stamp_provincial_residence == stamp_data.stamp_provincial_residence
-

@@ -1,5 +1,7 @@
 import base64
 import re
+
+from bdd.steps.utils.debt_position_utility import format_amount
 from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position import Installment, Transfer, Stamp, SilDebtPositionAction
@@ -12,10 +14,6 @@ TEMPLATE_DIR = './api/soap/requests_template_sil'
 def _render(template_name: str, **values) -> str:
     with open(f'{TEMPLATE_DIR}/{template_name}', 'r') as file:
         return file.read().format(**values)
-
-
-def _format_amount(amount_cents) -> str:
-    return "{:.2f}".format(int(amount_cents) / 100)
 
 
 def _to_base64(value: str) -> str:
@@ -41,7 +39,7 @@ def _build_dati_singolo_versamento(iud: str, amount_cents, tipo_dovuto: str, dat
     return _render(
         'datiVersamento.xml',
         iud=iud,
-        importo=_format_amount(amount_cents),
+        importo=format_amount(amount_cents),
         tipo_dovuto=tipo_dovuto,
         dati_specifici_riscossione=dati_specifici_riscossione,
         dati_marca_bollo=_build_marca_bollo(marca_bollo),
@@ -79,7 +77,7 @@ def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
         iban_ente_secondario=second_transfer.iban,
         causale_ente_secondario=second_transfer.remittance_information,
         dati_specifici_riscossione_ente_secondario=second_transfer.category,
-        importo_ente_secondario=_format_amount(second_transfer.amount_cents),
+        importo_ente_secondario=format_amount(second_transfer.amount_cents),
     )
     return _to_base64(dovuti_enti_secondari)
 
@@ -100,7 +98,7 @@ def _build_versamento_base64(installment: Installment, debt_position_type_org_co
         data_esecuzione_pagamento=installment.due_date,
         identificativo_univoco_versamento=_build_iuv_element(installment.iuv),
         iud=installment.iud,
-        importo=_format_amount(installment.amount_cents),
+        importo=format_amount(installment.amount_cents),
         tipo_dovuto=debt_position_type_org_code,
         causale=installment.remittance_information,
         dati_specifici_riscossione=installment.legacy_payment_metadata,

@@ -8,6 +8,7 @@ class FilePathName(Enum):
     PAYMENTS_REPORTING = 'data/payments_reporting'
     PAYMENTS_REPORTING_PAGOPA = 'data/payments_reporting/pagopa'
     INSTALLMENT = 'data/installment'
+    SEND_NOTIFICATION = 'data/send_notification'
 
 
 class FileStatus(Enum):
@@ -25,6 +26,7 @@ class IngestionFlowFileType(Enum):
     PAYMENTS_REPORTING_PAGOPA = 'PAYMENTS_REPORTING_PAGOPA'
     TREASURY_OPI = 'TREASURY_OPI'
     DP_INSTALLMENTS = 'DP_INSTALLMENTS'
+    SEND_NOTIFICATION = 'SEND_NOTIFICATION'
 
 
 class FileOrigin(Enum):

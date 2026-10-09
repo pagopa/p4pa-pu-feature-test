@@ -41,9 +41,6 @@ def post_upload_file_to_url(url: str, token, traceparent: str, file_name: str):
             'Authorization': f'Bearer {token}',
             'traceparent': f'{traceparent}'
         },
-        params={
-            'fileName': file_name
-        },
         files={
             'ingestionFlowFile': (file_name, open(file_name, 'rb'))
         },

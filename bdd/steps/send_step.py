@@ -13,7 +13,7 @@ from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_an
 from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
 from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
-    Document
+    Document, get_pagopa_int_mode, SEND_TEMPLATE_DIR
 from model.workflow_hub import WorkflowStatus
 
 
@@ -46,12 +46,7 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     """
     org_info = context.org_info
 
-    pagopa_int_mode = None
-    match org_info.pagopa_interaction:
-        case PagoPaInteractionModel.GPD.value:
-            pagopa_int_mode = 'ASYNC'
-        case PagoPaInteractionModel.ACA.value:
-            pagopa_int_mode = 'SYNC'
+    pagopa_int_mode = get_pagopa_int_mode(org_info.pagopa_interaction)
 
     installments_notified = []
 
@@ -113,7 +108,7 @@ def step_upload_notification_file(context):
     notification_id = context.send_notification_id
     installments_notified = context.installments_notified
 
-    notification_file_path = './bdd/steps/file_template/notification.pdf'
+    notification_file_path = f'{SEND_TEMPLATE_DIR}/notification_1.pdf'
 
     res_notification_file = post_upload_send_file(token=send_token, traceparent=context.traceparent,
                                                   org_id=org_id, notification_id=notification_id,
@@ -124,7 +119,7 @@ def step_upload_notification_file(context):
 
     workflow_id = ''
     for i in range(1, len(installments_notified) + 1):
-        payment_file_path = f'./bdd/steps/file_template/payment_{i}.pdf'
+        payment_file_path = f'{SEND_TEMPLATE_DIR}/payment_{i}.pdf'
         res_payment_file = post_upload_send_file(token=send_token, traceparent=context.traceparent,
                                                  org_id=org_id, notification_id=notification_id,
                                                  file_path=payment_file_path, digest=SendPdfDigest.payment_pdf_digest)
@@ -148,29 +143,48 @@ def step_upload_notification_file(context):
                               status=WorkflowStatus.COMPLETED)
 
 
+def to_send_status(status: str) -> str:
+    return status.upper().replace(' ', '_')
+
+
+def get_valid_send_notification(context, notification_id, status: str) -> dict:
+    """Polls SEND until the notification is in the expected status and asserts it has the IUN."""
+    expected_status = to_send_status(status)
+
+    res_status = retry_get_valid_send_notification(token=context.send_token, traceparent=context.traceparent,
+                                                   notification_id=notification_id, status=expected_status,
+                                                   tries=10, delay=60)
+
+    assert_response_ok(res_status, "Get valid SEND notification")
+    notification = res_status.json()
+    assert notification['status'] == expected_status, \
+        f"Notification {notification_id} in status {notification['status']}, expected {expected_status}"
+    assert notification['iun'] is not None
+
+    return notification
+
+
+def assert_installment_iun(context, installment, iun: str):
+    res = get_installment(token=context.token, traceparent=context.traceparent,
+                          installment_id=installment.installment_id)
+
+    assert_response_ok(res, "Get installment by id")
+    assert res.json()['iun'] == iun
+
+
 @then("the notification is in status {status} and the IUN is assigned to the installment")
 @then("the notification is in status {status} and the IUN is assigned to all installments")
 def step_check_iun(context, status):
-    """Checks that the notification is valid and the IUN is assigned. It:
+    """Checks that the notification is in the expected status and the IUN is assigned. It:
 
-    - polls SEND until the notification is valid and asserts it has an IUN;
+    - polls SEND until the notification is in the expected status and asserts it has an IUN;
     - verifies that every notified installment carries that same IUN.
     """
-    notification_id = context.send_notification_id
-    installments_notified = context.installments_notified
+    notification = get_valid_send_notification(context=context, notification_id=context.send_notification_id,
+                                               status=status)
 
-    res_status = retry_get_valid_send_notification(token=context.send_token, traceparent=context.traceparent,
-                                                   notification_id=notification_id, tries=10, delay=60)
-
-    assert_response_ok(res_status, "Get valid SEND notification")
-    assert res_status.json()['iun'] is not None
-
-    for installment in installments_notified:
-        res = get_installment(token=context.token, traceparent=context.traceparent,
-                              installment_id=installment.installment_id)
-
-        assert_response_ok(res, "Get installment by id")
-        assert res.json()['iun'] == res_status.json()['iun']
+    for installment in context.installments_notified:
+        assert_installment_iun(context=context, installment=installment, iun=notification['iun'])
 
 
 @then("SEND has set a notification fee")
