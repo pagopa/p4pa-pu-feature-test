@@ -67,7 +67,8 @@ class CSVRow:
     _HEADER_FIELDS = {
         'action': {'versions': ["1_0", "1_1", "1_2", "1_3", "1_4", "2_0", "2_0-eng"], 'IT': 'azione', 'EN': 'action'},
         'draft': {'versions': ["2_0", "2_0-eng"], 'IT': 'draft', 'EN': 'draft'},
-        'iupdOrg': {'versions': ["2_0", "2_0-eng"], 'IT': 'IUPD', 'EN': 'iupdOrg'},
+        'iupdOrg': {'versions': ["2_0", "2_0-eng"], 'IT': 'iupdOrg', 'EN': 'iupdOrg'},
+        'iupdPagopa': {'versions': ["2_0", "2_0-eng"], 'IT': 'iupdPagopa', 'EN': 'iupdPagopa'},
         'description': {'versions': ["2_0", "2_0-eng"], 'IT': 'descrizionePosizioneDebitoria', 'EN': 'description'},
         'validityDate': {'versions': ["2_0", "2_0-eng"], 'IT': 'dataValidita', 'EN': 'validityDate'},
         'paymentOptionIndex': {'versions': ["2_0", "2_0-eng"], 'IT': 'indiceOpzionePagamento',
@@ -153,6 +154,7 @@ class CSVRow:
     action: Action = Action.I.value
     draft: bool = False
     iupdOrg: str = None
+    iupdPagopa: str = None
     description: str = None
     validityDate: str = None
     paymentOptionIndex: int = None
