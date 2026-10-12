@@ -37,3 +37,40 @@ Feature: Receipts import from a file
     Examples:
       | interaction |
       | ACA         |
+
+  @receipts_file_update
+  Scenario: A receipt imported from a file for a debt position in PU is updated by importing it again with modified data and balance
+    Given a simple debt position created by organization interacting with GPD
+    And a receipt of a debt position inserted into an ingestion flow file with version 1_3
+    When the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the receipt is created correctly with origin receipt_file
+    And the debt position is in status paid
+    And the assessment is in status closed
+    And the assessment detail is created correctly based on balance
+    When the same receipt with amount increased by 20 euros, modified remittance information and balance is inserted into an ingestion flow file with version 1_3
+    And the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the receipt is updated
+    And the installment keeps its original amount
+    And the debt position is in status paid
+    And the assessment details are recalculated
+    And the assessment detail is created correctly based on balance
+
+  @receipts_file_update
+  Scenario: A technical debt position created by importing a receipts file is updated by importing the same receipt again with modified data and balance
+    Given organization interacting with GPD
+    And a receipt with balance of a non-existent debt position inserted into an ingestion flow file with version 1_3
+    When the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the debt positions are created correctly with origin receipt_file
+    And the receipts are created correctly with origin receipt_file
+    And the assessment is in status closed
+    And the assessment detail is created correctly based on balance
+    When the same receipt with amount increased by 10 euros, modified remittance information and balance is inserted into an ingestion flow file with version 1_3
+    And the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the receipt is updated
+    And the technical debt position is updated
+    And the assessment details are recalculated
+    And the assessment detail is created correctly based on balance
