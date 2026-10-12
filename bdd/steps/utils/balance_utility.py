@@ -1,6 +1,5 @@
-import xmltodict
 import execjs
-
+import xmltodict
 from model.classification import AssessmentRegistry, Section
 
 
@@ -53,3 +52,21 @@ class JavaScriptExtractor:
             return result
         except Exception as e:
             raise RuntimeError(f"Error in function JavaScript: {e}")
+
+
+def build_balance_xml(sections: list[Section]) -> str:
+    return xmltodict.unparse({
+        'bilancio': {
+            'capitolo': [
+                {
+                    'codCapitolo': section.assessment_registry.section_code,
+                    'codUfficio': section.assessment_registry.office_code,
+                    'accertamento': {
+                        'codAccertamento': section.assessment_registry.assessment_code,
+                        'importo': "{:.2f}".format(section.amount_cents / 100),
+                    },
+                }
+                for section in sections
+            ]
+        }
+    }, full_document=False)

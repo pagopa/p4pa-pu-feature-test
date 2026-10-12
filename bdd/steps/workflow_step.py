@@ -1,16 +1,17 @@
-from behave import then
-
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.utility import get_workflow_id
 from bdd.steps.utils.utility import retry_get_workflow_status
+from behave import then
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
-def check_workflow_status(context, workflow_type: WorkflowType, entity_id: int, status: WorkflowStatus):
+def check_workflow_status(context, workflow_type: WorkflowType, entity_id: int, status: WorkflowStatus,
+                          previous_run_id: str = None):
     workflow_id = get_workflow_id(workflow_type=workflow_type,
                                   entity_id=entity_id)
 
-    retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id, status=status)
+    retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id, status=status,
+                              previous_run_id=previous_run_id)
 
 
 @then("the check of debt position expiration is {status}")

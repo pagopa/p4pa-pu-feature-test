@@ -168,6 +168,7 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
         assert installment['iur'] is not None and installment['receiptId'] is not None \
                and receipt['receiptId'] == installment['receiptId']
         installment_paid.iur = installment['iur']
+        installment_paid.receipt_id = installment['receiptId']
 
     for transfer in installment_paid.transfers:
         check_workflow_status(context=context, workflow_type=WorkflowType.TRANSFER_CLASSIFICATION,
