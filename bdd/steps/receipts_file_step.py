@@ -8,6 +8,10 @@ from api.debt_positions import get_receipt, get_receipt_by_id, get_debt_position
     get_installment
 from api.fileshare import post_upload_file
 from api.workflow_hub import get_workflow_status
+from bdd.steps.assessments_step import step_check_assessment, step_check_assessment_detail
+from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_positions_created, \
+    step_check_installment_status
+from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import build_balance_xml
 from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
@@ -343,3 +347,52 @@ def step_check_installment_amount_unchanged(context):
     assert_response_ok(res, "Get installment by id")
     assert res.json()['amountCents'] == installment_paid.amount_cents, \
         f"amountCents mismatch: expected {installment_paid.amount_cents}, got {res.json()['amountCents']}"
+
+
+@given("a receipt successfully imported from a receipts file with version {csv_version}")
+def step_receipt_of_existing_dp_imported(context, csv_version: str):
+    """Imports a receipt from a receipts file and checks it is processed:
+
+    - builds the receipts file and uploads it
+    - checks that the receipts file is processed
+    - checks that the receipt is created with origin `RECEIPT_FILE`
+    - checks that the installment of payment option 1 and the debt position are `PAID`
+    - checks that the assessment is `CLOSED` and its details match the balance"""
+    step_create_receipts_file_for_existing_dp(context=context, csv_version=csv_version)
+    step_uploads_receipts_file(context=context)
+    step_check_receipt_imported_and_dp_paid(context=context)
+    step_check_assessment(context=context, status='closed')
+    step_check_assessment_detail(context=context)
+
+
+@given("a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}")
+def step_receipt_with_balance_of_non_existent_dp_imported(context, csv_version: str):
+    """Imports a receipt with balance of a debt position not present in PU from a receipts file and checks it is
+    processed:
+
+    - builds the receipts file and uploads it
+    - checks that the file is processed and the technical debt position is created with origin `RECEIPT_FILE`
+    - checks that the receipts file is processed
+    - checks that the receipt is created with origin `RECEIPT_FILE`
+    - checks that the installment of payment option 1 and the debt position are `PAID`
+    - checks that the assessment is `CLOSED` and its details match the balance"""
+    step_create_receipts_file_with_balance_for_non_existent_dp(context=context, csv_version=csv_version)
+    step_uploads_receipts_file(context=context)
+    step_receipts_file_processed(context=context)
+    step_check_debt_positions_created(context=context, debt_position_origin=DebtPositionOrigin.RECEIPT_FILE.value)
+    step_check_receipt_imported_and_dp_paid(context=context)
+    step_check_assessment(context=context, status='closed')
+    step_check_assessment_detail(context=context)
+
+
+@then("the receipt is imported correctly and the debt position is paid")
+def step_check_receipt_imported_and_dp_paid(context):
+    """Checks that the uploaded receipt is imported for the debt position. It verifies that:
+
+    - the receipts file is processed
+    - the receipt is created with origin `RECEIPT_FILE`
+    - the installment of payment option 1 and the debt position are `PAID`"""
+    step_receipts_file_processed(context=context)
+    step_check_receipt_created(context=context, receipt_origin=ReceiptOriginType.RECEIPT_FILE.value)
+    step_check_installment_status(context=context, po_index='1', status=Status.PAID.value)
+    step_check_dp_status(context=context, status=Status.PAID.value)
