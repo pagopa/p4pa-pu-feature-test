@@ -763,6 +763,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-assessment-details-are-recalculated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the assessment details are recalculated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-assessment-is-in-status-status" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -972,10 +983,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-receipt-is-imported-correctly-and-the-debt-position-is-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt is imported correctly and the debt position is paid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-receipt-is-processed-correctly" class="md-nav__link">
     <span class="md-ellipsis">
       
         the receipt is processed correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-receipt-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt is updated
       
     </span>
   </a>
@@ -1031,6 +1064,17 @@
     <span class="md-ellipsis">
       
         the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-technical-debt-position-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the technical debt position is updated
       
     </span>
   </a>
@@ -1201,6 +1245,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-assessment-details-are-recalculated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the assessment details are recalculated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-assessment-is-in-status-status" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1410,10 +1465,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-receipt-is-imported-correctly-and-the-debt-position-is-paid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt is imported correctly and the debt position is paid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-receipt-is-processed-correctly" class="md-nav__link">
     <span class="md-ellipsis">
       
         the receipt is processed correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-receipt-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt is updated
       
     </span>
   </a>
@@ -1469,6 +1546,17 @@
     <span class="md-ellipsis">
       
         the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-technical-debt-position-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the technical debt position is updated
       
     </span>
   </a>
@@ -1557,6 +1645,9 @@
 <li>checks the <code>CLASSIFY_ASSESSMENT</code> workflow completes;</li>
 <li>verifies one assessment detail per section with matching IUR, <code>PAID</code> label, amount and registry codes.</li>
 </ul>
+<h2 id="the-assessment-details-are-recalculated"><code>the assessment details are recalculated</code></h2>
+<p>Checks that the assessment workflows ran again after the last receipts file. It verifies that a new run of the
+<code>CREATE_ASSESSMENT</code> and of the <code>CLASSIFY_ASSESSMENT</code> workflows completes</p>
 <h2 id="the-assessment-is-in-status-status"><code>the assessment is in status {status}</code></h2>
 <p><em>also: <code>the assessment related to debt position {dp_identifier} is in status {status}</code></em></p>
 <p>Checks that the assessment for the paid installment is in the expected status. It:</p>
@@ -1666,6 +1757,13 @@
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
 <li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
 </ul>
+<h2 id="the-receipt-is-imported-correctly-and-the-debt-position-is-paid"><code>the receipt is imported correctly and the debt position is paid</code></h2>
+<p>Checks that the uploaded receipt is imported for the debt position. It verifies that:</p>
+<ul>
+<li>the receipts file is processed</li>
+<li>the receipt is created with origin <code>RECEIPT_FILE</code></li>
+<li>the installment of payment option 1 and the debt position are <code>PAID</code></li>
+</ul>
 <h2 id="the-receipt-is-processed-correctly"><code>the receipt is processed correctly</code></h2>
 <p><em>also: <code>the receipt of debt position {dp_identifier} is processed correctly</code></em></p>
 <p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
@@ -1675,6 +1773,11 @@
 <li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
 </ul>
+<h2 id="the-receipt-is-updated"><code>the receipt is updated</code></h2>
+<p>Checks that the receipt already imported has been updated by the last receipts file.</p>
+<p>It verifies that:
+- there is still exactly one receipt linked to the installment for the IUV and IUR
+- the receipt refers to the last ingestion flow file and has the modified remittance information and amount</p>
 <h2 id="the-receipts-are-created-correctly-with-origin-receipt_origin"><code>the receipts are created correctly with origin {receipt_origin}</code></h2>
 <p>Runs the <code>the receipt is created correctly</code> checks for every receipt imported from the file.</p>
 <h2 id="the-receipts-file-is-processed-correctly"><code>the receipts file is processed correctly</code></h2>
@@ -1690,6 +1793,12 @@
 <p>Checks if the RT returned by 'ChiediEsitoCarrello' matches the same RT ingested by PU from PagoPA</p>
 <h2 id="the-rt-returned-by-chiedipagaticonricevuta-matches-the-expected-data"><code>the RT returned by 'ChiediPagatiConRicevuta' matches the expected data</code></h2>
 <p>Checks if the RT returned by 'ChiediPagatiConRicevuta' matches the same RT ingested by PU from PagoPA</p>
+<h2 id="the-technical-debt-position-is-updated"><code>the technical debt position is updated</code></h2>
+<p>Checks that the technical debt position has been updated by the last receipts file.</p>
+<p>It verifies that:
+- there is still exactly one debt position for the notice, the same created by the first import
+- it has origin <code>RECEIPT_FILE</code>, it is <code>PAID</code> and its installment has the modified amount and remittance
+  information</p>
 <h2 id="the-treasury-import-completes-successfully"><code>the treasury import completes successfully</code></h2>
 <p>Polls the treasury import status (<code>pivotSILChiediStatoImportFlussoTesoreria</code>) until it reaches <code>FILE_CARICATO</code></p>
 <h2 id="the-treasury-is-processed-correctly"><code>the treasury is processed correctly</code></h2>

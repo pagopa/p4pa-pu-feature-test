@@ -665,6 +665,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-receipt-with-balance-of-a-non-existent-debt-position-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -884,6 +906,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-receipt-with-balance-of-a-non-existent-debt-position-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1005,6 +1049,26 @@
 <li>uploads the file;</li>
 <li>checks the debt position becomes <code>REPORTED</code>;</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+<h2 id="a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version"><code>a receipt successfully imported from a receipts file with version {csv_version}</code></h2>
+<p>Imports a receipt from a receipts file and checks it is processed:</p>
+<ul>
+<li>builds the receipts file and uploads it</li>
+<li>checks that the receipts file is processed</li>
+<li>checks that the receipt is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
+<li>checks that the assessment is <code>CLOSED</code> and its details match the balance</li>
+</ul>
+<h2 id="a-receipt-with-balance-of-a-non-existent-debt-position-successfully-imported-from-a-receipts-file-with-version-csv_version"><code>a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}</code></h2>
+<p>Imports a receipt with balance of a debt position not present in PU from a receipts file and checks it is
+processed:</p>
+<ul>
+<li>builds the receipts file and uploads it</li>
+<li>checks that the file is processed and the technical debt position is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the receipts file is processed</li>
+<li>checks that the receipt is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
+<li>checks that the assessment is <code>CLOSED</code> and its details match the balance</li>
 </ul>
 <h2 id="a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction"><code>a simple debt position created by organization interacting with {pagopa_interaction}</code></h2>
 <p><em>also: <code>a simple debt position of type {dp_type_org_code} created by organization interacting with {pagopa_interaction}</code>, <code>a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}</code></em></p>
