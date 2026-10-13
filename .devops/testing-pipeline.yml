@@ -88,10 +88,10 @@ stages:
               current_tag: 'debt_positions_file'
             receipts_file:
               current_tag: 'receipts_file'
-            send:
-              current_tag: 'send'
             assessments:
               current_tag: 'assessments'
+            send:
+              current_tag: 'send'
             sil_debt_positions:
               current_tag: 'sil_debt_positions'
             sil_classification:

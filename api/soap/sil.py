@@ -131,7 +131,7 @@ def post_sil_reconciliation(token, traceparent: str, data: str):
 
 
 def checkout_url_pattern(org_fiscal_code: str) -> str:
-    base = f'{secrets.base_url}{settings.api.ingress_path.sil}'
+    base = f'{secrets.base_url}/pu/sil'
     return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
 
 
