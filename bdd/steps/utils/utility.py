@@ -19,12 +19,17 @@ def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
 
 
-def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status: WorkflowStatus, tries=20, delay=4):
+def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status: WorkflowStatus, tries=20, delay=4,
+                              previous_run_id: str = None):
     count = 0
+
+    def is_expected_run(response):
+        return (response.status_code == 200 and response.json()['status'] == status.value
+                and (previous_run_id is None or response.json()['runId'] != previous_run_id))
 
     res = get_workflow_status(token=token, traceparent=traceparent, workflow_id=workflow_id)
 
-    success = (res.status_code == 200 and res.json()['status'] == status.value)
+    success = is_expected_run(res)
 
     while not success:
         count += 1
@@ -32,10 +37,11 @@ def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status:
             break
         time.sleep(delay)
         res = get_workflow_status(token=token, traceparent=traceparent, workflow_id=workflow_id)
-        success = (res.status_code == 200 and res.json()['status'] == status.value)
+        success = is_expected_run(res)
 
     assert success, \
-        f"\nWorkflow {workflow_id} did not reach status {status.value} after {tries} tries: " \
+        f"\nWorkflow {workflow_id} did not reach status {status.value} after {tries} tries" \
+        f"{f' with a run other than {previous_run_id}' if previous_run_id else ''}: " \
         f"Last response HTTP {res.status_code} - {res.content}\n"
 
 
