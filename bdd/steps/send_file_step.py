@@ -147,7 +147,6 @@ def step_check_campaign_status(context):
                                              organization_id=org_id, external_campaign_id=external_campaign_id)
 
     assert_response_ok(res_campaign_detail, "Get campaign detail")
-    print(res_campaign_detail.json())
     assert len(res_campaign_detail.json()['content']) == 1
     campaign_detail = res_campaign_detail.json()['content'][0]
 
