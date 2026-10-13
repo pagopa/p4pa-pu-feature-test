@@ -226,9 +226,8 @@ def _get_workflow_run_id(context, workflow_type: WorkflowType, entity_id) -> str
 @when("the same receipt with amount increased by {amount_increase} euros, modified remittance information and balance "
       "is inserted into an ingestion flow file with version {csv_version}")
 def step_create_receipts_file_with_modified_receipt(context, csv_version: str, amount_increase: str):
-    """Builds a receipts file containing the receipt already imported, with modified data.
+    """Builds a receipts file containing the receipt already imported, with modified data. It:
 
-    It:
     - keeps the same receipt identifier, IUV and IUD, so that the existing receipt is updated
     - changes the remittance information, increases the amount by the given value and changes the balance using different assessment codes so that the recalculated
       assessment details differ from the previous ones"""
@@ -259,9 +258,8 @@ def step_create_receipts_file_with_modified_receipt(context, csv_version: str, a
 
 @then("the receipt is updated")
 def step_check_receipt_updated(context):
-    """Checks that the receipt already imported has been updated by the last receipts file.
+    """Checks that the receipt already imported has been updated by the last receipts file. It verifies that:
 
-    It verifies that:
     - there is still exactly one receipt linked to the installment for the IUV and IUR
     - the receipt refers to the last ingestion flow file and has the modified remittance information and amount"""
     installment_paid = get_installment_paid(context)
@@ -292,9 +290,8 @@ def step_check_receipt_updated(context):
 
 @then("the technical debt position is updated")
 def step_check_technical_debt_position_updated(context):
-    """Checks that the technical debt position has been updated by the last receipts file.
+    """Checks that the technical debt position has been updated by the last receipts file. It verifies that:
 
-    It verifies that:
     - there is still exactly one debt position for the notice, the same created by the first import
     - it has origin `RECEIPT_FILE`, it is `PAID` and its installment has the modified amount and remittance
       information"""
