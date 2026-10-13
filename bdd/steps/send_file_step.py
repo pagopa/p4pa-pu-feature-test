@@ -5,7 +5,7 @@ from datetime import datetime
 from behave import given, when, then
 
 from api.fileshare import post_upload_file_to_url
-from api.send_campaign import get_send_campaigns, get_send_campaign_notifications
+from api.send_campaign import get_send_campaigns, get_send_campaign_notifications, get_send_campaign_detail
 from api.sil_rest import post_authorize_import_massive_file
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.send_step import get_valid_send_notification, assert_installment_iun
@@ -26,7 +26,7 @@ def create_send_notification_rows(installments: list, org_info, external_campaig
 
     for index, inst in enumerate(installments, start=1):
         row = CSVRow(organizationId=org_info.id,
-                     paProtocolNumber=f'PROT_FT_{timestamp}_{index}',
+                     paProtocolNumber=f'PROT_FT_{timestamp}',
                      externalCampaignId=external_campaign_id)
         row.senderDenomination = org_info.name
         row.senderTaxId = org_info.fiscal_code
@@ -98,15 +98,14 @@ def step_upload_send_notifications(context):
                                                        ingestion_flow_file_type=IngestionFlowFileType.SEND_NOTIFICATION)
 
     assert_response_ok(res_file_auth, "SIL authorization to upload SEND campaign file")
-    assert res_file_auth.json()[
-               'uploadUrl'] is not None, "No uploadUrl returned by the send notification import authorization"
-    assert res_file_auth.json()[
-               'importId'] is not None, "No importId returned by the send notification import authorization"
+    file_auth = res_file_auth.json()
+    assert file_auth['uploadUrl'] is not None, "No uploadUrl returned by the send notification import authorization"
+    assert file_auth['importId'] is not None, "No importId returned by the send notification import authorization"
 
-    context.send_notification_file_id = res_file_auth.json()['importId']
+    context.send_notification_file_id = file_auth['importId']
 
     res_upload = post_upload_file_to_url(token=context.token, traceparent=context.traceparent,
-                                         url=res_file_auth.json()['uploadUrl'],
+                                         url=file_auth['uploadUrl'],
                                          file_name=context.file_name)
 
     assert_response_ok(res_upload, "SIL upload SEND campaign file")
@@ -139,7 +138,7 @@ def step_check_send_file_processed(context):
 
 
 @then("the campaign has each notifications in status in progress")
-def step_check_campaign_notifications_status(context):
+def step_check_campaign_status(context):
     external_campaign_id = context.external_campaign_id
     org_id = context.org_info.id
     total_notifications = context.notifications_rows_len
@@ -148,18 +147,22 @@ def step_check_campaign_notifications_status(context):
                                              organization_id=org_id, external_campaign_id=external_campaign_id)
 
     assert_response_ok(res_campaign_detail, "Get campaign detail")
+    print(res_campaign_detail.json())
     assert len(res_campaign_detail.json()['content']) == 1
     campaign_detail = res_campaign_detail.json()['content'][0]
 
     assert campaign_detail['campaignId'] is not None
     assert campaign_detail['counters'] is not None
     assert campaign_detail['counters']['total'] == total_notifications
-    assert campaign_detail['startDate'] == datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now().strftime("%Y-%m-%d")
+    assert campaign_detail['startDate'] == today
+    assert campaign_detail['endDate'] == today
 
     context.campaign_id = campaign_detail['campaignId']
 
     res_campaign_notifications = get_send_campaign_notifications(token=context.token, traceparent=context.traceparent,
-                                                                 organization_id=org_id, campaign_id=context.campaign_id)
+                                                                 organization_id=org_id,
+                                                                 campaign_id=context.campaign_id)
 
     assert_response_ok(res_campaign_notifications, "Get campaign notifications")
     campaign_notifications = res_campaign_notifications.json()
@@ -179,20 +182,27 @@ def step_check_campaign_notifications_status(context):
 
 
 @then("each notifications are accepted by SEND and the IUN is assigned to the related installments")
-def step_check_campaign_iun(context):
+def step_check_campaign_installments_iun(context):
     """Checks that each notification of the campaign is accepted by SEND and the IUN is assigned. It:
 
     - polls SEND until each notification is in status `ACCEPTED`, `DELIVERING` or `DELIVERED`
       and asserts it has an IUN;
     - matches each notification to its installment through the NAV;
     - verifies that every notified installment carries the IUN of its own notification;
-    - verifies that every installment of the campaign has been notified.
+    - verifies that every installment of the campaign has been notified;
+    - verifies the campaign counters: all the notifications are counted as accepted, and the
+      delivered ones are at least those found in status `DELIVERED`, since the counters are
+      cumulative and the notifications may move forward after the polling.
     """
     installments_by_nav = {inst.nav: inst for inst in context.installments_notified}
     checked_navs = set()
+    delivered_found = 0
 
     for notification_id in context.send_notification_ids:
         notification = get_valid_send_notification(context=context, notification_id=notification_id)
+
+        if notification['status'] == SendStatus.DELIVERED.value:
+            delivered_found += 1
 
         navs = [nav for payment in notification['payments'] for nav in payment['navList']]
         assert len(navs) == 1, f"Notification {notification_id} has NAVs {navs}"
@@ -205,3 +215,19 @@ def step_check_campaign_iun(context):
 
     assert checked_navs == set(installments_by_nav), \
         f"Installments not notified: {set(installments_by_nav) - checked_navs}"
+
+    res_campaign_detail = get_send_campaign_detail(token=context.token, traceparent=context.traceparent,
+                                                   organization_id=context.org_info.id, campaign_id=context.campaign_id)
+
+    assert_response_ok(res_campaign_detail, "Get campaign details")
+    campaign_detail = res_campaign_detail.json()
+
+    assert campaign_detail['campaignId'] is not None
+    counters = campaign_detail['counters']
+    assert counters is not None
+
+    total = context.notifications_rows_len
+    assert counters['total'] == total
+    assert counters['accepted'] == total, f"Accepted counter is {counters['accepted']}, expected {total}"
+    assert delivered_found <= counters['delivered'] <= total, \
+        f"Delivered counter is {counters['delivered']}, expected between {delivered_found} and {total}"

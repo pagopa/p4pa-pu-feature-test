@@ -19,6 +19,17 @@ def get_send_campaigns(token, traceparent: str, organization_id: int, external_c
     )
 
 
+def get_send_campaign_detail(token, traceparent: str, organization_id: int, campaign_id: str):
+    return http_client.get(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_bff}/{organization_id}/campaigns/{campaign_id}',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        timeout=settings.default_timeout
+    )
+
+
 def get_send_campaign_notifications(token, traceparent: str, organization_id: int, campaign_id: str):
     return http_client.get(
         url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_bff}/{organization_id}/campaigns/{campaign_id}/notifications',
