@@ -46,6 +46,7 @@ parameters:
       - assessments
       - sil_debt_positions
       - sil_classification
+      - sil_send_notification_file
 
 variables:
   # Python version: 3.x
@@ -95,6 +96,8 @@ stages:
               current_tag: 'sil_debt_positions'
             sil_classification:
               current_tag: 'sil_classification'
+            sil_send_notification_file:
+              current_tag: 'sil_send_notification_file'
         steps:
           - checkout: self
           - template: template\test-run.yml

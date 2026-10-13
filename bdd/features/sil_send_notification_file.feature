@@ -1,4 +1,4 @@
-@sil_send_notification
+@sil_send_notification_file
 Feature: SEND notification import from a file by SIL
 
   Scenario: SEND notifications related to a campaign are created from a file, by a SIL interacting with GPD
