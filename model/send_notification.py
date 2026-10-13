@@ -1,13 +1,15 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 
 from dataclasses_json import dataclass_json, LetterCase
 
+from bdd.steps.authentication_step import PagoPaInteractionModel
 from config.configuration import secrets
 
+SEND_TEMPLATE_DIR = Path('bdd/steps/file_template/send')
 
-@dataclass
 class SendStatus(Enum):
     WAITING = 'WAITING_FILE'
     SENDING = 'SENDING'
@@ -26,6 +28,16 @@ class SendStatus(Enum):
     RETURNED_TO_SENDER = 'RETURNED_TO_SENDER'
 
 
+class SendCampaignNotificationStatus(Enum):
+    IN_PROGRESS = 'IN_PROGRESS'
+    COMPLETED = 'COMPLETED'
+    CANCELLED = 'CANCELLED'
+    REFUSED = 'REFUSED'
+    UNSUCCESSFUL = 'UNSUCCESSFUL'
+
+
+CONTENT_TYPE = 'application/pdf'
+
 class SendPdfDigest:
     notification_pdf_digest = "YSxsCpvZHvwL8IIosWJBUDjgUwa01sBHu6Cj4laQRLA="
     payment_pdf_digest = "45Iba3tn9Dfm7TX+AbtWDR1csMuHgEbrHi/zZr6DjHU="
@@ -34,8 +46,8 @@ class SendPdfDigest:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Document:
-    file_name: str = 'notification.pdf'
-    content_type: str = 'application/pdf'
+    file_name: str = 'notification_1.pdf'
+    content_type: str = CONTENT_TYPE
     digest: str = SendPdfDigest.notification_pdf_digest
 
 
@@ -55,7 +67,7 @@ class PaymentData:
     creditor_tax_id: str
     apply_cost: bool = True
     attachment: Document = field(
-        default_factory=lambda: Document(file_name='payment_1.pdf', content_type='application/pdf',
+        default_factory=lambda: Document(file_name='payment_1.pdf', content_type=CONTENT_TYPE,
                                          digest=SendPdfDigest.payment_pdf_digest))
 
 
@@ -99,3 +111,14 @@ class NotificationRequest:
     pa_fee: int = 100
     vat: int = 22
     externalCampaignId: str = 'featureTest-'+datetime.now().strftime('%Y-%m-%d')
+
+
+def get_pagopa_int_mode(pagopa_interaction: PagoPaInteractionModel) -> str:
+    pagopa_int_mode = None
+    match pagopa_interaction:
+        case PagoPaInteractionModel.GPD.value:
+            pagopa_int_mode = 'ASYNC'
+        case PagoPaInteractionModel.ACA.value:
+            pagopa_int_mode = 'SYNC'
+
+    return pagopa_int_mode

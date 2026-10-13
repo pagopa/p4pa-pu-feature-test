@@ -6,7 +6,7 @@ Feature: Debt position notification via SEND
     Given a simple debt position A for citizen X created by organization interacting with GPD
     And a notification created for the single installment of debt position A
     When the organization requires the notification to be uploaded to SEND
-    Then the notification is in status accepted and the IUN is assigned to the installment
+    Then the notification is accepted by SEND and the IUN is assigned to the installment
     And SEND has set a notification fee
     When the citizen X pays the installment of debt position A
     Then the receipt of debt position A is processed correctly

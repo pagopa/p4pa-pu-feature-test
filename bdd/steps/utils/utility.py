@@ -78,12 +78,14 @@ def retry_get_process_file_status(token, traceparent: str, organization_id: int,
     return file
 
 
-def retry_get_valid_send_notification(token, traceparent: str, notification_id, tries=20, delay=4):
+def retry_get_valid_send_notification(token, traceparent: str, notification_id, statuses: list = None,
+                                      tries=20, delay=4):
     count = 0
 
     res = get_send_notification(token=token, traceparent=traceparent, notification_id=notification_id)
 
-    success = (res.status_code == 200 and res.json().get('iun') is not None)
+    success = (res.status_code == 200 and res.json().get('iun') is not None
+               and (statuses is None or res.json().get('status') in statuses))
 
     while not success:
         count += 1
@@ -91,7 +93,8 @@ def retry_get_valid_send_notification(token, traceparent: str, notification_id, 
             break
         time.sleep(delay)
         res = get_send_notification(token=token, traceparent=traceparent, notification_id=notification_id)
-        success = (res.status_code == 200 and res.json().get('iun') is not None)
+        success = (res.status_code == 200 and res.json().get('iun') is not None
+                   and (statuses is None or res.json().get('status') in statuses))
 
     return res
 
