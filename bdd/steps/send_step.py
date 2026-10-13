@@ -11,10 +11,11 @@ from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, get_installment_paid, \
     seq_num_of, FEATURE_TEST_IUD_PREFIX, get_stored_debt_position
 from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
+from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
     Document, get_pagopa_int_mode, SEND_TEMPLATE_DIR
-from model.workflow_hub import WorkflowStatus
+from model.workflow_hub import WorkflowStatus, WorkflowType
 
 
 def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str) -> str:
@@ -143,22 +144,26 @@ def step_upload_notification_file(context):
                               status=WorkflowStatus.COMPLETED)
 
 
-def to_send_status(status: str) -> str:
-    return status.upper().replace(' ', '_')
+SEND_ACCEPTED_STATUSES = ['ACCEPTED', 'DELIVERING', 'DELIVERED']
 
 
-def get_valid_send_notification(context, notification_id, status: str) -> dict:
-    """Polls SEND until the notification is in the expected status and asserts it has the IUN."""
-    expected_status = to_send_status(status)
+def get_valid_send_notification(context, notification_id, statuses=None) -> dict:
+    """Polls SEND until the notification is in one of the expected statuses and asserts it has the IUN."""
 
-    res_status = retry_get_valid_send_notification(token=context.send_token, traceparent=context.traceparent,
-                                                   notification_id=notification_id, status=expected_status,
+    check_workflow_status(context=context, workflow_type=WorkflowType.SEND_NOTIFICATION_PROCESS,
+                          entity_id=notification_id, status=WorkflowStatus.COMPLETED)
+
+    if statuses is None:
+        statuses = SEND_ACCEPTED_STATUSES
+
+    res_status = retry_get_valid_send_notification(token=context.token, traceparent=context.traceparent,
+                                                   notification_id=notification_id, statuses=statuses,
                                                    tries=10, delay=60)
 
     assert_response_ok(res_status, "Get valid SEND notification")
     notification = res_status.json()
-    assert notification['status'] == expected_status, \
-        f"Notification {notification_id} in status {notification['status']}, expected {expected_status}"
+    assert notification['status'] in statuses, \
+        f"Notification {notification_id} in status {notification['status']}, expected one of {statuses}"
     assert notification['iun'] is not None
 
     return notification
@@ -172,16 +177,16 @@ def assert_installment_iun(context, installment, iun: str):
     assert res.json()['iun'] == iun
 
 
-@then("the notification is in status {status} and the IUN is assigned to the installment")
-@then("the notification is in status {status} and the IUN is assigned to all installments")
-def step_check_iun(context, status):
-    """Checks that the notification is in the expected status and the IUN is assigned. It:
+@then("the notification is accepted by SEND and the IUN is assigned to the installment")
+@then("the notification is accepted by SEND and the IUN is assigned to all installments")
+def step_check_iun(context):
+    """Checks that the notification is accepted by SEND and the IUN is assigned. It:
 
-    - polls SEND until the notification is in the expected status and asserts it has an IUN;
+    - polls SEND until the notification is in status `ACCEPTED`, `DELIVERING` or `DELIVERED`
+      and asserts it has an IUN;
     - verifies that every notified installment carries that same IUN.
     """
-    notification = get_valid_send_notification(context=context, notification_id=context.send_notification_id,
-                                               status=status)
+    notification = get_valid_send_notification(context=context, notification_id=context.send_notification_id)
 
     for installment in context.installments_notified:
         assert_installment_iun(context=context, installment=installment, iun=notification['iun'])

@@ -7,5 +7,4 @@ Feature: SEND notification import from a file by SIL
     When SIL uploads the SEND campaign file
     Then the SEND campaign file is processed correctly
     And the campaign has each notifications in status in progress
-    And each notifications are in status delivered and the IUN is assigned to the related installments
-
+    And each notifications are accepted by SEND and the IUN is assigned to the related installments

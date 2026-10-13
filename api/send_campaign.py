@@ -4,7 +4,7 @@ from config.configuration import secrets, settings
 
 def get_send_campaigns(token, traceparent: str, organization_id: int, external_campaign_id: str):
     return http_client.get(
-        url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_bff}/{organization_id}/campaigns/',
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.send_bff}/{organization_id}/campaigns',
         headers={
             'Authorization': f'Bearer {token}',
             'traceparent': f'{traceparent}'

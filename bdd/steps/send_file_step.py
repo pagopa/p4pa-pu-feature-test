@@ -14,7 +14,7 @@ from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from model.csv_file_send_notification import CSVRow, to_csv_lines
 from model.file import IngestionFlowFileType, FileStatus, FilePathName
-from model.send_notification import get_pagopa_int_mode, SEND_TEMPLATE_DIR, SendCampaignNotificationStatus
+from model.send_notification import get_pagopa_int_mode, SEND_TEMPLATE_DIR, SendCampaignNotificationStatus, SendStatus
 from model.workflow_hub import WorkflowStatus, WorkflowType
 
 
@@ -178,20 +178,21 @@ def step_check_campaign_notifications_status(context):
     context.send_notification_ids = [notification['sendNotificationId'] for notification in notifications]
 
 
-@then("each notifications are in status {status} and the IUN is assigned to the related installments")
-def step_check_campaign_iun(context, status):
-    """Checks that each notification of the campaign is in the expected status and the IUN is assigned. It:
+@then("each notifications are accepted by SEND and the IUN is assigned to the related installments")
+def step_check_campaign_iun(context):
+    """Checks that each notification of the campaign is accepted by SEND and the IUN is assigned. It:
 
-    - polls SEND until each notification is in the expected status and asserts it has an IUN;
+    - polls SEND until each notification is in status `ACCEPTED`, `DELIVERING` or `DELIVERED`
+      and asserts it has an IUN;
     - matches each notification to its installment through the NAV;
-    - verifies that every notified installment carries the IUN of its own notification.
+    - verifies that every notified installment carries the IUN of its own notification;
+    - verifies that every installment of the campaign has been notified.
     """
     installments_by_nav = {inst.nav: inst for inst in context.installments_notified}
     checked_navs = set()
 
     for notification_id in context.send_notification_ids:
-        notification = get_valid_send_notification(context=context, notification_id=notification_id,
-                                                   status=status)
+        notification = get_valid_send_notification(context=context, notification_id=notification_id)
 
         navs = [nav for payment in notification['payments'] for nav in payment['navList']]
         assert len(navs) == 1, f"Notification {notification_id} has NAVs {navs}"

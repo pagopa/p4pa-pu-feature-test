@@ -17,7 +17,7 @@ api:
     classifications: "/p4paclassification"
     fileshare: "/p4pafileshare"
     send_notification: "/p4pasendnotification/p4pasend"
-    send_bff: "/pu/send/organizations"
+    send_bff: "/p4pasendbff/organizations"
     sil: "/p4papusil/sil"
     sil_payments: "/pu/sil/soap/payments/PagamentiTelematiciDovutiPagati"
     sil_reconciliation: "/pu/sil/soap/reconciliation/PagamentiTelematiciPagatiRiconciliati"
