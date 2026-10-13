@@ -580,6 +580,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../send-notification-import-from-a-file-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEND notification import from a file by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -960,11 +988,12 @@
 </ul>
 </li>
 <li>
-<p>Builds a receipts file containing the receipt already imported, with modified data.</p>
-<p>It:
-- keeps the same receipt identifier, IUV and IUD, so that the existing receipt is updated
-- changes the remittance information, increases the amount by the given value and changes the balance using different assessment codes so that the recalculated
-  assessment details differ from the previous ones</p>
+<p>Builds a receipts file containing the receipt already imported, with modified data. It:</p>
+<ul>
+<li>keeps the same receipt identifier, IUV and IUD, so that the existing receipt is updated</li>
+<li>changes the remittance information, increases the amount by the given value and changes the balance using different assessment codes so that the recalculated
+  assessment details differ from the previous ones</li>
+</ul>
 </li>
 <li>
 <p>Checks that the uploaded receipt is imported for the debt position. It verifies that:</p>
@@ -975,10 +1004,11 @@
 </ul>
 </li>
 <li>
-<p>Checks that the receipt already imported has been updated by the last receipts file.</p>
-<p>It verifies that:
-- there is still exactly one receipt linked to the installment for the IUV and IUR
-- the receipt refers to the last ingestion flow file and has the modified remittance information and amount</p>
+<p>Checks that the receipt already imported has been updated by the last receipts file. It verifies that:</p>
+<ul>
+<li>there is still exactly one receipt linked to the installment for the IUV and IUR</li>
+<li>the receipt refers to the last ingestion flow file and has the modified remittance information and amount</li>
+</ul>
 </li>
 <li>
 <p>Checks that the assessment workflows ran again after the last receipts file. It verifies that a new run of the
@@ -1026,11 +1056,12 @@
 </ul>
 </li>
 <li>
-<p>Builds a receipts file containing the receipt already imported, with modified data.</p>
-<p>It:
-- keeps the same receipt identifier, IUV and IUD, so that the existing receipt is updated
-- changes the remittance information, increases the amount by the given value and changes the balance using different assessment codes so that the recalculated
-  assessment details differ from the previous ones</p>
+<p>Builds a receipts file containing the receipt already imported, with modified data. It:</p>
+<ul>
+<li>keeps the same receipt identifier, IUV and IUD, so that the existing receipt is updated</li>
+<li>changes the remittance information, increases the amount by the given value and changes the balance using different assessment codes so that the recalculated
+  assessment details differ from the previous ones</li>
+</ul>
 </li>
 <li>
 <p>Checks that the uploaded receipt is imported for the debt position. It verifies that:</p>
@@ -1041,10 +1072,11 @@
 </ul>
 </li>
 <li>
-<p>Checks that the receipt already imported has been updated by the last receipts file.</p>
-<p>It verifies that:
-- there is still exactly one receipt linked to the installment for the IUV and IUR
-- the receipt refers to the last ingestion flow file and has the modified remittance information and amount</p>
+<p>Checks that the receipt already imported has been updated by the last receipts file. It verifies that:</p>
+<ul>
+<li>there is still exactly one receipt linked to the installment for the IUV and IUR</li>
+<li>the receipt refers to the last ingestion flow file and has the modified remittance information and amount</li>
+</ul>
 </li>
 <li>
 <p>Checks that the assessment workflows ran again after the last receipts file. It verifies that a new run of the
@@ -1059,11 +1091,12 @@
 </ul>
 </li>
 <li>
-<p>Checks that the technical debt position has been updated by the last receipts file.</p>
-<p>It verifies that:
-- there is still exactly one debt position for the notice, the same created by the first import
-- it has origin <code>RECEIPT_FILE</code>, it is <code>PAID</code> and its installment has the modified amount and remittance
-  information</p>
+<p>Checks that the technical debt position has been updated by the last receipts file. It verifies that:</p>
+<ul>
+<li>there is still exactly one debt position for the notice, the same created by the first import</li>
+<li>it has origin <code>RECEIPT_FILE</code>, it is <code>PAID</code> and its installment has the modified amount and remittance
+  information</li>
+</ul>
 </li>
 </ol>
 

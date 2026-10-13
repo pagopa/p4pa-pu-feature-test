@@ -485,6 +485,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../send-notification-import-from-a-file-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEND notification import from a file by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -719,6 +747,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#each-notifications-are-accepted-by-send-and-the-iun-is-assigned-to-the-related-installments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        each notifications are accepted by SEND and the IUN is assigned to the related installments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#send-has-set-a-notification-fee" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -873,10 +912,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-notification-is-in-status-status-and-the-iun-is-assigned-to-the-installment" class="md-nav__link">
+  <a href="#the-notification-is-accepted-by-send-and-the-iun-is-assigned-to-the-installment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the notification is in status {status} and the IUN is assigned to the installment
+        the notification is accepted by SEND and the IUN is assigned to the installment
       
     </span>
   </a>
@@ -1064,6 +1103,17 @@
     <span class="md-ellipsis">
       
         the RT returned by 'ChiediPagatiConRicevuta' matches the expected data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-send-campaign-file-is-processed-correctly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the SEND campaign file is processed correctly
       
     </span>
   </a>
@@ -1201,6 +1251,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#each-notifications-are-accepted-by-send-and-the-iun-is-assigned-to-the-related-installments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        each notifications are accepted by SEND and the IUN is assigned to the related installments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#send-has-set-a-notification-fee" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1355,10 +1416,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-notification-is-in-status-status-and-the-iun-is-assigned-to-the-installment" class="md-nav__link">
+  <a href="#the-notification-is-accepted-by-send-and-the-iun-is-assigned-to-the-installment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the notification is in status {status} and the IUN is assigned to the installment
+        the notification is accepted by SEND and the IUN is assigned to the installment
       
     </span>
   </a>
@@ -1553,6 +1614,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-send-campaign-file-is-processed-correctly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the SEND campaign file is processed correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-technical-debt-position-is-updated" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1623,6 +1695,18 @@
 <li>validates the structure data</li>
 <li>checks if it has status <code>PAID</code> and debt position type org of type <code>UNKNOWN</code></li>
 </ul>
+<h2 id="each-notifications-are-accepted-by-send-and-the-iun-is-assigned-to-the-related-installments"><code>each notifications are accepted by SEND and the IUN is assigned to the related installments</code></h2>
+<p>Checks that each notification of the campaign is accepted by SEND and the IUN is assigned. It:</p>
+<ul>
+<li>polls SEND until each notification is in status <code>ACCEPTED</code>, <code>DELIVERING</code> or <code>DELIVERED</code>
+  and asserts it has an IUN;</li>
+<li>matches each notification to its installment through the NAV;</li>
+<li>verifies that every notified installment carries the IUN of its own notification;</li>
+<li>verifies that every installment of the campaign has been notified;</li>
+<li>verifies the campaign counters: all the notifications are counted as accepted, and the
+  delivered ones are at least those found in status <code>DELIVERED</code>, since the counters are
+  cumulative and the notifications may move forward after the polling.</li>
+</ul>
 <h2 id="send-has-set-a-notification-fee"><code>SEND has set a notification fee</code></h2>
 <p>Checks that SEND set a notification fee:
 - reads the fee for each notified installment;
@@ -1692,11 +1776,12 @@
 </ul>
 <h2 id="the-mixed-debt-position-and-technical-ones-are-in-status-status"><code>the mixed debt position and technical ones are in status {status}</code></h2>
 <p>Checks that the mixed debt position and its technical (<code>SPONTANEOUS_MIXED</code>) ones are all in the expected status.</p>
-<h2 id="the-notification-is-in-status-status-and-the-iun-is-assigned-to-the-installment"><code>the notification is in status {status} and the IUN is assigned to the installment</code></h2>
-<p><em>also: <code>the notification is in status {status} and the IUN is assigned to all installments</code></em></p>
-<p>Checks that the notification is valid and the IUN is assigned. It:</p>
+<h2 id="the-notification-is-accepted-by-send-and-the-iun-is-assigned-to-the-installment"><code>the notification is accepted by SEND and the IUN is assigned to the installment</code></h2>
+<p><em>also: <code>the notification is accepted by SEND and the IUN is assigned to all installments</code></em></p>
+<p>Checks that the notification is accepted by SEND and the IUN is assigned. It:</p>
 <ul>
-<li>polls SEND until the notification is valid and asserts it has an IUN;</li>
+<li>polls SEND until the notification is in status <code>ACCEPTED</code>, <code>DELIVERING</code> or <code>DELIVERED</code>
+  and asserts it has an IUN;</li>
 <li>verifies that every notified installment carries that same IUN.</li>
 </ul>
 <h2 id="the-paid-notice-appears-in-the-export-with-the-correct-data"><code>the paid notice appears in the export with the correct data</code></h2>
@@ -1774,10 +1859,11 @@
 <li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
 </ul>
 <h2 id="the-receipt-is-updated"><code>the receipt is updated</code></h2>
-<p>Checks that the receipt already imported has been updated by the last receipts file.</p>
-<p>It verifies that:
-- there is still exactly one receipt linked to the installment for the IUV and IUR
-- the receipt refers to the last ingestion flow file and has the modified remittance information and amount</p>
+<p>Checks that the receipt already imported has been updated by the last receipts file. It verifies that:</p>
+<ul>
+<li>there is still exactly one receipt linked to the installment for the IUV and IUR</li>
+<li>the receipt refers to the last ingestion flow file and has the modified remittance information and amount</li>
+</ul>
 <h2 id="the-receipts-are-created-correctly-with-origin-receipt_origin"><code>the receipts are created correctly with origin {receipt_origin}</code></h2>
 <p>Runs the <code>the receipt is created correctly</code> checks for every receipt imported from the file.</p>
 <h2 id="the-receipts-file-is-processed-correctly"><code>the receipts file is processed correctly</code></h2>
@@ -1793,12 +1879,20 @@
 <p>Checks if the RT returned by 'ChiediEsitoCarrello' matches the same RT ingested by PU from PagoPA</p>
 <h2 id="the-rt-returned-by-chiedipagaticonricevuta-matches-the-expected-data"><code>the RT returned by 'ChiediPagatiConRicevuta' matches the expected data</code></h2>
 <p>Checks if the RT returned by 'ChiediPagatiConRicevuta' matches the same RT ingested by PU from PagoPA</p>
+<h2 id="the-send-campaign-file-is-processed-correctly"><code>the SEND campaign file is processed correctly</code></h2>
+<p>Checks that the SEND campaign file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>SEND_NOTIFICATION_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
 <h2 id="the-technical-debt-position-is-updated"><code>the technical debt position is updated</code></h2>
-<p>Checks that the technical debt position has been updated by the last receipts file.</p>
-<p>It verifies that:
-- there is still exactly one debt position for the notice, the same created by the first import
-- it has origin <code>RECEIPT_FILE</code>, it is <code>PAID</code> and its installment has the modified amount and remittance
-  information</p>
+<p>Checks that the technical debt position has been updated by the last receipts file. It verifies that:</p>
+<ul>
+<li>there is still exactly one debt position for the notice, the same created by the first import</li>
+<li>it has origin <code>RECEIPT_FILE</code>, it is <code>PAID</code> and its installment has the modified amount and remittance
+  information</li>
+</ul>
 <h2 id="the-treasury-import-completes-successfully"><code>the treasury import completes successfully</code></h2>
 <p>Polls the treasury import status (<code>pivotSILChiediStatoImportFlussoTesoreria</code>) until it reaches <code>FILE_CARICATO</code></p>
 <h2 id="the-treasury-is-processed-correctly"><code>the treasury is processed correctly</code></h2>

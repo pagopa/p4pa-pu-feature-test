@@ -547,6 +547,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../send-notification-import-from-a-file-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEND notification import from a file by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -756,7 +784,7 @@
 <span class="c"># (2)!</span>
 <span class="k">When </span><span class="nf">the organization requires the notification to be uploaded to SEND</span>
 <span class="c"># (3)!</span>
-<span class="k">Then </span><span class="nf">the notification is in status accepted and the IUN is assigned to the installment</span>
+<span class="k">Then </span><span class="nf">the notification is accepted by SEND and the IUN is assigned to the installment</span>
 <span class="c"># (4)!</span>
 <span class="k">And </span><span class="nf">SEND has set a notification fee</span>
 <span class="c"># (5)!</span>
@@ -800,9 +828,10 @@
 </ul>
 </li>
 <li>
-<p>Checks that the notification is valid and the IUN is assigned. It:</p>
+<p>Checks that the notification is accepted by SEND and the IUN is assigned. It:</p>
 <ul>
-<li>polls SEND until the notification is valid and asserts it has an IUN;</li>
+<li>polls SEND until the notification is in status <code>ACCEPTED</code>, <code>DELIVERING</code> or <code>DELIVERED</code>
+  and asserts it has an IUN;</li>
 <li>verifies that every notified installment carries that same IUN.</li>
 </ul>
 </li>

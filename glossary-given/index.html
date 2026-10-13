@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../debt-positions-management-by-sil/">
+        <link rel="prev" href="../send-notification-import-from-a-file-by-sil/">
       
       
         <link rel="next" href="../glossary-when/">
@@ -487,6 +487,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../send-notification-import-from-a-file-by-sil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEND notification import from a file by SIL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -687,6 +715,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-send-campaign-file-prepared-to-notify-the-single-installment-of-debt-positions-identifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a SEND campaign file prepared to notify the single installment of debt positions {identifiers}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -713,6 +752,17 @@
     <span class="md-ellipsis">
       
         a simple debt position with balance created by organization interacting with {pagopa_interaction}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple-debt-positions-identifiers-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simple debt positions {identifiers} created by organization interacting with {pagopa_interaction}
       
     </span>
   </a>
@@ -928,6 +978,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-send-campaign-file-prepared-to-notify-the-single-installment-of-debt-positions-identifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a SEND campaign file prepared to notify the single installment of debt positions {identifiers}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -954,6 +1015,17 @@
     <span class="md-ellipsis">
       
         a simple debt position with balance created by organization interacting with {pagopa_interaction}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple-debt-positions-identifiers-created-by-organization-interacting-with-pagopa_interaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simple debt positions {identifiers} created by organization interacting with {pagopa_interaction}
       
     </span>
   </a>
@@ -1070,6 +1142,13 @@ processed:</p>
 <li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
 <li>checks that the assessment is <code>CLOSED</code> and its details match the balance</li>
 </ul>
+<h2 id="a-send-campaign-file-prepared-to-notify-the-single-installment-of-debt-positions-identifiers"><code>a SEND campaign file prepared to notify the single installment of debt positions {identifiers}</code></h2>
+<p>Prepares the zip file of a SEND campaign. It:</p>
+<ul>
+<li>generates the campaign id shared by all the notifications;</li>
+<li>builds a CSV row for the single installment of each debt position;</li>
+<li>zips the CSV together with the payment and notification PDFs of each debt position.</li>
+</ul>
 <h2 id="a-simple-debt-position-created-by-organization-interacting-with-pagopa_interaction"><code>a simple debt position created by organization interacting with {pagopa_interaction}</code></h2>
 <p><em>also: <code>a simple debt position of type {dp_type_org_code} created by organization interacting with {pagopa_interaction}</code>, <code>a simple debt position {dp_identifier} for citizen {citizen_identifier} created by organization interacting with {pagopa_interaction}</code></em></p>
 <p>Creates a simple, single-installment debt position in one step. It:</p>
@@ -1092,6 +1171,14 @@ processed:</p>
 <li>creates the debt position and checks it become <code>UNPAID</code>;</li>
 <li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
 <li>checks the expiration workflow is scheduled.</li>
+</ul>
+<h2 id="simple-debt-positions-identifiers-created-by-organization-interacting-with-pagopa_interaction"><code>simple debt positions {identifiers} created by organization interacting with {pagopa_interaction}</code></h2>
+<p>Creates multiple simple, single-installment debt positions in one step, one for each identifier. It:</p>
+<ul>
+<li>gets the organization token;</li>
+<li>for each debt position builds the entity, creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notices are present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflows are scheduled.</li>
 </ul>
 <h2 id="the-previous-payment-of-installment-seq_num-of-payment-option-po_index"><code>the previous payment of installment {seq_num} of payment option {po_index}</code></h2>
 <p>Given that plays a full payment-and-reporting cycle for one installment and checks the outcome:</p>
