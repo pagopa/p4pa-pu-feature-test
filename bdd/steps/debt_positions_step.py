@@ -1,13 +1,10 @@
 import json
 import uuid
-from datetime import datetime
-from pathlib import Path
-
-from behave import given, when, then
-
 from api.debt_position_type import get_debt_position_type_org_by_id
 from api.debt_positions import post_create_debt_position, \
-    get_debt_position_by_organization_id_and_installment_nav, get_installment, get_debt_position_by_iuv
+    get_debt_position_by_organization_id_and_installment_nav, get_installment, get_debt_position_by_iuv, \
+    get_debt_position, put_manage_debt_position_installments
+from api.gpd_aca import get_debt_position_on_aca_or_gpd
 from api.pagopa_payments import post_create_debt_position_on_gpd
 from bdd.steps.authentication_step import step_get_token_org, get_org_token_by_name
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
@@ -17,15 +14,18 @@ from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, cal
     create_payment_option, create_transfer, generate_iuv, fetch_debt_position, get_installment_paid, \
     set_installment_paid, get_stored_debt_position, store_debt_position_by_id, retrieve_dp_type_org_by_code, \
     retrieve_taxonomy_code_by_dp_type_org, build_feature_test_iud, find_installment_by_iud
-from bdd.steps.utils.utility import retry_get_dp_status
+from bdd.steps.utils.utility import retry_get_dp_status, get_workflow_run_id
 from bdd.steps.workflow_step import check_workflow_status, step_debt_position_workflow_check_expiration
+from behave import given, when, then
 from config.configuration import settings
+from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry
-from model.csv_file_debt_positions import CSVVersion
+from model.csv_file_debt_positions import CSVVersion, Action
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
-    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp, NAV_PREFIX
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
+from pathlib import Path
 
 
 @given("a new debt position of type {debt_position_type_org_code}")
@@ -260,7 +260,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     org_info = context.org_info
     iuv = iuv if iuv else context.iuv
 
-    nav = '3' + iuv
+    nav = NAV_PREFIX + iuv
     res = get_debt_position_by_organization_id_and_installment_nav(token, context.traceparent,
                                                                    organization_id=org_info.id, nav=nav)
 
@@ -364,7 +364,7 @@ def _validate_installments(org_info, inst_request_map, inst_responses, status):
 
         assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
         assert len(inst_response['iuv']) == 17
-        assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']
+        assert len(inst_response['nav']) == 18 and inst_response['nav'] == NAV_PREFIX + inst_response['iuv']
         assert inst_response['dueDate'] == inst_request.due_date
         assert inst_response['amountCents'] == inst_request.amount_cents
         assert inst_response['debtor'] == json.loads(inst_request.debtor.to_json())
@@ -408,7 +408,7 @@ def step_create_dp_on_gpd(context, pagopa_interaction):
 
     installment.transfers.append(transfer)
     installment.iuv = generate_iuv()
-    installment.nav = '3' + installment.iuv
+    installment.nav = NAV_PREFIX + installment.iuv
     installment.iupd_pagopa = f'{context.org_info.fiscal_code}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
     context.debt_position.payment_options[0].installments[0] = installment
 
@@ -509,3 +509,119 @@ def step_check_transfer_data(context):
     assert transfer.stamp_type == stamp_data.stamp_type
     assert transfer.stamp_hash_document == stamp_data.stamp_hash_document
     assert transfer.stamp_provincial_residence == stamp_data.stamp_provincial_residence
+
+
+@when("the organization adds the installment {seq_num} to payment option {po_index} with an amount of {amount} euros "
+      "and due date set in {expiration_days} days")
+def step_add_installment(context, seq_num, po_index, amount, expiration_days):
+    installment = create_installment(expiration_days=int(expiration_days), seq_num=int(seq_num),
+                                     amount_cents=int(amount) * 100)
+
+    _put_manage_installments(context=context, debt_position_dict=_get_debt_position_dict(context),
+                             po_index=int(po_index), action=Action.I,
+                             installment=json.loads(installment.to_json()))
+    context.requested_installment = installment
+
+
+@when("the organization modifies the installment {seq_num} of payment option {po_index} with new remittance "
+      "information, amount increased by {amount_increase} euros and due date postponed by {due_date_delay} days")
+def step_modify_installment(context, seq_num, po_index, amount_increase, due_date_delay):
+    debt_position_dict = _get_debt_position_dict(context)
+    stored_installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_position,
+                                                                  po_index=int(po_index), seq_num=int(seq_num))
+    payment_option_dict = next(po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == int(po_index))
+
+    installment = next(inst for inst in payment_option_dict['installments'] if inst['iud'] == stored_installment.iud)
+    installment['remittanceInformation'] = f'Feature test installment {seq_num} updated'
+    installment['amountCents'] = installment['amountCents'] + int(amount_increase) * 100
+    installment['dueDate'] = (datetime.strptime(installment['dueDate'], '%Y-%m-%d')
+                              + timedelta(days=int(due_date_delay))).strftime('%Y-%m-%d')
+
+    _put_manage_installments(context=context, debt_position_dict=debt_position_dict, po_index=int(po_index),
+                             action=Action.M, installment=installment)
+    context.requested_installment = Installment.from_dict(installment)
+
+
+@then("the debt position update is synchronized")
+def step_check_debt_position_update_synchronized(context):
+    """Checks that the update is synchronized.
+
+    It:
+    - waits for a new run of the organization's sync workflow to complete
+    - checks that the debt position status is `UNPAID`"""
+    check_workflow_status(context=context, workflow_type=context.org_info.workflow_type,
+                          entity_id=context.debt_position.debt_position_id, status=WorkflowStatus.COMPLETED,
+                          previous_run_id=context.sync_run_id)
+    step_check_dp_status(context=context, status=Status.UNPAID.value)
+    context.debt_position = fetch_debt_position(context)
+
+
+@then("the installment {seq_num} of payment option {po_index} is saved with the requested data")
+def step_check_installment_saved(context, seq_num, po_index):
+    requested_installment = context.requested_installment
+    installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_position,
+                                                           po_index=int(po_index), seq_num=int(seq_num))
+
+    assert installment is not None, f"Installment {seq_num} of payment option {po_index} not found"
+    assert installment.amount_cents == requested_installment.amount_cents, \
+        f"amountCents mismatch: expected {requested_installment.amount_cents}, got {installment.amount_cents}"
+    assert installment.due_date == requested_installment.due_date, \
+        f"dueDate mismatch: expected {requested_installment.due_date}, got {installment.due_date}"
+    assert installment.remittance_information == requested_installment.remittance_information, \
+        f"remittanceInformation mismatch: expected {requested_installment.remittance_information}, " \
+        f"got {installment.remittance_information}"
+    assert installment.status == Status.UNPAID, \
+        f"status mismatch: expected {Status.UNPAID.value}, got {installment.status}"
+    assert installment.iuv is not None and len(installment.iuv) == 17, f"Unexpected iuv: {installment.iuv}"
+    assert installment.nav == NAV_PREFIX + installment.iuv, \
+        f"nav mismatch: expected {NAV_PREFIX + installment.iuv}, got {installment.nav}"
+
+
+@then("the installment {seq_num} of payment option {po_index} matches its notice on GPD")
+def step_check_installment_on_gpd(context, seq_num, po_index):
+    installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_position,
+                                                           po_index=int(po_index), seq_num=int(seq_num))
+
+    res = get_debt_position_on_aca_or_gpd(org_fiscal_code=context.org_info.fiscal_code,
+                                          iupd_pagopa=installment.iupd_pagopa)
+    assert_response_ok(res, "Get debt position on GPD")
+    gpd_position = res.json()
+    gpd_installment = gpd_position['paymentOption'][0]['installments'][0]
+
+    assert gpd_position['status'] == 'VALID', f"GPD status mismatch: expected VALID, got {gpd_position['status']}"
+    assert gpd_installment['iuv'] == installment.iuv, \
+        f"GPD iuv mismatch: expected {installment.iuv}, got {gpd_installment['iuv']}"
+    assert gpd_installment['amount'] == installment.amount_cents, \
+        f"GPD amount mismatch: expected {installment.amount_cents}, got {gpd_installment['amount']}"
+    assert gpd_installment['dueDate'].startswith(installment.due_date), \
+        f"GPD dueDate mismatch: expected {installment.due_date}, got {gpd_installment['dueDate']}"
+    assert gpd_installment['description'] == installment.remittance_information, \
+        f"GPD description mismatch: expected {installment.remittance_information}, got {gpd_installment['description']}"
+
+
+def _get_debt_position_dict(context) -> dict:
+    res = get_debt_position(token=context.token, traceparent=context.traceparent,
+                            debt_position_id=context.debt_position.debt_position_id)
+    assert_response_ok(res, "Get debt position by id")
+    return res.json()
+
+
+def _put_manage_installments(context, debt_position_dict: dict, po_index: int, action: Action,
+                             installment: dict):
+    payment_option_dict = next(po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == po_index)
+    manage_debt_position = {
+        'debtPositionDescription': debt_position_dict['description'],
+        'validityDate': debt_position_dict.get('validityDate'),
+        'paymentOptionId': payment_option_dict['paymentOptionId'],
+        'paymentOptionDescription': payment_option_dict['description'],
+        'installments': [{'action': action.value, 'installment': installment}]
+    }
+
+    context.sync_run_id = get_workflow_run_id(token=context.token, traceparent=context.traceparent,
+                                              workflow_type=context.org_info.workflow_type,
+                                              entity_id=context.debt_position.debt_position_id)
+
+    res = put_manage_debt_position_installments(token=context.token, traceparent=context.traceparent,
+                                                debt_position_id=context.debt_position.debt_position_id,
+                                                manage_debt_position=manage_debt_position)
+    assert_response_ok(res, f"Manage installments of payment option {po_index} with action {action.value}")
