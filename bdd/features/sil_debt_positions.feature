@@ -94,7 +94,7 @@ Feature: Debt positions management by SIL
 
   @sil_importa_dovuto
   Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD has a printable notice and is paid after a citizen payment
-    Given a SIL acting on behalf of an organization interacting with GPD
+    Given a SIL acting on behalf of an organization having print notice enabled interacting with GPD
     When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
     Then the debt position is in status unpaid
     And the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
@@ -108,7 +108,7 @@ Feature: Debt positions management by SIL
 
   @sil_importa_dovuto
   Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD is updated via 'ImportaDovuto' and paid after a citizen payment
-    Given a SIL acting on behalf of an organization interacting with GPD
+    Given a SIL acting on behalf of an organization having print notice enabled interacting with GPD
     When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
     Then the debt position is in status unpaid
     And the payment notice PDF returned by 'ImportaDovuto' contains the debt position data
@@ -126,7 +126,7 @@ Feature: Debt positions management by SIL
 
   @sil_importa_dovuto
   Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD is cancelled via 'ImportaDovuto' and is no longer payable
-    Given a SIL acting on behalf of an organization interacting with GPD
+    Given a SIL acting on behalf of an organization having print notice enabled interacting with GPD
     When SIL creates a debt position of type FEATURE_TEST with single installment of 50 euros through SIL 'ImportaDovuto'
     Then the debt position is in status unpaid
     And 'VerificaAvviso' returns the checkout URL to start the payment
