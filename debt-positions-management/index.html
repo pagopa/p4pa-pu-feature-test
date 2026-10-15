@@ -420,6 +420,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-a-complex-debt-position-created-by-an-organization-interacting-with-gpd-is-updated-by-adding-an-installment-to-a-payment-option-and-modifying-an-installment-of-another-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A complex debt position created by an organization interacting with GPD is updated by adding an installment to a payment option and modifying an installment of another one
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -801,6 +812,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-a-complex-debt-position-created-by-an-organization-interacting-with-gpd-is-updated-by-adding-an-installment-to-a-payment-option-and-modifying-an-installment-of-another-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: A complex debt position created by an organization interacting with GPD is updated by adding an installment to a payment option and modifying an installment of another one
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -882,6 +904,43 @@
 <li>validates the whole created structure (payment options, installments, first transfer) in <code>TO_SYNC</code>;</li>
 <li>checks the organization's sync workflow (ACA/GPD) completes.</li>
 </ul>
+</li>
+</ol>
+<h2 id="scenario-a-complex-debt-position-created-by-an-organization-interacting-with-gpd-is-updated-by-adding-an-installment-to-a-payment-option-and-modifying-an-installment-of-another-one">Scenario: A complex debt position created by an organization interacting with GPD is updated by adding an installment to a payment option and modifying an installment of another one</h2>
+<p><strong>Tags:</strong> <code>@debt_positions_update</code> <code>@gpd</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a complex debt position with </span><span class="s">2</span><span class="nf"> payment options created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">When </span><span class="nf">the organization adds the installment </span><span class="s">3</span><span class="nf"> to payment option </span><span class="s">1</span><span class="nf"> with an amount of </span><span class="s">80</span><span class="nf"> euros and due date set in </span><span class="s">5</span><span class="nf"> days</span>
+<span class="k">Then </span><span class="nf">the debt position update is synchronized</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">3</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> is saved with the requested data</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">3</span><span class="nf"> of payment option </span><span class="s">1</span><span class="nf"> matches its notice on GPD</span>
+<span class="k">When </span><span class="nf">the organization modifies the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">2</span><span class="nf"> with new remittance information, amount increased by </span><span class="s">20</span><span class="nf"> euros and due date postponed by </span><span class="s">7</span><span class="nf"> days</span>
+<span class="k">Then </span><span class="nf">the debt position update is synchronized</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">2</span><span class="nf"> is saved with the requested data</span>
+<span class="k">And </span><span class="nf">the installment </span><span class="s">1</span><span class="nf"> of payment option </span><span class="s">2</span><span class="nf"> matches its notice on GPD</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a complex debt position (more than 1 payment options with installments) in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the payment options;</li>
+<li>creates the debt position and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies presence in the GPD/ACA archive and the scheduled expiration workflow.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the update is synchronized.</p>
+<p>It:
+- waits for a new run of the organization's sync workflow to complete
+- checks that the debt position status is <code>UNPAID</code></p>
+</li>
+<li>
+<p>Checks that the update is synchronized.</p>
+<p>It:
+- waits for a new run of the organization's sync workflow to complete
+- checks that the debt position status is <code>UNPAID</code></p>
 </li>
 </ol>
 

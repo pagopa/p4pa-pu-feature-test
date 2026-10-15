@@ -857,6 +857,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-debt-position-update-is-synchronized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the debt position update is synchronized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-debt-positions-are-created-correctly-with-origin-debt_position_origin" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1361,6 +1372,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-debt-position-update-is-synchronized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the debt position update is synchronized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-debt-positions-are-created-correctly-with-origin-debt_position_origin" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1757,6 +1779,11 @@
 <li>verifies its origin and, for <code>RECEIPT_FILE</code> origin, that it is <code>PAID</code>;</li>
 <li>checks the installment IUV and, for <code>REPORTING_PAGOPA</code> origin, the outcome-9 remittance and anonymous debtor.</li>
 </ul>
+<h2 id="the-debt-position-update-is-synchronized"><code>the debt position update is synchronized</code></h2>
+<p>Checks that the update is synchronized.</p>
+<p>It:
+- waits for a new run of the organization's sync workflow to complete
+- checks that the debt position status is <code>UNPAID</code></p>
 <h2 id="the-debt-positions-are-created-correctly-with-origin-debt_position_origin"><code>the debt positions are created correctly with origin {debt_position_origin}</code></h2>
 <p>Runs the <code>the debt position is created correctly</code> checks for every debt position imported from file.</p>
 <h2 id="the-debt-positions-identifiers-are-created-in-status-status"><code>the debt positions {identifiers} are created in status {status}</code></h2>
