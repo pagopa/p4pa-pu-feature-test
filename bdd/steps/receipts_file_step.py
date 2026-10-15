@@ -22,7 +22,7 @@ from config.configuration import secrets, settings
 from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry, Section
 from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, to_csv_lines, CSVVersion
-from model.debt_position import DebtPosition, DebtPositionOrigin, Status
+from model.debt_position import DebtPosition, DebtPositionOrigin, Status, NAV_PREFIX
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowStatus, WorkflowType
 
@@ -292,7 +292,7 @@ def step_check_technical_debt_position_updated(context):
     row = context.receipts_rows[0]
     debt_position_id = context.debt_position.debt_position_id
 
-    nav = '3' + installment_paid.iuv
+    nav = NAV_PREFIX + installment_paid.iuv
     res = get_debt_position_by_organization_id_and_installment_nav(context.token, context.traceparent,
                                                                    organization_id=context.org_info.id, nav=nav)
     assert_response_ok(res, "Get debt position by NAV")

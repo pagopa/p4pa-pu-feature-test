@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion, Action
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
-    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp, NAV_PREFIX
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 from pathlib import Path
@@ -260,7 +260,7 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
     org_info = context.org_info
     iuv = iuv if iuv else context.iuv
 
-    nav = '3' + iuv
+    nav = NAV_PREFIX + iuv
     res = get_debt_position_by_organization_id_and_installment_nav(token, context.traceparent,
                                                                    organization_id=org_info.id, nav=nav)
 
@@ -364,7 +364,7 @@ def _validate_installments(org_info, inst_request_map, inst_responses, status):
 
         assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
         assert len(inst_response['iuv']) == 17
-        assert len(inst_response['nav']) == 18 and inst_response['nav'] == '3' + inst_response['iuv']
+        assert len(inst_response['nav']) == 18 and inst_response['nav'] == NAV_PREFIX + inst_response['iuv']
         assert inst_response['dueDate'] == inst_request.due_date
         assert inst_response['amountCents'] == inst_request.amount_cents
         assert inst_response['debtor'] == json.loads(inst_request.debtor.to_json())
@@ -408,7 +408,7 @@ def step_create_dp_on_gpd(context, pagopa_interaction):
 
     installment.transfers.append(transfer)
     installment.iuv = generate_iuv()
-    installment.nav = '3' + installment.iuv
+    installment.nav = NAV_PREFIX + installment.iuv
     installment.iupd_pagopa = f'{context.org_info.fiscal_code}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
     context.debt_position.payment_options[0].installments[0] = installment
 
@@ -573,8 +573,8 @@ def step_check_installment_saved(context, seq_num, po_index):
     assert installment.status == Status.UNPAID, \
         f"status mismatch: expected {Status.UNPAID.value}, got {installment.status}"
     assert installment.iuv is not None and len(installment.iuv) == 17, f"Unexpected iuv: {installment.iuv}"
-    assert installment.nav == '3' + installment.iuv, \
-        f"nav mismatch: expected {'3' + installment.iuv}, got {installment.nav}"
+    assert installment.nav == NAV_PREFIX + installment.iuv, \
+        f"nav mismatch: expected {NAV_PREFIX + installment.iuv}, got {installment.nav}"
 
 
 @then("the installment {seq_num} of payment option {po_index} matches its notice on GPD")
