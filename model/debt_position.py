@@ -168,3 +168,9 @@ class DebtPositionTypeOrgBalanceCostType(Enum):
     NOTIFICATION_COST = 'NOTIFICATION_COST'
     DELAY_COST = 'DELAY_COST'
     INTEREST_COST = 'INTEREST_COST'
+
+
+class InstallmentAction(Enum):
+    INSERT = 'I'
+    UPDATE = 'M'
+    CANCEL = 'A'

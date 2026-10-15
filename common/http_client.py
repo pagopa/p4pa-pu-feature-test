@@ -24,3 +24,7 @@ def get(*args, **kwargs):
 
 def post(*args, **kwargs):
     return _request('POST', *args, **kwargs)
+
+
+def put(*args, **kwargs):
+    return _request('PUT', *args, **kwargs)

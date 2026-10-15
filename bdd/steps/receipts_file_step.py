@@ -7,7 +7,6 @@ import uuid
 from api.debt_positions import get_receipt, get_receipt_by_id, get_debt_position_by_organization_id_and_installment_nav, \
     get_installment
 from api.fileshare import post_upload_file
-from api.workflow_hub import get_workflow_status
 from bdd.steps.assessments_step import step_check_assessment, step_check_assessment_detail
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_positions_created, \
     step_check_installment_status
@@ -16,7 +15,7 @@ from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import build_balance_xml
 from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
-from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_id
+from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
 from bdd.steps.workflow_step import check_workflow_status
 from behave import given, when, then
 from config.configuration import secrets, settings
@@ -216,13 +215,6 @@ def step_create_receipts_file_with_balance_for_non_existent_dp(context, csv_vers
     _write_receipts_file(context, csv_rows)
 
 
-def _get_workflow_run_id(context, workflow_type: WorkflowType, entity_id) -> str:
-    res = get_workflow_status(token=context.token, traceparent=context.traceparent,
-                              workflow_id=get_workflow_id(workflow_type=workflow_type, entity_id=entity_id))
-    assert_response_ok(res, "Get workflow status")
-    return res.json()['runId']
-
-
 @when("the same receipt with amount increased by {amount_increase} euros, modified remittance information and balance "
       "is inserted into an ingestion flow file with version {csv_version}")
 def step_create_receipts_file_with_modified_receipt(context, csv_version: str, amount_increase: str):
@@ -247,11 +239,12 @@ def step_create_receipts_file_with_modified_receipt(context, csv_version: str, a
     ])
     installment_paid.balance = row.balance
 
-    context.create_assessment_run_id = _get_workflow_run_id(
-        context, WorkflowType.CREATE_ASSESSMENT, installment_paid.receipt_id)
-    context.classify_assessment_run_id = _get_workflow_run_id(
-        context, WorkflowType.CLASSIFY_ASSESSMENT,
-        str(context.org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iud)
+    context.create_assessment_run_id = get_workflow_run_id(
+        token=context.token, traceparent=context.traceparent, workflow_type=WorkflowType.CREATE_ASSESSMENT,
+        entity_id=installment_paid.receipt_id)
+    context.classify_assessment_run_id = get_workflow_run_id(
+        token=context.token, traceparent=context.traceparent, workflow_type=WorkflowType.CLASSIFY_ASSESSMENT,
+        entity_id=str(context.org_info.id) + '-' + installment_paid.iuv + '-' + installment_paid.iud)
 
     _write_receipts_file(context, [row])
 
