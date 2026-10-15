@@ -130,3 +130,15 @@ def get_debt_position_by_iuv(token, traceparent: str, organization_id: int, iuv:
         },
         timeout=settings.default_timeout
     )
+
+
+def put_manage_debt_position_installments(token, traceparent: str, debt_position_id: int, manage_debt_position: dict):
+    return http_client.put(
+        url=f'{secrets.internal_base_url}{settings.api.ingress_path.debt_positions}/debt-positions/{debt_position_id}/manage-installments',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'traceparent': f'{traceparent}'
+        },
+        json=manage_debt_position,
+        timeout=settings.default_timeout
+    )
