@@ -20,9 +20,9 @@ from behave import given, when, then
 from config.configuration import settings
 from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry
-from model.csv_file_debt_positions import CSVVersion
+from model.csv_file_debt_positions import CSVVersion, Action
 from model.debt_position import DebtPosition, Installment, Status, PaymentOptionType, \
-    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp, InstallmentAction
+    PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE, ANONYMOUS_DEBTOR_FISCAL_CODE, Debtor, Stamp
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
 from pathlib import Path
@@ -518,7 +518,7 @@ def step_add_installment(context, seq_num, po_index, amount, expiration_days):
                                      amount_cents=int(amount) * 100)
 
     _put_manage_installments(context=context, debt_position_dict=_get_debt_position_dict(context),
-                             po_index=int(po_index), action=InstallmentAction.INSERT,
+                             po_index=int(po_index), action=Action.I,
                              installment=json.loads(installment.to_json()))
     context.requested_installment = installment
 
@@ -538,7 +538,7 @@ def step_modify_installment(context, seq_num, po_index, amount_increase, due_dat
                               + timedelta(days=int(due_date_delay))).strftime('%Y-%m-%d')
 
     _put_manage_installments(context=context, debt_position_dict=debt_position_dict, po_index=int(po_index),
-                             action=InstallmentAction.UPDATE, installment=installment)
+                             action=Action.M, installment=installment)
     context.requested_installment = Installment.from_dict(installment)
 
 
@@ -606,7 +606,7 @@ def _get_debt_position_dict(context) -> dict:
     return res.json()
 
 
-def _put_manage_installments(context, debt_position_dict: dict, po_index: int, action: InstallmentAction,
+def _put_manage_installments(context, debt_position_dict: dict, po_index: int, action: Action,
                              installment: dict):
     payment_option_dict = next(po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == po_index)
     manage_debt_position = {
