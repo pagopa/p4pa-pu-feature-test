@@ -2,37 +2,18 @@ import time
 
 from behave import given, when, then
 
-from api.auth import post_external_auth_token
 from api.debt_positions import get_installment
 from api.send import post_create_send_notification, post_upload_send_file, get_send_notification, \
     get_send_notification_fee
-from bdd.steps.authentication_step import PagoPaInteractionModel
+from bdd.steps.authentication_step import get_send_token
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, get_installment_paid, \
     seq_num_of, FEATURE_TEST_IUD_PREFIX, get_stored_debt_position
 from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
 from bdd.steps.workflow_step import check_workflow_status
-from config.configuration import secrets
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
     Document, get_pagopa_int_mode, SEND_TEMPLATE_DIR
 from model.workflow_hub import WorkflowStatus, WorkflowType
-
-
-def step_send_token(pagopa_interaction: PagoPaInteractionModel, traceparent: str) -> str:
-    client = None
-    match pagopa_interaction:
-        case PagoPaInteractionModel.ACA.value:
-            client = secrets.send_info.aca
-        case PagoPaInteractionModel.GPD.value:
-            client = secrets.send_info.gpd
-
-    res = post_external_auth_token(client_id=client.client_id, client_secret=client.client_secret,
-                                   traceparent=traceparent)
-
-    assert_response_ok(res, "Post external auth token")
-    assert res.json()['access_token'] is not None
-
-    return res.json()['access_token']
 
 
 @given("a notification created for the single installment of debt position {dp_identifiers}")
@@ -54,8 +35,9 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     dp_identifiers = dp_identifiers.split()
     for dp_identifier in dp_identifiers:
         for seq_num in range(1, int(installments_size) + 1):
-            installment = find_installment_by_seq_num_and_po_index(debt_position=get_stored_debt_position(context, dp_identifier),
-                                                                   po_index=1, seq_num=seq_num)
+            installment = find_installment_by_seq_num_and_po_index(
+                debt_position=get_stored_debt_position(context, dp_identifier),
+                po_index=1, seq_num=seq_num)
             installments_notified.append(installment)
 
     recipients = []
@@ -81,7 +63,7 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
     notification_request = NotificationRequest(organization_id=org_info.id, pago_pa_int_mode=pagopa_int_mode,
                                                sender_denomination=org_info.name, recipients=recipients)
 
-    send_token = step_send_token(pagopa_interaction=org_info.pagopa_interaction, traceparent=context.traceparent)
+    send_token = get_send_token(org_info=org_info, traceparent=context.traceparent)
     context.send_token = send_token
 
     res = post_create_send_notification(token=send_token, traceparent=context.traceparent,
