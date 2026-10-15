@@ -19,6 +19,13 @@ def get_workflow_id(workflow_type: WorkflowType, entity_id: int) -> str:
     return workflow_type.value + "-" + str(entity_id)
 
 
+def get_workflow_run_id(token, traceparent: str, workflow_type: WorkflowType, entity_id) -> str:
+    res = get_workflow_status(token=token, traceparent=traceparent,
+                              workflow_id=get_workflow_id(workflow_type=workflow_type, entity_id=entity_id))
+    assert_response_ok(res, "Get workflow status")
+    return res.json()['runId']
+
+
 def retry_get_workflow_status(token, traceparent: str, workflow_id: str, status: WorkflowStatus, tries=20, delay=4,
                               previous_run_id: str = None):
     count = 0
