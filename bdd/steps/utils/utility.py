@@ -5,11 +5,13 @@ from api.debt_positions import get_debt_position
 from api.organization import get_org_by_ipa_code
 from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification
+from api.send_campaign import get_send_campaign_detail
 from api.soap.sil import post_sil_chiedi_stato_export_flusso, post_sil_chiedi_stato_import_flusso_tesoreria, \
     post_sil_chiedi_stato_export_flusso_riconciliazione
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName, SilExportStatus, SilImportStatus
+from model.send_notification import SendCampaignCounter
 from model.workflow_hub import WorkflowType, WorkflowStatus
 from secrets import token_hex
 from typing import Optional
@@ -255,3 +257,18 @@ def retry_get_reconciliation_export_status(token, traceparent: str, ipa_code: st
     time.sleep(delay)
 
   assert False, f"Reconciliation export {request_token} did not complete after {tries} tries (last status: {status})"
+
+def retry_get_send_campaign_detail(token, traceparent: str, organization_id: int, campaign_id, counter_name: SendCampaignCounter, expected_value: int, tries=5, delay=4):
+    count = 0
+
+    while count < tries:
+        count += 1
+        res_campaign_detail = get_send_campaign_detail(token=token, traceparent=traceparent,organization_id=organization_id, campaign_id=campaign_id)
+        counters = res_campaign_detail.json().get('counters')
+        if counters is not None and counters.get(counter_name.value) == expected_value:
+            return res_campaign_detail
+        
+        if count < tries:
+            time.sleep(delay)
+    
+    return res_campaign_detail
