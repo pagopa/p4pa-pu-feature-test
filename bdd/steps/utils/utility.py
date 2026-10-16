@@ -11,7 +11,7 @@ from api.soap.sil import post_sil_chiedi_stato_export_flusso, post_sil_chiedi_st
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName, SilExportStatus, SilImportStatus
-from model.send_notification import SendCampaignCounter
+from model.send_campaign import SendCampaignCounter
 from model.workflow_hub import WorkflowType, WorkflowStatus
 from secrets import token_hex
 from typing import Optional
