@@ -5,15 +5,16 @@ from datetime import datetime
 from behave import given, when, then
 
 from api.fileshare import post_upload_file_to_url
-from api.send_campaign import get_send_campaigns, get_send_campaign_notifications, get_send_campaign_detail
+from api.send_campaign import get_send_campaigns, get_send_campaign_notifications
 from api.sil_rest import post_authorize_import_massive_file
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.send_step import get_valid_send_notification, assert_installment_iun
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.utility import retry_get_process_file_status
+from bdd.steps.utils.utility import retry_get_process_file_status, retry_get_send_campaign_detail
 from bdd.steps.workflow_step import check_workflow_status
 from model.csv_file_send_notification import CSVRow, to_csv_lines
 from model.file import IngestionFlowFileType, FileStatus, FilePathName
+from model.send_campaign import SendCampaignCounter
 from model.send_notification import get_pagopa_int_mode, SEND_TEMPLATE_DIR, SendCampaignNotificationStatus, SendStatus
 from model.workflow_hub import WorkflowStatus, WorkflowType
 
@@ -215,8 +216,18 @@ def step_check_campaign_installments_iun(context):
     assert checked_navs == set(installments_by_nav), \
         f"Installments not notified: {set(installments_by_nav) - checked_navs}"
 
-    res_campaign_detail = get_send_campaign_detail(token=context.token, traceparent=context.traceparent,
-                                                   organization_id=context.org_info.id, campaign_id=context.campaign_id)
+    total = context.notifications_rows_len
+
+    res_campaign_detail = retry_get_send_campaign_detail(
+        token=context.token, 
+        traceparent=context.traceparent,
+        organization_id=context.org_info.id, 
+        campaign_id=context.campaign_id,
+        counter_name=SendCampaignCounter.ACCEPTED,
+        expected_value=total,
+        tries=10,
+        delay=4
+    )
 
     assert_response_ok(res_campaign_detail, "Get campaign details")
     campaign_detail = res_campaign_detail.json()
@@ -225,7 +236,6 @@ def step_check_campaign_installments_iun(context):
     counters = campaign_detail['counters']
     assert counters is not None
 
-    total = context.notifications_rows_len
     assert counters['total'] == total
     assert counters['accepted'] == total, f"Accepted counter is {counters['accepted']}, expected {total}"
     assert delivered_found <= counters['delivered'] <= total, \

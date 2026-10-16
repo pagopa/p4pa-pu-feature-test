@@ -35,7 +35,6 @@ class SendCampaignNotificationStatus(Enum):
     REFUSED = 'REFUSED'
     UNSUCCESSFUL = 'UNSUCCESSFUL'
 
-
 CONTENT_TYPE = 'application/pdf'
 
 class SendPdfDigest:
