@@ -388,13 +388,13 @@ def step_check_receipt_imported_and_dp_paid(context):
     step_check_dp_status(context=context, status=Status.PAID.value)
 
 
-@then("the installment is updated with the data of the pagoPA receipt")
-def step_check_installment_updated_by_pagopa_receipt(context):
-    """Checks that the receipt sent by pagoPA prevails over the one imported from file. It verifies that:
+@then("the installment is linked to the pagoPA receipt")
+def step_check_installment_linked_to_pagopa_receipt(context):
+    """Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
+    It verifies that:
 
-    - the installment has the IUR sent by pagoPA, no longer the one imported from file, and is linked to the pagoPA receipt
-    - the data of the receipt linked to the installment (fee and payer address) are the ones sent by pagoPA and differ
-      from the ones imported from file"""
+    - the installment IUR is no longer the one imported from file
+    - the receipt linked to the installment has origin `RECEIPT_PAGOPA` and the same IUR of the installment"""
     installment_paid = get_installment_paid(context)
     res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
     assert_response_ok(res, "Get installment by id")

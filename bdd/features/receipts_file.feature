@@ -60,10 +60,10 @@ Feature: Receipts import from a file
     And the technical debt position is updated
 
   @receipts_file_update
-  Scenario: An installment paid by a receipt imported from a file is updated with the data of the receipt sent by pagoPA node
+  Scenario: An installment paid by a receipt imported from a file is linked to the receipt sent by pagoPA node
     Given a simple debt position created by organization interacting with GPD
     And a receipt successfully imported from a receipts file with version 1_3
     When the citizen pays the installment
     Then the receipt is processed correctly
     And the receipt is created correctly with origin receipt_pagopa
-    And the installment is updated with the data of the pagoPA receipt
+    And the installment is linked to the pagoPA receipt
