@@ -912,6 +912,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-installment-is-linked-to-the-pagopa-receipt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the installment is linked to the pagoPA receipt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-mixed-debt-position-and-technical-ones-are-in-status-status" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1427,6 +1438,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-installment-is-linked-to-the-pagopa-receipt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the installment is linked to the pagoPA receipt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-mixed-debt-position-and-technical-ones-are-in-status-status" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1800,6 +1822,13 @@
 <li>the file reaches <code>COMPLETED</code> (or <code>WARNING</code> when the organization has no generate-notice API key);</li>
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
+<h2 id="the-installment-is-linked-to-the-pagopa-receipt"><code>the installment is linked to the pagoPA receipt</code></h2>
+<p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
+It verifies that:</p>
+<ul>
+<li>the installment IUR is no longer the one imported from file</li>
+<li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
 </ul>
 <h2 id="the-mixed-debt-position-and-technical-ones-are-in-status-status"><code>the mixed debt position and technical ones are in status {status}</code></h2>
 <p>Checks that the mixed debt position and its technical (<code>SPONTANEOUS_MIXED</code>) ones are all in the expected status.</p>
