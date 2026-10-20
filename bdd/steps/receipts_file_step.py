@@ -386,3 +386,29 @@ def step_check_receipt_imported_and_dp_paid(context):
     step_check_receipt_created(context=context, receipt_origin=ReceiptOriginType.RECEIPT_FILE.value)
     step_check_installment_status(context=context, po_index='1', status=Status.PAID.value)
     step_check_dp_status(context=context, status=Status.PAID.value)
+
+
+@then("the installment is updated with the data of the pagoPA receipt")
+def step_check_installment_updated_by_pagopa_receipt(context):
+    """Checks that the receipt sent by pagoPA prevails over the one imported from file. It verifies that:
+
+    - the installment has the IUR sent by pagoPA, no longer the one imported from file, and is linked to the pagoPA receipt
+    - the data of the receipt linked to the installment (fee and payer address) are the ones sent by pagoPA and differ
+      from the ones imported from file"""
+    installment_paid = get_installment_paid(context)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    assert_response_ok(res, "Get installment by id")
+    installment = res.json()
+
+    file_row = context.receipts_rows[0]
+
+    assert installment['iur'] != file_row.paymentReceiptId, \
+        f"iur still equal to the one imported from file: {file_row.paymentReceiptId}"
+
+    res = get_receipt_by_id(token=context.token, traceparent=context.traceparent, receipt_id=installment['receiptId'])
+    assert_response_ok(res, "Get receipt by id")
+    receipt = res.json()
+    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_PAGOPA.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt['receiptOrigin']}"
+    assert receipt['paymentReceiptId'] == installment['iur'], \
+        f"paymentReceiptId mismatch: expected {installment['iur']}, got {receipt['paymentReceiptId']}"
