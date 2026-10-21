@@ -354,6 +354,19 @@ def step_receipt_of_existing_dp_imported(context, csv_version: str):
     step_check_assessment(context=context, status='closed')
     step_check_assessment_detail(context=context)
 
+@given("a receipt of the installment created outside PU successfully imported from a receipts file with version {csv_version}")
+def step_receipt_of_installment_outside_pu_imported(context, csv_version: str):
+    """Imports a receipt of an installment created outside PU and checks it is processed:
+
+    - builds the receipts file and uploads it
+    - checks that the file is processed and the technical debt position is created with origin `RECEIPT_FILE`
+    - checks that the receipt is created with origin `RECEIPT_FILE`
+    - checks that the installment of payment option 1 and the debt position are `PAID`"""
+    step_create_receipts_file_for_existing_dp(context=context, csv_version=csv_version)
+    step_uploads_receipts_file(context=context)
+    step_receipts_file_processed(context=context)
+    step_check_debt_positions_created(context=context, debt_position_origin=DebtPositionOrigin.RECEIPT_FILE.value)
+    step_check_receipt_imported_and_dp_paid(context=context)
 
 @given("a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}")
 def step_receipt_with_balance_of_non_existent_dp_imported(context, csv_version: str):
@@ -412,3 +425,4 @@ def step_check_installment_linked_to_pagopa_receipt(context):
         f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt['receiptOrigin']}"
     assert receipt['paymentReceiptId'] == installment['iur'], \
         f"paymentReceiptId mismatch: expected {installment['iur']}, got {receipt['paymentReceiptId']}"
+    

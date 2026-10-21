@@ -67,3 +67,12 @@ Feature: Receipts import from a file
     Then the receipt is processed correctly
     And the receipt is created correctly with origin receipt_pagopa
     And the installment is linked to the pagoPA receipt
+
+  @receipts_file_update
+  Scenario: An installment of a technical debt position created by importing a receipts file is linked to the receipt sent by pagoPA node
+    Given a simple debt position created on GPD
+    And a receipt of the installment created outside PU successfully imported from a receipts file with version 1_3
+    When the citizen pays the installment
+    Then the receipt is processed correctly
+    And the receipt is created correctly with origin receipt_pagopa
+    And the installment is linked to the pagoPA receipt
