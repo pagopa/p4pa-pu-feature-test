@@ -693,6 +693,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-receipt-of-the-installment-created-outside-pu-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt of the installment created outside PU successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -956,6 +967,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-receipt-of-the-installment-created-outside-pu-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a receipt of the installment created outside PU successfully imported from a receipts file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1121,6 +1143,14 @@
 <li>uploads the file;</li>
 <li>checks the debt position becomes <code>REPORTED</code>;</li>
 <li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+<h2 id="a-receipt-of-the-installment-created-outside-pu-successfully-imported-from-a-receipts-file-with-version-csv_version"><code>a receipt of the installment created outside PU successfully imported from a receipts file with version {csv_version}</code></h2>
+<p>Imports a receipt of an installment created outside PU and checks it is processed:</p>
+<ul>
+<li>builds the receipts file and uploads it</li>
+<li>checks that the file is processed and the technical debt position is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the receipt is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
 </ul>
 <h2 id="a-receipt-successfully-imported-from-a-receipts-file-with-version-csv_version"><code>a receipt successfully imported from a receipts file with version {csv_version}</code></h2>
 <p>Imports a receipt from a receipts file and checks it is processed:</p>

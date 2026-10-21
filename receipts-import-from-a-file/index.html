@@ -498,6 +498,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-an-installment-of-a-technical-debt-position-created-by-importing-a-receipts-file-is-linked-to-the-receipt-sent-by-pagopa-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: An installment of a technical debt position created by importing a receipts file is linked to the receipt sent by pagoPA node
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -845,6 +856,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-an-installment-of-a-technical-debt-position-created-by-importing-a-receipts-file-is-linked-to-the-receipt-sent-by-pagopa-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: An installment of a technical debt position created by importing a receipts file is linked to the receipt sent by pagoPA node
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1154,6 +1176,74 @@
 <li>checks that the receipt is created with origin <code>RECEIPT_FILE</code></li>
 <li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
 <li>checks that the assessment is <code>CLOSED</code> and its details match the balance</li>
+</ul>
+</li>
+<li>
+<p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
+<ul>
+<li>verifies the payment notice (<code>verifyPaymentNotice</code>) and reads amount/due date;</li>
+<li>activates the payment notice (<code>activatePaymentNotice</code>) and gets a payment token;</li>
+<li>sends the payment outcome (<code>sendPaymentOutcome</code>), each call expected to return <code>OK</code></li>
+</ul>
+</li>
+<li>
+<p>Checks that the pagoPA receipt has been fully processed. It verifies that:</p>
+<ul>
+<li>the receipt file <code>RT_&lt;nav&gt;.xml</code> reaches status <code>COMPLETED</code>;</li>
+<li>the paid installment now has both <code>IUR</code> and <code>receiptId</code> set;</li>
+<li>the async <code>TRANSFER_CLASSIFICATION</code> workflow completes;</li>
+<li>the async <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
+<ul>
+<li>the receipt exists (looked up by IUV/IUR, or by IUR when it is a duplicate);</li>
+<li>its <code>receiptOrigin</code> matches the expected one and it is linked to the installment (<code>receiptId</code>);</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the <code>IUD_CLASSIFICATION</code> workflow completes.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
+    It verifies that:</p>
+<ul>
+<li>the installment IUR is no longer the one imported from file</li>
+<li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
+</ul>
+</li>
+</ol>
+<h2 id="scenario-an-installment-of-a-technical-debt-position-created-by-importing-a-receipts-file-is-linked-to-the-receipt-sent-by-pagopa-node">Scenario: An installment of a technical debt position created by importing a receipts file is linked to the receipt sent by pagoPA node</h2>
+<p><strong>Tags:</strong> <code>@receipts_file_update</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created on GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">a receipt of the installment created outside PU successfully imported from a receipts file with version </span><span class="s">1</span><span class="nf">_</span><span class="s">3</span>
+<span class="c"># (2)!</span>
+<span class="k">When </span><span class="nf">the citizen pays the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">Then </span><span class="nf">the receipt is processed correctly</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the receipt is created correctly with origin receipt_pagopa</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the installment is linked to the pagoPA receipt</span>
+<span class="c"># (6)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple debt position directly on GPD/ACA (bypassing PU creation):</p>
+<ul>
+<li>builds the entity and its transfer, generating IUV/NAV/IUPD;</li>
+<li>posts it to GPD/ACA and asserts the call succeeds;</li>
+<li>verifies the notice is present as <code>VALID</code> in the GPD/ACA archive.</li>
+</ul>
+</li>
+<li>
+<p>Imports a receipt of an installment created outside PU and checks it is processed:</p>
+<ul>
+<li>builds the receipts file and uploads it</li>
+<li>checks that the file is processed and the technical debt position is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the receipt is created with origin <code>RECEIPT_FILE</code></li>
+<li>checks that the installment of payment option 1 and the debt position are <code>PAID</code></li>
 </ul>
 </li>
 <li>
