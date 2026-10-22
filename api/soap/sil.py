@@ -1,12 +1,12 @@
 import base64
 import re
+from typing import Optional
 
 from bdd.steps.utils.debt_position_utility import format_amount
 from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position import Installment, Transfer, Stamp, SilDebtPositionAction
 from model.debt_position_mixed import DebtPositionMixed
-from typing import Optional
 
 TEMPLATE_DIR = './api/soap/requests_template_sil'
 
@@ -298,5 +298,18 @@ def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_
 
 def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
     data = _render('chiediStatoExportFlussoRiconciliazione.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_accertamento_per_iuf(token, traceparent: str, ipa_code: str, iuf: str):
+    data = _render('chiediAccertamentoPerIUF.xml', codice_ipa=ipa_code, iuf=iuf)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_accertamento_per_bolletta(token, traceparent: str, ipa_code: str, bill_code: str, bill_year: str):
+    data = _render('chiediAccertamentoPerBolletta.xml', codice_ipa=ipa_code, numero_bolletta=bill_code,
+                   anno_bolletta=bill_year)
 
     return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
