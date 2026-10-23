@@ -76,3 +76,14 @@ Feature: Receipts import from a file
     Then the receipt is processed correctly
     And the receipt is created correctly with origin receipt_pagopa
     And the installment is linked to the pagoPA receipt
+
+  @receipts_file_update
+  Scenario: An installment paid by a citizen remains linked to the receipt sent by pagoPA node when a receipt with balance of the same installment is imported from a file
+    Given a simple debt position created by organization interacting with GPD
+    And the successful payment of the installment
+    And a receipt with balance of the paid installment inserted into an ingestion flow file with version 1_3
+    When the organization uploads the receipts file
+    Then the receipts file is processed correctly
+    And the receipt imported from file is created with origin receipt_file
+    And the installment is linked to the pagoPA receipt
+    And the installment balance is updated by the receipts file
