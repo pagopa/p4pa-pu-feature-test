@@ -46,8 +46,9 @@ def get_payment_reporting_flow(context, outcome_code):
 @when(
     "the organization uploads the payment reporting file about installment of payment option {po_index} with outcome code {outcome_code}")
 @when("the organization uploads a second payment reporting for the installment with outcome code {outcome_code}")
+@when("the organization uploads the payment reporting for the installment with outcome code {outcome_code}")
 def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outcome_code='0', installment=None):
-    token = context.token
+    token = getattr(context, 'org_token', None) or context.token
     org_info = context.org_info
 
     if installment is None:
@@ -198,6 +199,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
 
 
 @then("the payment reporting is processed correctly")
+@then("the payment reporting import completes successfully")
 def step_check_payment_reporting_processed(context):
     """Checks that the payment reporting file was processed correctly. It verifies that:
 
@@ -206,13 +208,14 @@ def step_check_payment_reporting_processed(context):
     - the `TRANSFER_CLASSIFICATION` workflow completes for each transfer;
     - the installment now has its `IUF` set.
     """
+    token = getattr(context, 'org_token', None) or context.token
     installment_paid = get_installment_paid(context)
     organization_id = context.org_info.id
 
     file_path_name = FilePathName.PAYMENTS_REPORTING
     file_name = context.payment_reporting_file_name
 
-    retry_get_process_file_status(token=context.token, traceparent=context.traceparent, organization_id=organization_id,
+    retry_get_process_file_status(token=token, traceparent=context.traceparent, organization_id=organization_id,
                                   file_path_name=file_path_name, file_name=file_name,
                                   status=FileStatus.COMPLETED)
 
@@ -225,7 +228,7 @@ def step_check_payment_reporting_processed(context):
                                         installment_paid.iur + '-' + str(transfer.transfer_index),
                               status=WorkflowStatus.COMPLETED)
 
-    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    res = get_installment(token=token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert_response_ok(res, "Get installment by id")
     assert res.json()['iuf'] is not None

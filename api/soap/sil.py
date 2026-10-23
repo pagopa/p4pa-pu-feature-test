@@ -284,11 +284,14 @@ def post_sil_chiedi_stato_import_flusso_tesoreria(token, traceparent: str, ipa_c
 
 
 def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, iuv: str,
-                                                   classification_label: str, version: str = 'v1.4'):
+                                                   classification_labels: str, version: str = 'v1.4'):
+    labels = [l.strip() for l in classification_labels.split(",") if l.strip()]
+    classificazioni = "".join(f"<classificazione>{l}</classificazione>" for l in labels)
+
     data = _render(
         'prenotaExportFlussoRiconciliazione.xml',
         codice_ipa=ipa_code,
-        classificazione=classification_label,
+        classificazioni=classificazioni,
         iuv=iuv,
         versione_tracciato=version,
     )
@@ -298,5 +301,17 @@ def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_
 
 def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
     data = _render('chiediStatoExportFlussoRiconciliazione.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_autorizza_import_flusso_notificati(token, traceparent: str, ipa_code: str):
+    data = _render('autorizzaImportFlussoNotificati.xml', codice_ipa=ipa_code)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_import_flusso_notificati(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoImportFlussoNotificati.xml', codice_ipa=ipa_code, request_token=request_token)
 
     return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)

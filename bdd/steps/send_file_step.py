@@ -10,9 +10,10 @@ from api.sil_rest import post_authorize_import_massive_file
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.send_step import get_valid_send_notification, assert_installment_iun
 from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.csv_utils import to_csv_lines
 from bdd.steps.utils.utility import retry_get_process_file_status, retry_get_send_campaign_detail
 from bdd.steps.workflow_step import check_workflow_status
-from model.csv_file_send_notification import CSVRow, to_csv_lines
+from model.csv_file_send_notification import CSVRow
 from model.file import IngestionFlowFileType, FileStatus, FilePathName
 from model.send_campaign import SendCampaignCounter
 from model.send_notification import get_pagopa_int_mode, SEND_TEMPLATE_DIR, SendCampaignNotificationStatus, SendStatus

@@ -2,6 +2,7 @@ import random
 import string
 import uuid
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from api.debt_position_type import get_debt_position_type_org_by_code, get_debt_position_type_by_id
 from api.debt_positions import get_debt_position
@@ -201,5 +202,9 @@ def fetch_debt_position(context, debt_position_id=None) -> DebtPosition:
     assert_response_ok(res, "Get debt position by id")
     return DebtPosition.from_dict(res.json())
 
+
 def format_amount(amount_cents) -> str:
     return "{:.2f}".format(int(amount_cents) / 100)
+
+def format_decimal_amount(amount_cents) -> Decimal:
+    return Decimal(amount_cents) / Decimal(100)

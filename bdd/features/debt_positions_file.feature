@@ -3,7 +3,7 @@ Feature: Debt positions import from a file
 
   @<csv_version> @eng
   @gpd
-  Scenario Outline: Debt positions are created from an ingestion flow file version <csv_version>-eng, by an organization interacting with GPD
+  Scenario Outline: Debt positions are created from an ingestion flow file version <csv_version>, by an organization interacting with GPD
     Given organization interacting with GPD
     And debt positions <identifiers> with the installments configured as follows:
       | identifier | po index | po type            | installment seq | action |
