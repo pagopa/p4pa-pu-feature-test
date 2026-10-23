@@ -5,14 +5,14 @@ import random
 import string
 import uuid
 from api.debt_positions import get_receipt, get_receipt_by_id, get_debt_position_by_organization_id_and_installment_nav, \
-    get_installment
+    get_installment, get_receipt_by_iur
 from api.fileshare import post_upload_file
 from bdd.steps.assessments_step import step_check_assessment, step_check_assessment_detail
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_positions_created, \
     step_check_installment_status
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.balance_utility import build_balance_xml
+from bdd.steps.utils.balance_utility import build_balance_xml, extract_balance_from_xml
 from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
@@ -208,6 +208,18 @@ def step_create_receipts_file_with_balance_for_non_existent_dp(context, csv_vers
     context.csv_version = CSVVersion(csv_version)
 
     csv_rows = create_receipts_rows(context, receipts_size=1)
+    row = csv_rows[0]
+    row.balance = build_balance_xml([Section(amount_cents=_to_cents(row.paymentAmountCents),
+                                             assessment_registry=AssessmentRegistry())])
+
+    _write_receipts_file(context, csv_rows)
+
+
+@given("a receipt with balance of the paid installment inserted into an ingestion flow file with version {csv_version}")
+def step_create_receipts_file_with_balance_for_paid_installment(context, csv_version: str):
+    context.csv_version = CSVVersion(csv_version)
+
+    csv_rows = create_receipts_rows(context, receipts_size=1, debt_position=context.debt_position)
     row = csv_rows[0]
     row.balance = build_balance_xml([Section(amount_cents=_to_cents(row.paymentAmountCents),
                                              assessment_registry=AssessmentRegistry())])
@@ -425,4 +437,32 @@ def step_check_installment_linked_to_pagopa_receipt(context):
         f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt['receiptOrigin']}"
     assert receipt['paymentReceiptId'] == installment['iur'], \
         f"paymentReceiptId mismatch: expected {installment['iur']}, got {receipt['paymentReceiptId']}"
-    
+
+
+@then("the receipt imported from file is created with origin receipt_file")
+def step_check_file_receipt_created(context):
+    """Checks that the receipt in the file is imported with origin `RECEIPT_FILE`."""
+    row = context.receipts_rows[0]
+
+    res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=row.paymentReceiptId)
+    assert_response_ok(res, "Get receipt by IUR")
+    receipt = res.json()
+    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_FILE.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_FILE.value}, got {receipt['receiptOrigin']}"
+    assert receipt['ingestionFlowFileId'] == context.receipts_file_id, \
+        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt['ingestionFlowFileId']}"
+
+
+@then("the installment balance is updated by the receipts file")
+def step_check_installment_balance_updated(context):
+    """Checks that the balance of the paid installment has been replaced by the balance of the receipt in the file."""
+    installment_paid = get_installment_paid(context)
+    row = context.receipts_rows[0]
+
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    assert_response_ok(res, "Get installment by id")
+    installment_balance = res.json()['balance']
+
+    assert installment_balance is not None, "Installment balance not set"
+    assert extract_balance_from_xml(installment_balance) == extract_balance_from_xml(row.balance), \
+        f"balance mismatch: expected {row.balance}, got {installment_balance}"
