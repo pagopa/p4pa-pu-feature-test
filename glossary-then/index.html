@@ -912,6 +912,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-installment-balance-is-updated-by-the-receipts-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the installment balance is updated by the receipts file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-installment-is-linked-to-the-pagopa-receipt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1026,6 +1037,17 @@
     <span class="md-ellipsis">
       
         the payment reporting with outcome code 9 is processed correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-receipt-imported-from-file-is-created-with-origin-receipt_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt imported from file is created with origin receipt_file
       
     </span>
   </a>
@@ -1438,6 +1460,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-installment-balance-is-updated-by-the-receipts-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the installment balance is updated by the receipts file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-installment-is-linked-to-the-pagopa-receipt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1552,6 +1585,17 @@
     <span class="md-ellipsis">
       
         the payment reporting with outcome code 9 is processed correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-receipt-imported-from-file-is-created-with-origin-receipt_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the receipt imported from file is created with origin receipt_file
       
     </span>
   </a>
@@ -1823,11 +1867,13 @@
 <li>the number of imported rows equals the rows sent and all were imported successfully;</li>
 <li>the <code>DEBT_POSITION_INGESTION_FLOW</code> workflow completes.</li>
 </ul>
+<h2 id="the-installment-balance-is-updated-by-the-receipts-file"><code>the installment balance is updated by the receipts file</code></h2>
+<p>Checks that the balance of the paid installment has been replaced by the balance of the receipt in the file.</p>
 <h2 id="the-installment-is-linked-to-the-pagopa-receipt"><code>the installment is linked to the pagoPA receipt</code></h2>
 <p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
 It verifies that:</p>
 <ul>
-<li>the installment IUR is no longer the one imported from file</li>
+<li>the installment IUR isn't the one imported from file</li>
 <li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
 </ul>
 <h2 id="the-mixed-debt-position-and-technical-ones-are-in-status-status"><code>the mixed debt position and technical ones are in status {status}</code></h2>
@@ -1890,6 +1936,8 @@ It verifies that:</p>
 <li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
 <li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes.</li>
 </ul>
+<h2 id="the-receipt-imported-from-file-is-created-with-origin-receipt_file"><code>the receipt imported from file is created with origin receipt_file</code></h2>
+<p>Checks that the receipt in the file is imported with origin <code>RECEIPT_FILE</code>.</p>
 <h2 id="the-receipt-is-created-correctly-with-origin-receipt_origin"><code>the receipt is created correctly with origin {receipt_origin}</code></h2>
 <p>Checks that the receipt for the paid installment was created with the expected origin. It verifies that:</p>
 <ul>

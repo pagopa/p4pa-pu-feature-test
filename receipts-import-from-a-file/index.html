@@ -509,6 +509,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-an-installment-paid-by-a-citizen-remains-linked-to-the-receipt-sent-by-pagopa-node-when-a-receipt-with-balance-of-the-same-installment-is-imported-from-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: An installment paid by a citizen remains linked to the receipt sent by pagoPA node when a receipt with balance of the same installment is imported from a file
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -867,6 +878,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-an-installment-paid-by-a-citizen-remains-linked-to-the-receipt-sent-by-pagopa-node-when-a-receipt-with-balance-of-the-same-installment-is-imported-from-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: An installment paid by a citizen remains linked to the receipt sent by pagoPA node when a receipt with balance of the same installment is imported from a file
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1208,7 +1230,7 @@
 <p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
     It verifies that:</p>
 <ul>
-<li>the installment IUR is no longer the one imported from file</li>
+<li>the installment IUR isn't the one imported from file</li>
 <li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
 </ul>
 </li>
@@ -1276,9 +1298,67 @@
 <p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
     It verifies that:</p>
 <ul>
-<li>the installment IUR is no longer the one imported from file</li>
+<li>the installment IUR isn't the one imported from file</li>
 <li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
 </ul>
+</li>
+</ol>
+<h2 id="scenario-an-installment-paid-by-a-citizen-remains-linked-to-the-receipt-sent-by-pagopa-node-when-a-receipt-with-balance-of-the-same-installment-is-imported-from-a-file">Scenario: An installment paid by a citizen remains linked to the receipt sent by pagoPA node when a receipt with balance of the same installment is imported from a file</h2>
+<p><strong>Tags:</strong> <code>@receipts_file_update</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a receipt with balance of the paid installment inserted into an ingestion flow file with version </span><span class="s">1</span><span class="nf">_</span><span class="s">3</span>
+<span class="k">When </span><span class="nf">the organization uploads the receipts file</span>
+<span class="k">Then </span><span class="nf">the receipts file is processed correctly</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">the receipt imported from file is created with origin receipt_file</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the installment is linked to the pagoPA receipt</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the installment balance is updated by the receipts file</span>
+<span class="c"># (6)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the receipts file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
+<li>the number of imported rows equals the rows sent and all were imported successfully;</li>
+<li>the <code>RECEIPT_INGESTION_FLOW</code> workflow completes.</li>
+</ul>
+</li>
+<li>
+<p>Checks that the receipt in the file is imported with origin <code>RECEIPT_FILE</code>.</p>
+</li>
+<li>
+<p>Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
+    It verifies that:</p>
+<ul>
+<li>the installment IUR isn't the one imported from file</li>
+<li>the receipt linked to the installment has origin <code>RECEIPT_PAGOPA</code> and the same IUR of the installment</li>
+</ul>
+</li>
+<li>
+<p>Checks that the balance of the paid installment has been replaced by the balance of the receipt in the file.</p>
 </li>
 </ol>
 
