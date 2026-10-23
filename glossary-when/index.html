@@ -732,6 +732,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-imports-the-payment-notification-related-to-the-installment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL imports the payment notification related to the installment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-imports-the-treasury-flow-of-type-flow_type" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -765,10 +776,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version" class="md-nav__link">
+  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_labels-with-version-version" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL requests the reconciliation export for classification label {classification_label} with version {version}
+        SIL requests the reconciliation export for classification label {classification_labels} with version {version}
       
     </span>
   </a>
@@ -967,6 +978,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sil-imports-the-payment-notification-related-to-the-installment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SIL imports the payment notification related to the installment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sil-imports-the-treasury-flow-of-type-flow_type" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1000,10 +1022,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version" class="md-nav__link">
+  <a href="#sil-requests-the-reconciliation-export-for-classification-label-classification_labels-with-version-version" class="md-nav__link">
     <span class="md-ellipsis">
       
-        SIL requests the reconciliation export for classification label {classification_label} with version {version}
+        SIL requests the reconciliation export for classification label {classification_labels} with version {version}
       
     </span>
   </a>
@@ -1100,6 +1122,12 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <h2 id="sil-creates-the-spontaneous-multi-beneficiary-debt-position-via-the-inviacarrello"><code>SIL creates the spontaneous multi-beneficiary debt position via the 'InviaCarrello'</code></h2>
 <p>Creates the spontaneous multi-beneficiary debt position through SIL (<code>paaSILInviaCarrello</code>) and
 asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</p>
+<h2 id="sil-imports-the-payment-notification-related-to-the-installment"><code>SIL imports the payment notification related to the installment</code></h2>
+<p>Imports a payment notification file through SIL (<code>pivotSILAutorizzaImportFlusso</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>builds the payment notification zip and uploads it to the returned URL</li>
+</ul>
 <h2 id="sil-imports-the-treasury-flow-of-type-flow_type"><code>SIL imports the treasury flow of type {flow_type}</code></h2>
 <p>Imports a treasury flow through SIL (<code>pivotSILAutorizzaImportFlussoTesoreria</code>)</p>
 <ul>
@@ -1116,7 +1144,7 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <ul>
 <li>requests the export for a <code>dateTime</code> window around today, filtered by the debt position type org</li>
 </ul>
-<h2 id="sil-requests-the-reconciliation-export-for-classification-label-classification_label-with-version-version"><code>SIL requests the reconciliation export for classification label {classification_label} with version {version}</code></h2>
+<h2 id="sil-requests-the-reconciliation-export-for-classification-label-classification_labels-with-version-version"><code>SIL requests the reconciliation export for classification label {classification_labels} with version {version}</code></h2>
 <p>Requests a reconciliation export through SIL (<code>pivotSILPrenotaExportFlussoRiconciliazione</code>)</p>
 <ul>
 <li>requests the export filtered by the paid notice IUV and the given classification</li>

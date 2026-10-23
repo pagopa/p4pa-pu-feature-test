@@ -554,6 +554,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-sil-imports-a-payment-notification-file-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL imports a payment notification file and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -839,6 +850,17 @@
     <span class="md-ellipsis">
       
         Scenario: SIL imports a treasury flow and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-imports-a-payment-notification-file-and-the-paid-notice-is-correctly-reconciled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL imports a payment notification file and the paid notice is correctly reconciled
       
     </span>
   </a>
@@ -1149,6 +1171,76 @@
 <li>locates the row matching the paid installment IUV/IUD</li>
 <li>asserts that the IUR, IUF and classification label of that row matches the expected values</li>
 </ul>
+</li>
+</ol>
+<h2 id="scenario-sil-imports-a-payment-notification-file-and-the-paid-notice-is-correctly-reconciled">Scenario: SIL imports a payment notification file and the paid notice is correctly reconciled</h2>
+<p><strong>Tags:</strong> <code>@sil_payment_notification</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the paid notice is classified as RT_NO_IUD, RT_NO_IUF according to the reconciliation export v</span><span class="s">1.4</span>
+<span class="k">When </span><span class="nf">SIL imports the payment notification related to the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">Then </span><span class="nf">the payment notification import completes successfully</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">the paid notice is classified as RT_NO_IUF according to the reconciliation export v</span><span class="s">1.4</span>
+<span class="k">When </span><span class="nf">the organization uploads the payment reporting for the installment with outcome code </span><span class="s">0</span>
+<span class="k">Then </span><span class="nf">the payment reporting import completes successfully</span>
+<span class="c"># (5)!</span>
+<span class="k">And </span><span class="nf">the paid notice is classified as IUD_RT_IUF according to the reconciliation export v</span><span class="s">1.4</span>
+<span class="k">When </span><span class="nf">SIL imports the treasury flow of type O</span>
+<span class="c"># (6)!</span>
+<span class="k">Then </span><span class="nf">the treasury import completes successfully</span>
+<span class="c"># (7)!</span>
+<span class="k">And </span><span class="nf">the paid notice is classified as IUD_RT_IUF, IUD_RT_IUF_TES according to the reconciliation export v</span><span class="s">1.4</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Creates a simple, single-installment debt position in one step. It:</p>
+<ul>
+<li>gets the organization token and builds the debt position entity;</li>
+<li>creates it and checks it becomes <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Imports a payment notification file through SIL (<code>pivotSILAutorizzaImportFlusso</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>builds the payment notification zip and uploads it to the returned URL</li>
+</ul>
+</li>
+<li>
+<p>Polls the payment notification import status (<code>pivotSILChiediStatoImportFlusso</code>) until it reaches <code>FILE_CARICATO</code></p>
+</li>
+<li>
+<p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
+<ul>
+<li>the file reaches status <code>COMPLETED</code>;</li>
+<li>the <code>PAYMENTS_REPORTING_INGESTION</code> workflow completes;</li>
+<li>the <code>TRANSFER_CLASSIFICATION</code> workflow completes for each transfer;</li>
+<li>the installment now has its <code>IUF</code> set.</li>
+</ul>
+</li>
+<li>
+<p>Imports a treasury flow through SIL (<code>pivotSILAutorizzaImportFlussoTesoreria</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>builds the treasury OPI zip and uploads it to the returned URL</li>
+</ul>
+</li>
+<li>
+<p>Polls the treasury import status (<code>pivotSILChiediStatoImportFlussoTesoreria</code>) until it reaches <code>FILE_CARICATO</code></p>
 </li>
 </ol>
 

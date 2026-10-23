@@ -967,10 +967,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label" class="md-nav__link">
+  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the paid notice appears in the reconciliation export with classification label {classification_label}
+        the paid notice appears in the reconciliation export with classification label {classification_labels}
       
     </span>
   </a>
@@ -978,10 +978,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label-without-iur-and-iuf" class="md-nav__link">
+  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels-without-iur-and-iuf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the paid notice appears in the reconciliation export with classification label {classification_label} without iur and iuf
+        the paid notice appears in the reconciliation export with classification label {classification_labels} without iur and iuf
       
     </span>
   </a>
@@ -1015,6 +1015,17 @@
     <span class="md-ellipsis">
       
         the payment notice PDF returned by 'ImportaDovuto' is no longer available
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notification-import-completes-successfully" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notification import completes successfully
       
     </span>
   </a>
@@ -1515,10 +1526,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label" class="md-nav__link">
+  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the paid notice appears in the reconciliation export with classification label {classification_label}
+        the paid notice appears in the reconciliation export with classification label {classification_labels}
       
     </span>
   </a>
@@ -1526,10 +1537,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label-without-iur-and-iuf" class="md-nav__link">
+  <a href="#the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels-without-iur-and-iuf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        the paid notice appears in the reconciliation export with classification label {classification_label} without iur and iuf
+        the paid notice appears in the reconciliation export with classification label {classification_labels} without iur and iuf
       
     </span>
   </a>
@@ -1563,6 +1574,17 @@
     <span class="md-ellipsis">
       
         the payment notice PDF returned by 'ImportaDovuto' is no longer available
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-payment-notification-import-completes-successfully" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the payment notification import completes successfully
       
     </span>
   </a>
@@ -1893,14 +1915,14 @@ It verifies that:</p>
 <li>locates the row matching the paid installment IUV/IUD</li>
 <li>asserts that the amount, debt position type org, IUR, IUV and IUD of that row matches the expected values</li>
 </ul>
-<h2 id="the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label"><code>the paid notice appears in the reconciliation export with classification label {classification_label}</code></h2>
+<h2 id="the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels"><code>the paid notice appears in the reconciliation export with classification label {classification_labels}</code></h2>
 <p>Downloads the reconciliation export CSV and verifies the paid notice row</p>
 <ul>
 <li>fetches the export file from the fileshare service using the export request token</li>
 <li>locates the row matching the paid installment IUV/IUD</li>
 <li>asserts that the IUR, IUF and classification label of that row matches the expected values</li>
 </ul>
-<h2 id="the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_label-without-iur-and-iuf"><code>the paid notice appears in the reconciliation export with classification label {classification_label} without iur and iuf</code></h2>
+<h2 id="the-paid-notice-appears-in-the-reconciliation-export-with-classification-label-classification_labels-without-iur-and-iuf"><code>the paid notice appears in the reconciliation export with classification label {classification_labels} without iur and iuf</code></h2>
 <p>Downloads the reconciliation export CSV and verifies the paid notice row</p>
 <ul>
 <li>fetches the export file from the fileshare service using the export request token</li>
@@ -1921,7 +1943,10 @@ It verifies that:</p>
   the amount, the due date and the NAV of the installment, and a valid CBILL code.</p>
 <h2 id="the-payment-notice-pdf-returned-by-importadovuto-is-no-longer-available"><code>the payment notice PDF returned by 'ImportaDovuto' is no longer available</code></h2>
 <p>Verifies that the payment notice download is no longer available through the URL returned by 'ImportaDovuto'</p>
+<h2 id="the-payment-notification-import-completes-successfully"><code>the payment notification import completes successfully</code></h2>
+<p>Polls the payment notification import status (<code>pivotSILChiediStatoImportFlusso</code>) until it reaches <code>FILE_CARICATO</code></p>
 <h2 id="the-payment-reporting-is-processed-correctly"><code>the payment reporting is processed correctly</code></h2>
+<p><em>also: <code>the payment reporting import completes successfully</code></em></p>
 <p>Checks that the payment reporting file was processed correctly. It verifies that:</p>
 <ul>
 <li>the file reaches status <code>COMPLETED</code>;</li>
