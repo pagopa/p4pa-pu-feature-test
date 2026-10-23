@@ -59,32 +59,3 @@ class CSVRow:
     @property
     def HEADER_FIELDS(self):
         return self._HEADER_FIELDS
-
-
-def to_csv_lines(csv_rows: list[CSVRow], lang: str = CSVLanguage.IT.value, with_header=True) -> list:
-    if not csv_rows:
-        return []
-
-    first_row = csv_rows[0]
-    active_fields = list(first_row.HEADER_FIELDS.keys())
-
-    lines = []
-
-    if with_header:
-        headers = [first_row.HEADER_FIELDS[f][lang] for f in active_fields]
-        lines.append(';'.join(f'"{h}"' if ';' in h else h for h in headers))
-
-    for row in csv_rows:
-        values = []
-        for f in active_fields:
-            val = getattr(row, f)
-            if val is None:
-                values.append('')
-            elif hasattr(val, 'value'):
-                values.append(val.value)
-            else:
-                values.append(str(val))
-
-        lines.append(';'.join(f'"{v}"' if ';' in v else v for v in values))
-
-    return lines

@@ -13,6 +13,7 @@ from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import build_balance_xml
+from bdd.steps.utils.csv_utils import to_csv_lines
 from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
@@ -21,7 +22,7 @@ from behave import given, when, then
 from config.configuration import secrets, settings
 from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry, Section
-from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, to_csv_lines, CSVVersion
+from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, CSVVersion
 from model.debt_position import DebtPosition, DebtPositionOrigin, Status, NAV_PREFIX
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowStatus, WorkflowType

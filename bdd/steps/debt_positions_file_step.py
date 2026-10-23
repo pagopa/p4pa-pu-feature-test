@@ -10,10 +10,11 @@ from api.fileshare import post_upload_file
 from bdd.steps.debt_positions_step import validate_debt_position_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.debt_position_utility import create_debt_position, create_payment_option, create_installment
+from bdd.steps.utils.csv_utils import to_csv_lines
 from bdd.steps.utils.utility import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import settings
-from model.csv_file_debt_positions import CSVRow, to_csv_lines, CSVVersion
+from model.csv_file_debt_positions import CSVRow, CSVVersion
 from model.debt_position import Status, PaymentOptionType, DebtPosition
 from model.file import FileOrigin, IngestionFlowFileType, FilePathName, FileStatus
 from model.workflow_hub import WorkflowType, WorkflowStatus
