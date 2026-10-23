@@ -7,7 +7,7 @@ from api.process_executions import get_by_org_and_file_path_and_file_name
 from api.send import get_send_notification
 from api.send_campaign import get_send_campaign_detail
 from api.soap.sil import post_sil_chiedi_stato_export_flusso, post_sil_chiedi_stato_import_flusso_tesoreria, \
-    post_sil_chiedi_stato_export_flusso_riconciliazione
+    post_sil_chiedi_stato_export_flusso_riconciliazione, post_sil_chiedi_stato_import_flusso_notificati
 from api.workflow_hub import get_workflow_status
 from bdd.steps.utils.assertions import assert_response_ok
 from model.file import FileStatus, FilePathName, SilExportStatus, SilImportStatus
@@ -218,25 +218,41 @@ def _resolve_element(xml_str: str, xpath: Optional[str]) -> ET.Element:
 def _local_name(tag: str) -> str:
     return tag.split('}')[-1]
 
-def retry_get_import_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
+def retry_get_sil_import_status(post_fn, operation_name: str, response_root: str,
+                                token, traceparent: str, ipa_code: str, request_token: str,
+                                tries=20, delay=4):
   status = None
   count = 0
   while count < tries:
     count += 1
-    res = post_sil_chiedi_stato_import_flusso_tesoreria(token=token, traceparent=traceparent, ipa_code=ipa_code,
-                                                        request_token=request_token)
-    assert_response_ok(res, "SIL chiedi stato import flusso tesoreria")
-    res_body = check_res_ok_and_get_body(res.content, 'pivotSILChiediStatoImportFlussoTesoreriaRisposta')
+    res = post_fn(token=token, traceparent=traceparent, ipa_code=ipa_code, request_token=request_token)
+    assert_response_ok(res, operation_name)
+    res_body = check_res_ok_and_get_body(res.content, response_root)
     status = res_body['stato']
 
     if status == SilImportStatus.IMPORT_STATUS_COMPLETED:
       return
     assert status != SilImportStatus.IMPORT_STATUS_FAILED, \
-      f"Import {request_token} reached unexpected terminal status: {status}"
-    assert status in SilImportStatus.IMPORT_STATUS_IN_PROGRESS, f"Unexpected import status: {status}"
+      f"{operation_name}: import {request_token} reached unexpected terminal status: {status}"
+    assert status in SilImportStatus.IMPORT_STATUS_IN_PROGRESS, \
+      f"{operation_name}: unexpected import status: {status}"
     time.sleep(delay)
 
-  assert False, f"Import {request_token} did not complete after {tries} tries (last status: {status})"
+  assert False, f"{operation_name}: import {request_token} did not complete after {tries} tries (last status: {status})"
+
+
+def retry_get_import_treasury_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
+  retry_get_sil_import_status(post_sil_chiedi_stato_import_flusso_tesoreria,
+                              "SIL chiedi stato import flusso tesoreria",
+                              'pivotSILChiediStatoImportFlussoTesoreriaRisposta',
+                              token, traceparent, ipa_code, request_token, tries, delay)
+
+
+def retry_get_import_payment_notification_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
+  retry_get_sil_import_status(post_sil_chiedi_stato_import_flusso_notificati,
+                              "SIL chiedi stato import notificati",
+                              'pivotSILChiediStatoImportFlussoRisposta',
+                              token, traceparent, ipa_code, request_token, tries, delay)
 
 def retry_get_reconciliation_export_status(token, traceparent: str, ipa_code: str, request_token: str, tries=20, delay=4):
   status = None

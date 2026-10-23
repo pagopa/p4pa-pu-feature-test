@@ -44,3 +44,19 @@ Feature: Debt positions classification by SIL
     When SIL requests the reconciliation export for classification label RT_IUF_TES with version v1.4
     Then the reconciliation export completes successfully
     And the paid notice appears in the reconciliation export with classification label RT_IUF_TES
+
+  @sil_payment_notification
+  Scenario: SIL imports a payment notification file and the paid notice is correctly reconciled
+    Given a simple debt position created by organization interacting with GPD
+    And the successful payment of the installment
+    And the paid notice is classified as RT_NO_IUD, RT_NO_IUF according to the reconciliation export v1.4
+    When SIL imports the payment notification related to the installment
+    Then the payment notification import completes successfully
+    And the paid notice is classified as RT_NO_IUF according to the reconciliation export v1.4
+    When the organization uploads the payment reporting for the installment with outcome code 0
+    Then the payment reporting import completes successfully
+    And the paid notice is classified as IUD_RT_IUF according to the reconciliation export v1.4
+    When SIL imports the treasury flow of type O
+    Then the treasury import completes successfully
+    And the paid notice is classified as IUD_RT_IUF, IUD_RT_IUF_TES according to the reconciliation export v1.4
+
