@@ -1,16 +1,13 @@
 import os
-from datetime import datetime
-
-import pandas
-from behave import when, then
-
 from api.fileshare import post_upload_file_to_url
 from api.soap.sil import post_sil_autorizza_import_flusso_notificati
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.csv_utils import to_csv_lines
+from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
 from bdd.steps.utils.debt_position_utility import format_decimal_amount, get_installment_paid
 from bdd.steps.utils.utility import check_res_ok_and_get_body, retry_get_import_payment_notification_status
+from behave import when, then
+from datetime import datetime
 from model.csv_file_payments_notification import CSVRow
 from model.debt_position import Installment
 
@@ -47,16 +44,11 @@ def create_payment_notification_zip(installments: list) -> str:
     csv_rows = create_payments_notification_rows(installments=installments)
 
     csv_lines = to_csv_lines(csv_rows=csv_rows)
-    dataset_dataframe = pandas.DataFrame(data=csv_lines)
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f'PaymentNotificationFeatureTest_{timestamp}-1_0'
-    zip_file_path = f'{filename}.zip'
 
-    dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
-                             compression=dict(method='zip', archive_name=f'{filename}.csv'))
-
-    return zip_file_path
+    return write_csv_zip(csv_lines=csv_lines, filename=filename)
 
 
 @when("SIL imports the payment notification related to the installment")

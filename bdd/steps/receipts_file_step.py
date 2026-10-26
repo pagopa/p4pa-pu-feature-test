@@ -1,6 +1,5 @@
 import copy
 import os
-import pandas
 import random
 import string
 import uuid
@@ -13,7 +12,7 @@ from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.balance_utility import build_balance_xml, extract_balance_from_xml
-from bdd.steps.utils.csv_utils import to_csv_lines
+from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
 from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
 from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
@@ -40,18 +39,11 @@ def step_create_receipts_file_for_non_existent_dp(context, csv_version: str):
 def _write_receipts_file(context, csv_rows: list):
       csv_version = context.csv_version
       csv_lines = to_csv_lines(csv_rows=csv_rows, csv_version=csv_version)
-
-      dataset_dataframe = pandas.DataFrame(data=csv_lines)
-
       filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}-{csv_version.value}'
-      zip_file_path = f'{filename}.zip'
-      dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
-                               compression=dict(method='zip',
-                                                archive_name=f'{filename}.csv'))
 
       context.receipts_rows = csv_rows
       context.receipts_rows_len = len(csv_rows)
-      context.receipts_file_name = zip_file_path
+      context.receipts_file_name = write_csv_zip(csv_lines=csv_lines, filename=filename)
 
 
 
