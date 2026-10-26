@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 behave = "==1.2.6"
 behave-html-pretty-formatter = "==1.11.1"
-certifi = "==2024.8.30"
+certifi = "==2026.10.19"
 charset-normalizer = "==3.3.2"
 dataclasses-json = "==0.6.7"
 distlib = "==0.3.8"
