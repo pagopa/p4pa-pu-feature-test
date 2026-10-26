@@ -1,3 +1,4 @@
+import pandas
 from dataclasses import fields
 
 
@@ -65,3 +66,11 @@ def to_csv_lines(csv_rows: list, csv_version=None, lang: str = None, with_header
         lines.append(';'.join(_escape(v) for v in values))
 
     return lines
+
+
+def write_csv_zip(csv_lines: list[str], filename: str) -> str:
+    """Writes the CSV lines into ``<filename>.zip``, containing a single ``<filename>.csv``, and returns the zip path."""
+    zip_file_path = f'{filename}.zip'
+    pandas.DataFrame(data=csv_lines).to_csv(zip_file_path, index=False, header=False,
+                                            compression=dict(method='zip', archive_name=f'{filename}.csv'))
+    return zip_file_path
