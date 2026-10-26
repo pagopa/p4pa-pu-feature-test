@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
       
 
@@ -798,6 +798,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-changes-configured-as-follows-are-inserted-into-an-ingestion-flow-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the changes configured as follows are inserted into an ingestion flow file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-citizen-pays-the-installment-of-payment-option-po_index" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1044,6 +1055,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-changes-configured-as-follows-are-inserted-into-an-ingestion-flow-file-with-version-csv_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the changes configured as follows are inserted into an ingestion flow file with version {csv_version}
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-citizen-pays-the-installment-of-payment-option-po_index" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1155,6 +1177,14 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
 <li>asserts the SOAP outcome is <code>OK</code> with the same IUV and the URL of the updated payment notice PDF;</li>
 <li>checks the debt position has been updated with the new amount.</li>
 </ul>
+<h2 id="the-changes-configured-as-follows-are-inserted-into-an-ingestion-flow-file-with-version-csv_version"><code>the changes configured as follows are inserted into an ingestion flow file with version {csv_version}</code></h2>
+<p>Builds a file with the changes configured in the table. For each row:</p>
+<ul>
+<li><code>I</code>: inserts a new installment in the given payment option</li>
+<li><code>M</code>: updates the installment with new remittance information, amount increased by 10 euros and due date
+  postponed by 5 days</li>
+<li><code>A</code>: deletes the installment</li>
+</ul>
 <h2 id="the-citizen-pays-the-installment-of-payment-option-po_index"><code>the citizen pays the installment of payment option {po_index}</code></h2>
 <p><em>also: <code>the citizen pays the installment {seq_num} of payment option {po_index}</code>, <code>the citizen {citizen_identifier} pays the installment of debt position {dp_identifier}</code>, <code>the citizen pays the installment {seq_num} of debt position {dp_identifier}</code>, <code>the citizen pays the installment</code></em></p>
 <p>Simulates the citizen paying the installment through the pagoPA node. It:</p>
@@ -1234,10 +1264,10 @@ asserts the SOAP outcome is <code>OK</code> with a URL to proceed for payment.</
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>
