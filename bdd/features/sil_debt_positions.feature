@@ -137,3 +137,16 @@ Feature: Debt positions management by SIL
     And 'VerificaAvviso' reports the outcome as 'PAA_IUV_NON_VALIDO'
     And 'ChiediPagati' reports the outcome as 'PAA_DOVUTO_NON_PAGABILE'
     And the citizen cannot pay the installment
+
+  @sil_importa_flusso
+  Scenario: Debt positions are created from an ingestion flow file version 1.4, by a SIL for organization interacting with GPD
+    Given a SIL acting on behalf of an organization interacting with GPD
+    And debt positions A B C with the installments configured as follows:
+      | identifier | po index | po type            | installment seq | action |
+      | A          | 1        | SINGLE_INSTALLMENT | 1               | I      |
+      | B          | 1        | SINGLE_INSTALLMENT | 1               | I      |
+      | C          | 1        | SINGLE_INSTALLMENT | 1               | I      |
+    And debt positions A B C inserted into an ingestion flow file with version 1_4
+    When SIL imports the debt positions flow
+    Then the debt positions import completes successfully
+    And the debt positions A B C are created in status UNPAID
