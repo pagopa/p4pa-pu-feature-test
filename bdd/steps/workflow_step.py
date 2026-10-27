@@ -1,6 +1,6 @@
 from api.workflow_hub import get_workflow_status
-from bdd.steps.utils.utility import get_workflow_id
-from bdd.steps.utils.utility import retry_get_workflow_status
+from bdd.steps.utils.generic_utils import get_workflow_id
+from bdd.steps.utils.polling_utils import retry_get_workflow_status
 from behave import then
 from model.workflow_hub import WorkflowType, WorkflowStatus
 

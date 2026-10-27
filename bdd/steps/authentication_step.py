@@ -4,7 +4,7 @@ from behave import given
 
 from api.auth import post_auth_token, post_external_auth_token
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.utility import retrieve_org_id_by_ipa_code
+from bdd.steps.utils.generic_utils import retrieve_org_id_by_ipa_code
 from config.configuration import secrets
 from model.workflow_hub import WorkflowType
 

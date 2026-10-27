@@ -4,6 +4,8 @@ from datetime import datetime
 
 from behave import given, when, then
 
+from bdd.steps.utils.date_utils import today, unique_timestamp
+
 from api.fileshare import post_upload_file_to_url
 from api.send_campaign import get_send_campaigns, get_send_campaign_notifications
 from api.sil_rest import post_authorize_import_massive_file
@@ -11,7 +13,7 @@ from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.send_step import get_valid_send_notification, assert_installment_iun
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.csv_utils import to_csv_lines
-from bdd.steps.utils.utility import retry_get_process_file_status, retry_get_send_campaign_detail
+from bdd.steps.utils.polling_utils import retry_get_process_file_status, retry_get_send_campaign_detail
 from bdd.steps.workflow_step import check_workflow_status
 from model.csv_file_send_notification import CSVRow
 from model.file import IngestionFlowFileType, FileStatus, FilePathName
@@ -22,7 +24,7 @@ from model.workflow_hub import WorkflowStatus, WorkflowType
 
 def create_send_notification_rows(installments: list, org_info, external_campaign_id: str) -> list[CSVRow]:
     pagopa_int_mode = get_pagopa_int_mode(org_info.pagopa_interaction)
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]
+    timestamp = unique_timestamp()
 
     send_notification_rows = []
 
@@ -155,9 +157,9 @@ def step_check_campaign_status(context):
     assert campaign_detail['campaignId'] is not None
     assert campaign_detail['counters'] is not None
     assert campaign_detail['counters']['total'] == total_notifications
-    today = datetime.now().strftime("%Y-%m-%d")
-    assert campaign_detail['startDate'] == today
-    assert campaign_detail['endDate'] == today
+    date_now = today()
+    assert campaign_detail['startDate'] == date_now
+    assert campaign_detail['endDate'] == date_now
 
     context.campaign_id = campaign_detail['campaignId']
 

@@ -11,11 +11,13 @@ from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_
     step_check_installment_status
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.balance_utility import build_balance_xml, extract_balance_from_xml
+from bdd.steps.utils.balance_utils import build_balance_xml, extract_balance_from_xml
 from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
-from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
+from bdd.steps.utils.amount_utils import cents_to_euro_str
+from bdd.steps.utils.debt_position_utils import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
-from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
+from bdd.steps.utils.generic_utils import get_workflow_run_id
 from bdd.steps.workflow_step import check_workflow_status
 from behave import given, when, then
 from config.configuration import secrets, settings
@@ -108,7 +110,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
     for i in range(receipts_size):
         iud = f'{FEATURE_TEST_IUD_PREFIX}{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
         amount = "{:.2f}".format(
-            random.randint(1, 200)) if debt_position is None else (float(debt_position.first_installment.amount_cents) / 100)
+            random.randint(1, 200)) if debt_position is None else cents_to_euro_str(debt_position.first_installment.amount_cents)
         iuv = generate_iuv() if debt_position is None else debt_position.first_installment.iuv
         context.iuvs.append(iuv)
 
@@ -234,7 +236,7 @@ def step_create_receipts_file_with_modified_receipt(context, csv_version: str, a
     row = copy.deepcopy(context.receipts_rows[0])
     row.remittanceInformation = 'Feature Test Import Receipts File updated'
     amount_cents = _to_cents(row.paymentAmountCents) + int(amount_increase) * 100
-    row.paymentAmountCents = "{:.2f}".format(amount_cents / 100)
+    row.paymentAmountCents = cents_to_euro_str(amount_cents)
     row.singlePaymentAmount = row.paymentAmountCents
 
     row.balance = build_balance_xml([

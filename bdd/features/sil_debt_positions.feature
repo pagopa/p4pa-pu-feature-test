@@ -139,7 +139,7 @@ Feature: Debt positions management by SIL
     And the citizen cannot pay the installment
 
   @sil_importa_flusso
-  Scenario: Debt positions are created from an ingestion flow file version 1.4, by a SIL for organization interacting with GPD
+  Scenario: Debt positions are created from an ingestion flow file version 1.4 via 'ImportaFlusso', by a SIL for organization interacting with GPD
     Given a SIL acting on behalf of an organization interacting with GPD
     And debt positions A B C with the installments configured as follows:
       | identifier | po index | po type            | installment seq | action |

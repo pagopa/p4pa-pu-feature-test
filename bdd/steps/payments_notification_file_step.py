@@ -4,8 +4,11 @@ from api.soap.sil import post_sil_autorizza_import_flusso_notificati
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
-from bdd.steps.utils.debt_position_utility import format_decimal_amount, get_installment_paid
-from bdd.steps.utils.utility import check_res_ok_and_get_body, retry_get_import_payment_notification_status
+from bdd.steps.utils.amount_utils import cents_to_euro_decimal
+from bdd.steps.utils.date_utils import today
+from bdd.steps.utils.debt_position_utils import get_installment_paid
+from bdd.steps.utils.soap_utils import check_res_ok_and_get_body
+from bdd.steps.utils.polling_utils import retry_get_import_payment_notification_status
 from behave import when, then
 from datetime import datetime
 from model.csv_file_payments_notification import CSVRow
@@ -14,7 +17,7 @@ from model.debt_position import Installment
 
 def create_payments_notification_rows(installments: list[Installment]) -> list:
     payments_notification_rows = []
-    today = datetime.now().strftime("%Y-%m-%d")
+    date_now = today()
 
     for installment in installments:
         row = CSVRow()
@@ -23,8 +26,8 @@ def create_payments_notification_rows(installments: list[Installment]) -> list:
         row.debtorUniqueIdentifierType = installment.debtor.entity_type.value
         row.debtorUniqueIdentifierCode = installment.debtor.fiscal_code
         row.debtorFullName = installment.debtor.full_name
-        row.paymentExecutionDate = today
-        row.amountPaid = format_decimal_amount(installment.amount_cents)
+        row.paymentExecutionDate = date_now
+        row.amountPaid = cents_to_euro_decimal(installment.amount_cents)
         row.remittanceInformation = installment.remittance_information
         row.transferCategory = installment.transfers[0].category
         row.debtorAddress = installment.debtor.address

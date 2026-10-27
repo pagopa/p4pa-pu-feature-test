@@ -15,42 +15,42 @@ from api.soap.sil import post_sil_invia_carrello_dovuti, post_sil_chiedi_esito_c
     get_sil_print_payment_notice, post_sil_autorizza_import_flusso_posizioni_debitorie, notices_url_pattern, \
     iuvs_url_pattern
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import \
+from bdd.steps.utils.debt_position_utils import \
     find_installment_by_seq_num_and_po_index, get_installment_paid, \
     retrieve_dp_type_org_by_code, retrieve_taxonomy_code_by_dp_type_org, \
     build_feature_test_iud
-from bdd.steps.utils.utility import xml_elements_equal, retry_get_import_debt_positions_status
+from bdd.steps.utils.xml_utils import xml_elements_equal
+from bdd.steps.utils.polling_utils import retry_get_import_debt_positions_status
+from bdd.steps.utils.soap_utils import extract_soap_body
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 from model.debt_position import DebtPosition, DebtPositionOrigin, Installment, \
     Debtor, SilDebtPositionAction
 
 _RESPONSE_INFO_BY_SOAP_ACTION = {
     'InviaCarrelloDovuti': {
-        'tag': 'ns3:paaSILInviaCarrelloDovutiRisposta',
+        'tag': 'paaSILInviaCarrelloDovutiRisposta',
         'session_field': 'idSessionCarrello',
     },
     'InviaDovuti': {
-        'tag': 'ns3:paaSILInviaDovutiRisposta',
+        'tag': 'paaSILInviaDovutiRisposta',
         'session_field': 'idSession',
     },
     'VerificaAvviso': {
-        'tag': 'ns3:paaSILVerificaAvvisoRisposta',
+        'tag': 'paaSILVerificaAvvisoRisposta',
         'session_field': 'idSession',
     },
     'ImportaDovuto': {
-        'tag': 'ns3:paaSILImportaDovutoRisposta',
+        'tag': 'paaSILImportaDovutoRisposta',
     },
     'ImportaFlusso': {
-        'tag': 'ns3:paaSILAutorizzaImportFlussoRisposta'
+        'tag': 'paaSILAutorizzaImportFlussoRisposta'
     }
 }
 
 
 def _get_response_body(res, soap_action):
-    response_tag = _RESPONSE_INFO_BY_SOAP_ACTION[soap_action]['tag']
-
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, f"SIL {soap_action}")
-    return res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'][response_tag]
+    return extract_soap_body(res.content, _RESPONSE_INFO_BY_SOAP_ACTION[soap_action]['tag'])
 
 
 def _get_ok_response_body(res, soap_action):
@@ -182,10 +182,9 @@ def step_sil_chiedi_esito_carrello(context, status):
         ipa_code=context.org_info.ipa_code,
     )
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL chiedi esito carrello")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'] \
-        ['ns3:paaSILChiediEsitoCarrelloDovutiRisposta']['listaCarrelli']['rispostaCarrello']
+    res_body = extract_soap_body(res.content, 'paaSILChiediEsitoCarrelloDovutiRisposta') \
+        ['listaCarrelli']['rispostaCarrello']
     assert res_body['esito'] == status
 
     context.chiedi_esito_carrello_response = res_body
@@ -199,7 +198,7 @@ def step_chiedi_esito_carrello_rt_matches(context):
 
 
 @then("'ChiediPagati' reports the outcome as '{status}'")
-def step_sil_chiedi_pagati(context, status):
+def step_sil_chiedi_pagati_outcome(context, status):
     res_body = _chiedi_pagati(context)
     assert res_body['fault']['faultCode'] == status
 
@@ -212,10 +211,8 @@ def _chiedi_pagati(context):
         ipa_code=context.org_info.ipa_code,
     )
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL chiedi pagati")
-    return res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'][
-        'ns3:paaSILChiediPagatiRisposta']
+    return extract_soap_body(res.content, 'paaSILChiediPagatiRisposta')
 
 
 @then("the RT returned by 'ChiediPagatiConRicevuta' matches the expected data")
@@ -229,9 +226,8 @@ def step_chiedi_pagati_rt_matches(context):
         ipa_code=context.org_info.ipa_code,
     )
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL chiedi pagati con ricevuta")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILChiediPagatiConRicevutaRisposta']
+    res_body = extract_soap_body(res.content, 'paaSILChiediPagatiConRicevutaRisposta')
     rt_b64 = res_body.get('rt')
     _assert_rt_matches_expected(context, rt_b64, source_label='ChiediPagatiConRicevuta')
 
@@ -325,7 +321,7 @@ def step_check_payment_notice_pdf(context):
         'creditor_fiscal_code': context.org_info.fiscal_code,
         'creditor_name': context.org_info.name,
         'debtor_name': installment.debtor.full_name,
-        'amount': f"{installment.amount_cents / 100:.2f}".replace('.', ','),
+        'amount': cents_to_euro_str(installment.amount_cents).replace('.', ','),
         'due_date': installment.due_date,
         'notice_number': installment.nav,
     }
@@ -375,7 +371,7 @@ def step_check_payment_notice_not_available(context):
 
 
 @then("'ChiediPagati' reports the installment as paid")
-def step_sil_chiedi_pagati(context):
+def step_sil_chiedi_pagati_as_paid(context):
     """Checks the payment through SIL (`paaSILChiediPagati`)"""
 
     res_body = _chiedi_pagati(context)
@@ -388,7 +384,7 @@ def step_sil_chiedi_pagati(context):
     payment_data = payment['datiPagamento']
     single_payment_data = payment_data['datiSingoloPagamento'][0]
     installment = get_installment_paid(context)
-    expected_amount = "{:.2f}".format(installment.amount_cents / 100)
+    expected_amount = cents_to_euro_str(installment.amount_cents)
 
     assert payment_data['identificativoUnivocoVersamento'] == installment.iuv, \
         f"iuv mismatch: expected {installment.iuv}, got {payment_data['identificativoUnivocoVersamento']}"

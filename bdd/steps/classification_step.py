@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from behave import given, then
 
 from api.classifications import get_classification
@@ -9,7 +7,8 @@ from bdd.steps.payments_reporting_step import step_upload_payment_reporting_file
 from bdd.steps.payments_step import step_installment_payment, step_check_receipt_processed
 from bdd.steps.treasury_step import step_upload_treasury_file, step_check_treasury_processed
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import get_installment_paid
+from bdd.steps.utils.date_utils import today
+from bdd.steps.utils.debt_position_utils import get_installment_paid
 from model.debt_position import Status
 
 
@@ -23,7 +22,7 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
     - asserts at least one classification exists;
     - verifies that, for every transfer, the stored labels match the expected set.
     """
-    date_now = datetime.now().strftime('%Y-%m-%d')
+    date_now = today()
 
     if outcome_code is not None:
         flow = get_payment_reporting_flow(context, outcome_code)
@@ -52,9 +51,9 @@ def step_check_classification(context, labels: str, outcome_code: str = None):
     for transfer in installment.transfers:
         actual_labels = sorted(cl['label'] for cl in classification_transfer_map.get(transfer.transfer_index, []))
         assert actual_labels == expected_labels, (
-            f"Transfer {transfer.transfer_index}"
-            + (f", payment reporting outcome {outcome_code}" if outcome_code is not None else "")
-            + f": Expected {expected_labels}, found {actual_labels}"
+                f"Transfer {transfer.transfer_index}"
+                + (f", payment reporting outcome {outcome_code}" if outcome_code is not None else "")
+                + f": Expected {expected_labels}, found {actual_labels}"
         )
 
 

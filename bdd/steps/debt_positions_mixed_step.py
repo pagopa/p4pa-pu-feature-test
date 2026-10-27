@@ -4,7 +4,6 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-import xmltodict
 from behave import given, when, then
 
 from api.debt_positions import get_debt_position_by_iud, get_debt_position_by_iuv
@@ -13,7 +12,9 @@ from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.debt_positions_step import step_check_dp_status
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
+from bdd.steps.utils.date_utils import unique_timestamp
+from bdd.steps.utils.debt_position_utils import retrieve_taxonomy_code_by_dp_type_org, retrieve_dp_type_org_by_code
+from bdd.steps.utils.soap_utils import extract_soap_body
 from bdd.steps.workflow_step import step_debt_position_workflow_check_expiration, check_workflow_does_not_exist
 from model.debt_position import DebtPositionOrigin, PaymentOptionType, DebtPosition, Status
 from model.debt_position_mixed import TransferMixed, DebtPositionMixed, MIXED_REMITTANCE
@@ -27,18 +28,20 @@ def step_create_dp_mixed_entity(context):
     transfers_mixed = []
     for row in context.table:
         transfer_index = row['transfer index']
-        iud = f'Mixed_{transfer_index}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
+        iud = f'Mixed_{transfer_index}_{unique_timestamp()}_{uuid.uuid4().hex[:5]}'
         remittance_information = 'Test ' + iud
         dp_type_org_code = row['type org']
 
-        debt_position_type_org = retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent, organization_id=org_id,
+        debt_position_type_org = retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent,
+                                                              organization_id=org_id,
                                                               debt_position_type_org_code=dp_type_org_code)
         taxonomy_code = retrieve_taxonomy_code_by_dp_type_org(token=context.token, traceparent=context.traceparent,
-                                                              debt_position_type_id=debt_position_type_org['debtPositionTypeId'])
+                                                              debt_position_type_id=debt_position_type_org[
+                                                                  'debtPositionTypeId'])
 
         transfer = TransferMixed(iud=iud,
                                  remittance_information=remittance_information,
-                                 amount_cents=int(float(row["amount"])*100),
+                                 amount_cents=int(float(row["amount"]) * 100),
                                  debt_position_type_org_code=dp_type_org_code,
                                  legacy_payment_metadata=taxonomy_code,
                                  debt_position_type_org_id=debt_position_type_org['debtPositionTypeOrgId'],
@@ -60,9 +63,8 @@ def step_sil_invia_dovuto_mixed(context):
                                            debt_position_mixed=context.debt_position_mixed,
                                            ipa_code=context.org_info.ipa_code)
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL invia dovuto")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILInviaDovutiRisposta']
+    res_body = extract_soap_body(res.content, 'paaSILInviaDovutiRisposta')
     assert res_body['esito'] == 'OK'
 
     expected_pattern = checkout_url_pattern(context.org_info.fiscal_code)
@@ -90,7 +92,8 @@ def step_check_debt_positions_mixed_created(context, status):
         transfers_index = row['transfers index'].split()
         if dp_origin == DebtPositionOrigin.SPONTANEOUS_MIXED.value:
             transfer_mixed = transfer_index_map[int(transfers_index[0])]
-            res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent, organization_id=org_info.id,
+            res_dp_by_iud = get_debt_position_by_iud(token=token, traceparent=context.traceparent,
+                                                     organization_id=org_info.id,
                                                      iud=transfer_mixed.iud,
                                                      debt_position_origin=dp_origin)
             assert_response_ok(res_dp_by_iud, "Get debt position by IUD")
@@ -101,7 +104,8 @@ def step_check_debt_positions_mixed_created(context, status):
                                                                   row, transfers_index, transfer_index_map, status)
 
         elif dp_origin == DebtPositionOrigin.SPONTANEOUS_SIL.value:
-            res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_info.id,
+            res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent,
+                                                     organization_id=org_info.id,
                                                      iuv=iuv,
                                                      debt_position_origin=dp_origin)
             assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
@@ -109,7 +113,8 @@ def step_check_debt_positions_mixed_created(context, status):
             res_dp = res_dp_by_iuv.json()[0]
 
             debt_position_type_org = retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent,
-                                                                  organization_id=org_info.id, debt_position_type_org_code=row['type org'])
+                                                                  organization_id=org_info.id,
+                                                                  debt_position_type_org_code=row['type org'])
 
             _validate_dp_spontaneous_sil(res_dp, debt_position_type_org['debtPositionTypeOrgId'], dp_mixed, org_info,
                                          row, transfers_index, transfer_index_map, status)
@@ -136,7 +141,8 @@ def step_sil_create_mixed_dp(context, pagopa_interaction):
     iuv = _extract_iuv_from_dp_found_by_iud(token=token, traceparent=context.traceparent, org_id=org_id,
                                             iud=context.debt_position_mixed.transfers[0].iud)
 
-    res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_id, iuv=iuv)
+    res_dp_by_iuv = get_debt_position_by_iuv(token=token, traceparent=context.traceparent, organization_id=org_id,
+                                             iuv=iuv)
     assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
     res_dp_list = res_dp_by_iuv.json()
 
@@ -151,8 +157,10 @@ def step_check_mixed_and_tech_dp_status(context, status):
     """Checks that the mixed debt position and its technical (`SPONTANEOUS_MIXED`) ones are all in the expected status."""
     step_check_dp_status(context=context, status=status)
 
-    res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
-                                             iuv=context.iuv_mixed, debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
+    res_dp_by_iuv = get_debt_position_by_iuv(token=context.token, traceparent=context.traceparent,
+                                             organization_id=context.org_info.id,
+                                             iuv=context.iuv_mixed,
+                                             debt_position_origin=DebtPositionOrigin.SPONTANEOUS_MIXED.value)
     assert_response_ok(res_dp_by_iuv, "Get debt position by IUV")
     for dp_sp_mixed in res_dp_by_iuv.json():
         step_check_dp_status(context=context, status=status, debt_position_id=dp_sp_mixed['debtPositionId'])
@@ -175,8 +183,9 @@ def _quick_validate_all_dp(context, res_dp_list, org_id):
                                           entity_id=dp['debtPositionId'])
         else:
             assert dp['debtPositionOrigin'] == DebtPositionOrigin.SPONTANEOUS_SIL.value
-            debt_position_type_org_id = retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent,
-                                                                     organization_id=org_id, debt_position_type_org_code='MIXED')[
+            debt_position_type_org_id = \
+            retrieve_dp_type_org_by_code(token=context.token, traceparent=context.traceparent,
+                                         organization_id=org_id, debt_position_type_org_code='MIXED')[
                 'debtPositionTypeOrgId']
             assert dp['debtPositionTypeOrgId'] == debt_position_type_org_id
             assert dp['paymentOptions'][0]['totalAmountCents'] == sum(amount_by_type_org_id.values())

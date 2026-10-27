@@ -2,7 +2,7 @@ import base64
 import re
 from typing import Optional
 
-from bdd.steps.utils.debt_position_utility import format_amount
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position import Installment, Transfer, Stamp, SilDebtPositionAction
@@ -39,7 +39,7 @@ def _build_dati_singolo_versamento(iud: str, amount_cents, tipo_dovuto: str, dat
     return _render(
         'datiVersamento.xml',
         iud=iud,
-        importo=format_amount(amount_cents),
+        importo=cents_to_euro_str(amount_cents),
         tipo_dovuto=tipo_dovuto,
         dati_specifici_riscossione=dati_specifici_riscossione,
         dati_marca_bollo=_build_marca_bollo(marca_bollo),
@@ -77,7 +77,7 @@ def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
         iban_ente_secondario=second_transfer.iban,
         causale_ente_secondario=second_transfer.remittance_information,
         dati_specifici_riscossione_ente_secondario=second_transfer.category,
-        importo_ente_secondario=format_amount(second_transfer.amount_cents),
+        importo_ente_secondario=cents_to_euro_str(second_transfer.amount_cents),
     )
     return _to_base64(dovuti_enti_secondari)
 
@@ -98,7 +98,7 @@ def _build_versamento_base64(installment: Installment, debt_position_type_org_co
         data_esecuzione_pagamento=installment.due_date,
         identificativo_univoco_versamento=_build_iuv_element(installment.iuv),
         iud=installment.iud,
-        importo=format_amount(installment.amount_cents),
+        importo=cents_to_euro_str(installment.amount_cents),
         tipo_dovuto=debt_position_type_org_code,
         causale=installment.remittance_information,
         dati_specifici_riscossione=installment.legacy_payment_metadata,

@@ -2,7 +2,8 @@ import random
 import string
 import uuid
 from datetime import datetime, timedelta
-from decimal import Decimal
+
+from bdd.steps.utils.date_utils import unique_timestamp
 
 from api.debt_position_type import get_debt_position_type_org_by_code, get_debt_position_type_by_id
 from api.debt_positions import get_debt_position
@@ -16,7 +17,7 @@ FEATURE_TEST_IUD_PREFIX = 'FeatureTest_'
 
 
 def build_feature_test_iud(seq_num) -> str:
-    return f'{FEATURE_TEST_IUD_PREFIX}{seq_num}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
+    return f'{FEATURE_TEST_IUD_PREFIX}{seq_num}_{unique_timestamp()}_{uuid.uuid4().hex[:5]}'
 
 
 def seq_num_of(iud: str) -> int:
@@ -201,10 +202,3 @@ def fetch_debt_position(context, debt_position_id=None) -> DebtPosition:
 
     assert_response_ok(res, "Get debt position by id")
     return DebtPosition.from_dict(res.json())
-
-
-def format_amount(amount_cents) -> str:
-    return "{:.2f}".format(int(amount_cents) / 100)
-
-def format_decimal_amount(amount_cents) -> Decimal:
-    return Decimal(amount_cents) / Decimal(100)
