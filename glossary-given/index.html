@@ -824,6 +824,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-successful-payment-of-the-installment-created-outside-pu-that-creates-a-technical-debt-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the successful payment of the installment created outside PU that creates a technical debt position
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1109,6 +1120,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-successful-payment-of-the-installment-created-outside-pu-that-creates-a-technical-debt-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        the successful payment of the installment created outside PU that creates a technical debt position
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1260,6 +1282,13 @@ processed:</p>
 <h2 id="the-successful-payment-of-the-installment-created-outside-pu"><code>the successful payment of the installment created outside PU</code></h2>
 <p>Like <code>the successful payment of the installment</code>, but pays the first installment of a debt
 position created outside PU, then checks the <code>PAID</code> status and that the receipt is processed.</p>
+<h2 id="the-successful-payment-of-the-installment-created-outside-pu-that-creates-a-technical-debt-position"><code>the successful payment of the installment created outside PU that creates a technical debt position</code></h2>
+<p>Pays the first installment of a debt position created outside PU and not yet present in PU. It:</p>
+<ul>
+<li>pays the installment and waits for the pagoPA receipt <code>RT_&lt;nav&gt;.xml</code> to be <code>COMPLETED</code>;</li>
+<li>checks the technical debt position is created with origin <code>RECEIPT_PAGOPA</code> and is <code>PAID</code>;</li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
 
 
 
