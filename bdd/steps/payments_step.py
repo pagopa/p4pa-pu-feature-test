@@ -18,7 +18,7 @@ psp_info = secrets.payment_info.psp
 
 def check_res_ok_and_get_body(response_content, tag_name):
     res_body = extract_soap_body(response_content, tag_name)
-    assert res_body['outcome'] == 'OK'
+    assert res_body['outcome'] == 'OK', f'Payment failed: {res_body}'
     return res_body
 
 
