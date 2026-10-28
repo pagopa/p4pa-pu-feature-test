@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from behave import then
+from behave import given, then
 
 from api.classifications import get_assessment, get_assessment_details, get_assessment_registry, \
     get_assessment_details_by_iud_and_iuv, get_classification
@@ -11,7 +11,7 @@ from bdd.steps.utils.balance_utils import extract_balance_from_xml, extract_sect
 from bdd.steps.utils.date_utils import today
 from bdd.steps.utils.debt_position_utils import get_installment_paid, set_installment_paid
 from bdd.steps.workflow_step import check_workflow_status
-from model.classification import Balance, AssessmentRegistry, AssessmentDetailClassificationLabel, Section
+from model.classification import Balance, AssessmentRegistry, Section, AssessmentDetailClassificationLabel
 from model.debt_position import DebtPositionTypeOrgBalanceCostType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
@@ -111,7 +111,8 @@ def step_check_assessment_detail_classification_label(context, label):
 
 @then("the assessment detail is created correctly based on balance")
 @then("the assessment detail is created correctly based on balance including {dptobc_type} section")
-def step_check_assessment_detail(context, dptobc_type=None):
+def step_check_assessment_detail(context, dptobc_type=None,
+                                 classification_label=AssessmentDetailClassificationLabel.PAID.value):
     """Checks that assessment details were created from the balance. It:
 
     - retrieves the expected balance sections (optionally including a given DPTOBC section);
@@ -135,6 +136,7 @@ def step_check_assessment_detail(context, dptobc_type=None):
 
     assert_response_ok(res, "Get assessment details")
     assessment_details = res.json()["_embedded"]["assessmentsDetails"]
+    context.assessment_details = assessment_details
     assert len(assessment_details) == len(balance.sections)
 
     for section in balance.sections:
@@ -142,7 +144,7 @@ def step_check_assessment_detail(context, dptobc_type=None):
         assert assessment_detail is not None, f"No assessmentDetail matches {section.assessment_registry}"
 
         assert installment_paid.iur == assessment_detail["iur"]
-        assert assessment_detail['classificationLabel'] == AssessmentDetailClassificationLabel.PAID.value
+        assert assessment_detail['classificationLabel'] == classification_label
         assert int(section.amount_cents) == assessment_detail["amountCents"]
         assert (assessment_detail["sectionCode"] is not None and
                 section.assessment_registry.section_code == assessment_detail["sectionCode"])
@@ -214,3 +216,9 @@ def retrieve_dpto_balance_cost_of_notification(context) -> AssessmentRegistry:
         dptobc = res_dptobc_by_id.json()
         return AssessmentRegistry(section_code=dptobc.get('sectionCode'), office_code=dptobc.get('officeCode'),
                                   assessment_code=dptobc.get('assessmentCode'))
+
+
+@given("an assessment, classified as '{label}', exists for the installment")
+def step_check_assessment_existence(context, label):
+    step_check_assessment(context=context, status='closed')
+    step_check_assessment_detail(context=context, classification_label=label.upper())

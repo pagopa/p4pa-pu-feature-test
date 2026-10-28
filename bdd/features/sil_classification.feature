@@ -60,3 +60,23 @@ Feature: Debt positions classification by SIL
     Then the treasury import completes successfully
     And the paid notice is classified as IUD_RT_IUF, IUD_RT_IUF_TES according to the reconciliation export v1.4
 
+
+
+  @sil_assessments
+  Scenario: SIL checks assessment by IUF for a reported notice
+    Given a simple debt position with balance created by organization interacting with GPD
+    And the successful payment of the installment
+    And a payment reporting with outcome code 0 has been successfully processed for the installment
+    And an assessment, classified as 'reported', exists for the installment
+    When SIL requests to check the assessment using the IUF
+    Then the assessment returned matches the classified assessment details
+
+  @sil_assessments
+  Scenario: SIL checks assessment by bill for a cashed notice
+    Given a simple debt position with balance created by organization interacting with GPD
+    And the successful payment of the installment
+    And a payment reporting with outcome code 0 has been successfully processed for the installment
+    And a treasury file has been successfully processed for the installment
+    And an assessment, classified as 'cashed', exists for the installment
+    When SIL requests to check the assessment using the bill
+    Then the assessment returned matches the classified assessment details

@@ -1,24 +1,27 @@
 import io
 import os
+from collections import Counter
 from datetime import datetime, timedelta
-
-from bdd.steps.utils.date_utils import today
+from decimal import Decimal
 
 import pandas
-from behave import given, when, then
+from behave import given
+from behave import when, then
 
 from api.fileshare import get_export_file, post_upload_file_to_url
 from api.soap.sil import post_sil_prenota_export_flusso, \
     post_sil_prenota_export_flusso_incrementale_con_ricevuta, \
-    post_sil_autorizza_import_flusso_tesoreria, post_sil_prenota_export_flusso_riconciliazione
+    post_sil_autorizza_import_flusso_tesoreria, post_sil_prenota_export_flusso_riconciliazione, \
+    post_sil_chiedi_accertamento_per_iuf, post_sil_chiedi_accertamento_per_bolletta
 from bdd.steps.authentication_step import step_get_token_sil
-from bdd.steps.treasury_step import format_ingestion_flow_file, create_files
+from bdd.steps.treasury_step import format_ingestion_flow_file, create_files, IUF_NOT_FOUND
 from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.date_utils import today
 from bdd.steps.utils.debt_position_utils import get_installment_paid
-from bdd.steps.utils.soap_utils import check_res_ok_and_get_body
 from bdd.steps.utils.polling_utils import retry_get_export_status, \
     retry_get_import_treasury_status, \
     retry_get_reconciliation_export_status
+from bdd.steps.utils.soap_utils import check_res_ok_and_get_body
 from config.configuration import settings
 
 DEBT_POSITION_TYPE_ORG_CODE = settings.debt_position_type_org_code.feature_test
@@ -63,6 +66,7 @@ def step_sil_prenota_export_flusso_incrementale(context, version):
         token=context.token, traceparent=context.traceparent, ipa_code=context.org_info.ipa_code,
         date_from=date_from, date_to=date_to, debt_position_type_org_code=DEBT_POSITION_TYPE_ORG_CODE, receipt=True,
         incremental=True, version=version)
+
     _store_export_request_token(context, res, 'paaSILPrenotaExportFlussoIncrementaleConRicevutaRisposta',
                                 "SIL prenota export flusso incrementale con ricevuta")
 
@@ -120,6 +124,7 @@ def step_sil_import_treasury_flow(context, flow_type):
 
     res = post_sil_autorizza_import_flusso_tesoreria(token=context.token, traceparent=context.traceparent,
                                                      ipa_code=context.org_info.ipa_code, flow_type=flow_type)
+
     assert_response_ok(res, "SIL autorizza import flusso tesoreria")
     res_body = check_res_ok_and_get_body(res.content, 'pivotSILAutorizzaImportFlussoTesoreriaRisposta')
 
@@ -234,4 +239,55 @@ def step_check_classification_labels(context, classification_labels, version):
     step_sil_prenota_reconciliation_export(context=context, classification_labels=classification_labels,
                                            version=version)
     step_check_reconciliation_export_status(context=context)
-    step_check_notice_in_reconciliation_export_with_iur_iuf(context=context, classification_labels=classification_labels)
+    step_check_notice_in_reconciliation_export_with_iur_iuf(context=context,
+                                                            classification_labels=classification_labels)
+
+
+@when("SIL requests to check the assessment using the {parameter}")
+def step_request_to_check_assessment(context, parameter):
+    if parameter == "IUF":
+        iuf = get_installment_paid(context).iuf or IUF_NOT_FOUND
+
+        res = post_sil_chiedi_accertamento_per_iuf(token=context.token, traceparent=context.traceparent,
+                                                   ipa_code=context.org_info.ipa_code, iuf=iuf)
+    elif parameter == "bill":
+        print(context.bill_code)
+        print(context.bill_year)
+        res = post_sil_chiedi_accertamento_per_bolletta(token=context.token, traceparent=context.traceparent,
+                                                        ipa_code=context.org_info.ipa_code,
+                                                        bill_year=context.bill_year, bill_code=context.bill_code)
+    else:
+        raise ValueError("")
+
+    assert_response_ok(res, "Check the assessment")
+    assessment_response_body = check_res_ok_and_get_body(res.content, 'pivotSILChiediAccertamentoRisposta')
+
+    context.assessment_response_body = assessment_response_body
+
+
+def _as_list(value):
+    return [] if value is None else value if isinstance(value, list) else [value]
+
+
+def _parse_body(body):
+    result = Counter()
+    for bil in filter(None, _as_list(body.get("bilancio"))):
+        for tipo in _as_list(bil.get("tipoDovuto")):
+            for cap in _as_list(tipo.get("capitolo")):
+                for acc in _as_list(cap.get("accertamento")):
+                    key = (bil["ufficio"], tipo["codTipoDovuto"], cap["codCapitolo"], acc["codAccertamento"])
+                    result[key] += int(Decimal(acc["importo"]) * 100)
+    return result
+
+
+@then("the assessment returned matches the classified assessment details")
+def step_check_assessment_by_iuf(context):
+    expected = Counter()
+    for d in context.assessment_details:
+        key = (d["officeCode"], context.debt_position_type_org_code, d["sectionCode"], d["assessmentCode"])
+        expected[key] += d["amountCents"]
+
+    actual = _parse_body(context.assessment_response_body)
+
+    assert expected, "No classified assessment details to compare"
+    assert actual == expected, f"Assessment mismatch.\nExpected: {dict(expected)}\nActual:   {dict(actual)}"

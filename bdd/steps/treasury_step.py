@@ -5,12 +5,11 @@ import zipfile
 from datetime import datetime
 from zipfile import ZipFile
 
-from bdd.steps.utils.date_utils import today, now
-
-from behave import when, then
+from behave import given, when, then
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.date_utils import today, now
 from bdd.steps.utils.debt_position_utils import get_installment_paid
 from bdd.steps.utils.polling_utils import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
@@ -31,6 +30,7 @@ def format_ingestion_flow_file(context, amount, file, org_info):
     year = datetime.now().year
     remittance_description = '/PUR/LGPE-RIVERSAMENTO/URI/' + iuf + ' .PUR.LGPE-RIVERSAMENTO.URI.2025-05- TRXID: ' + ''.join(
         random.choices(string.digits, k=17))
+    bill_code = str(random.randint(1_000_000, 9_999_999))
 
     file = file.format(flow_date_time=date_time,
                        org_code='XX00YY',
@@ -50,7 +50,7 @@ def format_ingestion_flow_file(context, amount, file, org_info):
                        management_provisional_code=''.join(
                            random.choices(string.digits, k=10)),
                        bill_amount=amount,
-                       bill_code=''.join(random.choices(string.digits, k=7)),
+                       bill_code=bill_code,
                        bill_date=date,
                        region_value_date=date,
                        psp_last_name=psp_info.name,
@@ -58,6 +58,8 @@ def format_ingestion_flow_file(context, amount, file, org_info):
                        end_to_end_id='RF' + ''.join(random.choices(string.digits, k=24))
                        )
 
+    context.bill_code = bill_code
+    context.bill_year = year
     return file
 
 
@@ -103,7 +105,8 @@ def step_upload_treasury_file_with_amount(context, amount):
     os.remove(xml_file_path)
 
 
-@when("the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
+@when(
+    "the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
 def step_upload_treasury_file(context, po_index, installment_seq_num):
     token = context.token
     org_info = context.org_info
@@ -159,3 +162,13 @@ def step_check_treasury_processed(context):
     check_workflow_status(context=context, workflow_type=WorkflowType.IUF_CLASSIFICATION,
                           entity_id=str(organization_id) + '-' + installment_paid.iuf,
                           status=WorkflowStatus.COMPLETED)
+
+
+@given("a treasury file has been successfully processed for the installment")
+def step_successful_treasury_uploading(context):
+    """Uploads a treasury file and checks it is processed:
+
+        - uploads the file;
+        - checks if processing is complete"""
+    step_upload_treasury_file(context=context, installment_seq_num=1, po_index=1)
+    step_check_treasury_processed(context=context)

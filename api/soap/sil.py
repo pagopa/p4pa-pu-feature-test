@@ -337,3 +337,16 @@ def post_sil_chiedi_stato_import_flusso_notificati(token, traceparent: str, ipa_
     data = _render('chiediStatoImportFlussoNotificati.xml', codice_ipa=ipa_code, request_token=request_token)
 
     return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_accertamento_per_iuf(token, traceparent: str, ipa_code: str, iuf: str):
+    data = _render('chiediAccertamentoPerIUF.xml', codice_ipa=ipa_code, iuf=iuf)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_accertamento_per_bolletta(token, traceparent: str, ipa_code: str, bill_code: str, bill_year: str):
+    data = _render('chiediAccertamentoPerBolletta.xml', codice_ipa=ipa_code, numero_bolletta=bill_code,
+                   anno_bolletta=bill_year)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
