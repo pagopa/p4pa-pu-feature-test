@@ -5,12 +5,11 @@ import zipfile
 from datetime import datetime
 from zipfile import ZipFile
 
-from bdd.steps.utils.date_utils import today, now
-
-from behave import when, then
+from behave import given, when, then
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.assertions import assert_response_ok
+from bdd.steps.utils.date_utils import today, now
 from bdd.steps.utils.debt_position_utils import get_installment_paid
 from bdd.steps.utils.polling_utils import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
@@ -106,7 +105,8 @@ def step_upload_treasury_file_with_amount(context, amount):
     os.remove(xml_file_path)
 
 
-@when("the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
+@when(
+    "the organization uploads the treasury file with amount of installment {installment_seq_num} of payment option {po_index}")
 def step_upload_treasury_file(context, po_index, installment_seq_num):
     token = context.token
     org_info = context.org_info
