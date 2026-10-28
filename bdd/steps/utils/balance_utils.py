@@ -1,5 +1,6 @@
 import execjs
 import xmltodict
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 from model.classification import AssessmentRegistry, Section
 
 
@@ -63,7 +64,7 @@ def build_balance_xml(sections: list[Section]) -> str:
                     'codUfficio': section.assessment_registry.office_code,
                     'accertamento': {
                         'codAccertamento': section.assessment_registry.assessment_code,
-                        'importo': "{:.2f}".format(section.amount_cents / 100),
+                        'importo': cents_to_euro_str(section.amount_cents),
                     },
                 }
                 for section in sections

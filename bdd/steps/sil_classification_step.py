@@ -2,6 +2,8 @@ import io
 import os
 from datetime import datetime, timedelta
 
+from bdd.steps.utils.date_utils import today
+
 import pandas
 from behave import given, when, then
 
@@ -12,13 +14,23 @@ from api.soap.sil import post_sil_prenota_export_flusso, \
 from bdd.steps.authentication_step import step_get_token_sil
 from bdd.steps.treasury_step import format_ingestion_flow_file, create_files
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import get_installment_paid
-from bdd.steps.utils.utility import check_res_ok_and_get_body, retry_get_export_status, \
+from bdd.steps.utils.debt_position_utils import get_installment_paid
+from bdd.steps.utils.soap_utils import check_res_ok_and_get_body
+from bdd.steps.utils.polling_utils import retry_get_export_status, \
     retry_get_import_treasury_status, \
     retry_get_reconciliation_export_status
 from config.configuration import settings
 
 DEBT_POSITION_TYPE_ORG_CODE = settings.debt_position_type_org_code.feature_test
+
+
+def _store_export_request_token(context, res, response_tag, label):
+    """Validate a SIL export reservation SOAP response and store its requestToken on the context."""
+    assert_response_ok(res, label)
+    res_body = check_res_ok_and_get_body(res.content, response_tag)
+    context.export_request_token = res_body['requestToken']
+    assert context.export_request_token is not None, f"No requestToken returned by '{label}'"
+    return res_body
 
 
 @when("SIL requests the export of paid notices with version {version}")
@@ -28,17 +40,13 @@ def step_sil_prenota_export_flusso(context, version):
     - requests the export for a date window around today, filtered by the debt position type org"""
     step_get_token_sil(context=context, pagopa_interaction=context.org_info.pagopa_interaction)
 
-    date_from = (datetime.now()).strftime('%Y-%m-%d')
-    date_to = (datetime.now()).strftime('%Y-%m-%d')
+    date_from = today()
+    date_to = today()
 
     res = post_sil_prenota_export_flusso(token=context.token, traceparent=context.traceparent,
                                          ipa_code=context.org_info.ipa_code, date_from=date_from, date_to=date_to,
                                          debt_position_type_org_code=DEBT_POSITION_TYPE_ORG_CODE, version=version)
-    assert_response_ok(res, "SIL prenota export flusso")
-    res_body = check_res_ok_and_get_body(res.content, 'paaSILPrenotaExportFlussoRisposta')
-
-    context.export_request_token = res_body['requestToken']
-    assert context.export_request_token is not None, "No requestToken returned by the export reservation"
+    _store_export_request_token(context, res, 'paaSILPrenotaExportFlussoRisposta', "SIL prenota export flusso")
 
 
 @when("SIL requests the incremental export of paid notices with receipt and version {version}")
@@ -55,11 +63,8 @@ def step_sil_prenota_export_flusso_incrementale(context, version):
         token=context.token, traceparent=context.traceparent, ipa_code=context.org_info.ipa_code,
         date_from=date_from, date_to=date_to, debt_position_type_org_code=DEBT_POSITION_TYPE_ORG_CODE, receipt=True,
         incremental=True, version=version)
-    assert_response_ok(res, "SIL prenota export flusso incrementale con ricevuta")
-    res_body = check_res_ok_and_get_body(res.content, 'paaSILPrenotaExportFlussoIncrementaleConRicevutaRisposta')
-
-    context.export_request_token = res_body['requestToken']
-    assert context.export_request_token is not None, "No requestToken returned by the export reservation"
+    _store_export_request_token(context, res, 'paaSILPrenotaExportFlussoIncrementaleConRicevutaRisposta',
+                                "SIL prenota export flusso incrementale con ricevuta")
 
 
 @then("the paid notices export completes successfully")
@@ -157,11 +162,8 @@ def step_sil_prenota_reconciliation_export(context, classification_labels, versi
     res = post_sil_prenota_export_flusso_riconciliazione(token=context.token, traceparent=context.traceparent,
                                                          ipa_code=context.org_info.ipa_code, iuv=installment.iuv,
                                                          classification_labels=classification_labels, version=version)
-    assert_response_ok(res, "SIL prenota export flusso riconciliazione")
-    res_body = check_res_ok_and_get_body(res.content, 'pivotSILPrenotaExportFlussoRiconciliazioneRisposta')
-
-    context.export_request_token = res_body['requestToken']
-    assert context.export_request_token is not None, "No requestToken returned by the reconciliation export reservation"
+    _store_export_request_token(context, res, 'pivotSILPrenotaExportFlussoRiconciliazioneRisposta',
+                                "SIL prenota export flusso riconciliazione")
 
 
 @then("the reconciliation export completes successfully")
@@ -174,7 +176,7 @@ def step_check_reconciliation_export_status(context):
 
 @then(
     "the paid notice appears in the reconciliation export with classification label {classification_labels} without iur and iuf")
-def step_check_notice_in_reconciliation_export(context, classification_labels):
+def step_check_notice_in_reconciliation_export_without_iur_iuf(context, classification_labels):
     """Downloads the reconciliation export CSV and verifies the paid notice row
 
                   - fetches the export file from the fileshare service using the export request token
@@ -184,7 +186,7 @@ def step_check_notice_in_reconciliation_export(context, classification_labels):
 
 
 @then("the paid notice appears in the reconciliation export with classification label {classification_labels}")
-def step_check_notice_in_reconciliation_export(context, classification_labels):
+def step_check_notice_in_reconciliation_export_with_iur_iuf(context, classification_labels):
     """Downloads the reconciliation export CSV and verifies the paid notice row
 
                     - fetches the export file from the fileshare service using the export request token
@@ -232,4 +234,4 @@ def step_check_classification_labels(context, classification_labels, version):
     step_sil_prenota_reconciliation_export(context=context, classification_labels=classification_labels,
                                            version=version)
     step_check_reconciliation_export_status(context=context)
-    step_check_notice_in_reconciliation_export(context=context, classification_labels=classification_labels)
+    step_check_notice_in_reconciliation_export_with_iur_iuf(context=context, classification_labels=classification_labels)

@@ -7,9 +7,9 @@ from api.send import post_create_send_notification, post_upload_send_file, get_s
     get_send_notification_fee
 from bdd.steps.authentication_step import get_send_token
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, get_installment_paid, \
+from bdd.steps.utils.debt_position_utils import find_installment_by_seq_num_and_po_index, get_installment_paid, \
     seq_num_of, FEATURE_TEST_IUD_PREFIX, get_stored_debt_position
-from bdd.steps.utils.utility import retry_get_workflow_status, retry_get_valid_send_notification
+from bdd.steps.utils.polling_utils import retry_get_workflow_status, retry_get_valid_send_notification
 from bdd.steps.workflow_step import check_workflow_status
 from model.send_notification import SendStatus, SendPdfDigest, NotificationRequest, PaymentData, Recipient, Payment, \
     Document, get_pagopa_int_mode, SEND_TEMPLATE_DIR

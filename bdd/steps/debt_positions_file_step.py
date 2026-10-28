@@ -9,12 +9,13 @@ from bdd.steps.debt_positions_step import validate_debt_position_created
 from bdd.steps.gpd_aca_step import step_verify_presence_debt_positions_in_gpd
 from bdd.steps.utils.assertions import assert_response_ok
 from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
-from bdd.steps.utils.debt_position_utility import create_debt_position, \
+from bdd.steps.utils.debt_position_utils import create_debt_position, \
     create_payment_option, create_installment, \
     get_stored_debt_position, fetch_debt_position, \
     find_payment_option_by_po_index, \
-    find_installment_by_seq_num_and_po_index, seq_num_of, format_amount
-from bdd.steps.utils.utility import retry_get_process_file_status
+    find_installment_by_seq_num_and_po_index, seq_num_of
+from bdd.steps.utils.amount_utils import cents_to_euro_str
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status, \
     step_debt_positions_workflow_check_expiration
 from behave import given, when, then
@@ -115,7 +116,7 @@ def _create_installment_row(debt_position, payment_option, installment, action: 
     row.email = installment.debtor.email
     row.iud = installment.iud
     row.dueDate = installment.due_date
-    row.amount = format_amount(installment.amount_cents)
+    row.amount = cents_to_euro_str(installment.amount_cents)
     row.remittanceInformation = installment.remittance_information
     row.iuv = installment.iuv
 

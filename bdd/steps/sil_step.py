@@ -1,49 +1,56 @@
 import base64
-import pymupdf
+import os
 import re
+from datetime import datetime, timedelta
+
+import pymupdf
 import xmltodict
+from behave import when, then
+
 from api.debt_positions import get_debt_position_by_iud
-from api.fileshare import get_ingestion_flow_file
+from api.fileshare import get_ingestion_flow_file, post_upload_file_to_url
 from api.soap.sil import post_sil_invia_carrello_dovuti, post_sil_chiedi_esito_carrello_dovuti, checkout_url_pattern, \
     post_sil_invia_carrello_dovuti_enti_secondari, post_sil_invia_dovuti, post_sil_chiedi_pagati, \
     post_sil_chiedi_pagati_con_ricevuta, post_sil_importa_dovuto, post_sil_verifica_avviso, \
-    get_sil_print_payment_notice
+    get_sil_print_payment_notice, post_sil_autorizza_import_flusso_posizioni_debitorie, notices_url_pattern, \
+    iuvs_url_pattern
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import \
+from bdd.steps.utils.debt_position_utils import \
     find_installment_by_seq_num_and_po_index, get_installment_paid, \
     retrieve_dp_type_org_by_code, retrieve_taxonomy_code_by_dp_type_org, \
     build_feature_test_iud
-from bdd.steps.utils.utility import xml_elements_equal
-from behave import when, then
-from datetime import datetime, timedelta
+from bdd.steps.utils.xml_utils import xml_elements_equal
+from bdd.steps.utils.polling_utils import retry_get_import_debt_positions_status
+from bdd.steps.utils.soap_utils import extract_soap_body
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 from model.debt_position import DebtPosition, DebtPositionOrigin, Installment, \
     Debtor, SilDebtPositionAction
 
 _RESPONSE_INFO_BY_SOAP_ACTION = {
     'InviaCarrelloDovuti': {
-        'tag': 'ns3:paaSILInviaCarrelloDovutiRisposta',
+        'tag': 'paaSILInviaCarrelloDovutiRisposta',
         'session_field': 'idSessionCarrello',
     },
     'InviaDovuti': {
-        'tag': 'ns3:paaSILInviaDovutiRisposta',
+        'tag': 'paaSILInviaDovutiRisposta',
         'session_field': 'idSession',
     },
     'VerificaAvviso': {
-        'tag': 'ns3:paaSILVerificaAvvisoRisposta',
+        'tag': 'paaSILVerificaAvvisoRisposta',
         'session_field': 'idSession',
     },
     'ImportaDovuto': {
-        'tag': 'ns3:paaSILImportaDovutoRisposta',
+        'tag': 'paaSILImportaDovutoRisposta',
     },
+    'ImportaFlusso': {
+        'tag': 'paaSILAutorizzaImportFlussoRisposta'
+    }
 }
 
 
 def _get_response_body(res, soap_action):
-    response_tag = _RESPONSE_INFO_BY_SOAP_ACTION[soap_action]['tag']
-
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, f"SIL {soap_action}")
-    return res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'][response_tag]
+    return extract_soap_body(res.content, _RESPONSE_INFO_BY_SOAP_ACTION[soap_action]['tag'])
 
 
 def _get_ok_response_body(res, soap_action):
@@ -175,10 +182,9 @@ def step_sil_chiedi_esito_carrello(context, status):
         ipa_code=context.org_info.ipa_code,
     )
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL chiedi esito carrello")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'] \
-        ['ns3:paaSILChiediEsitoCarrelloDovutiRisposta']['listaCarrelli']['rispostaCarrello']
+    res_body = extract_soap_body(res.content, 'paaSILChiediEsitoCarrelloDovutiRisposta') \
+        ['listaCarrelli']['rispostaCarrello']
     assert res_body['esito'] == status
 
     context.chiedi_esito_carrello_response = res_body
@@ -192,23 +198,21 @@ def step_chiedi_esito_carrello_rt_matches(context):
 
 
 @then("'ChiediPagati' reports the outcome as '{status}'")
-def step_sil_chiedi_pagati(context, status):
+def step_sil_chiedi_pagati_outcome(context, status):
     res_body = _chiedi_pagati(context)
     assert res_body['fault']['faultCode'] == status
 
 
 def _chiedi_pagati(context):
-  res = post_sil_chiedi_pagati(
-    token=context.token,
-    traceparent=context.traceparent,
-    installment_id=context.installment.installment_id,
-    ipa_code=context.org_info.ipa_code,
-  )
+    res = post_sil_chiedi_pagati(
+        token=context.token,
+        traceparent=context.traceparent,
+        installment_id=context.installment.installment_id,
+        ipa_code=context.org_info.ipa_code,
+    )
 
-  res_parsed = xmltodict.parse(res.content.decode('utf-8'))
-  assert_response_ok(res, "SIL chiedi pagati")
-  return res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body'][
-    'ns3:paaSILChiediPagatiRisposta']
+    assert_response_ok(res, "SIL chiedi pagati")
+    return extract_soap_body(res.content, 'paaSILChiediPagatiRisposta')
 
 
 @then("the RT returned by 'ChiediPagatiConRicevuta' matches the expected data")
@@ -222,21 +226,20 @@ def step_chiedi_pagati_rt_matches(context):
         ipa_code=context.org_info.ipa_code,
     )
 
-    res_parsed = xmltodict.parse(res.content.decode('utf-8'))
     assert_response_ok(res, "SIL chiedi pagati con ricevuta")
-    res_body = res_parsed['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns3:paaSILChiediPagatiConRicevutaRisposta']
+    res_body = extract_soap_body(res.content, 'paaSILChiediPagatiConRicevutaRisposta')
     rt_b64 = res_body.get('rt')
     _assert_rt_matches_expected(context, rt_b64, source_label='ChiediPagatiConRicevuta')
 
 
 def _importa_dovuto(context, action: SilDebtPositionAction):
     res = post_sil_importa_dovuto(
-      token=context.token,
-      traceparent=context.traceparent,
-      installment=context.installment,
-      debt_position_type_org_code=context.debt_position_type_org_code,
-      ipa_code=context.org_info.ipa_code,
-      action=action,
+        token=context.token,
+        traceparent=context.traceparent,
+        installment=context.installment,
+        debt_position_type_org_code=context.debt_position_type_org_code,
+        ipa_code=context.org_info.ipa_code,
+        action=action,
     )
 
     res_body = _get_ok_response_body(res, 'ImportaDovuto')
@@ -318,7 +321,7 @@ def step_check_payment_notice_pdf(context):
         'creditor_fiscal_code': context.org_info.fiscal_code,
         'creditor_name': context.org_info.name,
         'debtor_name': installment.debtor.full_name,
-        'amount': f"{installment.amount_cents / 100:.2f}".replace('.', ','),
+        'amount': cents_to_euro_str(installment.amount_cents).replace('.', ','),
         'due_date': installment.due_date,
         'notice_number': installment.nav,
     }
@@ -335,10 +338,10 @@ def step_sil_verifica_avviso(context):
     """Verifies the payment notice through SIL (`paaSILVerificaAvviso`)"""
 
     res_body = _get_ok_response_body(post_sil_verifica_avviso(
-      token=context.token,
-      traceparent=context.traceparent,
-      iuv=context.installment.iuv,
-      ipa_code=context.org_info.ipa_code,
+        token=context.token,
+        traceparent=context.traceparent,
+        iuv=context.installment.iuv,
+        ipa_code=context.org_info.ipa_code,
     ), 'VerificaAvviso')
     _check_checkout_session('VerificaAvviso', res_body, context.org_info, context.installment)
 
@@ -348,10 +351,10 @@ def step_sil_verifica_avviso_fault(context, status):
     """Verifies that SIL (`paaSILVerificaAvviso`) returns the expected status as fault code"""
 
     res_body = _get_response_body(post_sil_verifica_avviso(
-      token=context.token,
-      traceparent=context.traceparent,
-      iuv=context.installment.iuv,
-      ipa_code=context.org_info.ipa_code,
+        token=context.token,
+        traceparent=context.traceparent,
+        iuv=context.installment.iuv,
+        ipa_code=context.org_info.ipa_code,
     ), 'VerificaAvviso')
     assert res_body.get('fault') is not None, f"'VerificaAvviso' did not return a fault: {res_body}"
     assert res_body['fault']['faultCode'] == status, \
@@ -368,7 +371,7 @@ def step_check_payment_notice_not_available(context):
 
 
 @then("'ChiediPagati' reports the installment as paid")
-def step_sil_chiedi_pagati(context):
+def step_sil_chiedi_pagati_as_paid(context):
     """Checks the payment through SIL (`paaSILChiediPagati`)"""
 
     res_body = _chiedi_pagati(context)
@@ -376,12 +379,12 @@ def step_sil_chiedi_pagati(context):
     assert res_body.get('pagati'), "Field 'pagati' is missing in the 'ChiediPagati' response"
 
     payment = xmltodict.parse(base64.b64decode(res_body['pagati']), process_namespaces=True,
-                                   namespaces={'http://www.regione.veneto.it/schemas/2012/Pagamenti/Ente/': None},
-                                   force_list=('datiSingoloPagamento',))['Pagati']
+                              namespaces={'http://www.regione.veneto.it/schemas/2012/Pagamenti/Ente/': None},
+                              force_list=('datiSingoloPagamento',))['Pagati']
     payment_data = payment['datiPagamento']
     single_payment_data = payment_data['datiSingoloPagamento'][0]
     installment = get_installment_paid(context)
-    expected_amount = "{:.2f}".format(installment.amount_cents / 100)
+    expected_amount = cents_to_euro_str(installment.amount_cents)
 
     assert payment_data['identificativoUnivocoVersamento'] == installment.iuv, \
         f"iuv mismatch: expected {installment.iuv}, got {payment_data['identificativoUnivocoVersamento']}"
@@ -430,3 +433,49 @@ def step_sil_importa_dovuto_cancel(context):
         f"iuv mismatch: expected {iuv}, got {res_body['identificativoUnivocoVersamento']}"
     assert res_body.get('urlFileAvviso') is None, \
         f"Unexpected payment notice URL returned for a cancelled debt position: {res_body.get('urlFileAvviso')}"
+
+
+@when("SIL imports the debt positions flow")
+def step_sil_importa_flusso_dp(context):
+    """Imports a treasury flow through SIL (`paaSILAutorizzaImportFlusso`)
+
+    - authorizes the import and reads the upload URL and request token
+    - uploads the file to the returned URL"""
+    res = post_sil_autorizza_import_flusso_posizioni_debitorie(token=context.token, traceparent=context.traceparent,
+                                                               ipa_code=context.org_info.ipa_code)
+
+    assert_response_ok(res, "SIL authorize import debt positions file")
+    res_body = _get_response_body(res, 'ImportaFlusso')
+
+    context.import_request_token = res_body['requestToken']
+    upload_url = res_body['uploadUrl']
+    assert context.import_request_token is not None, "No requestToken returned by the debt positions import authorization"
+    assert upload_url is not None, "No uploadUrl returned by the debt positions import authorization"
+
+    res_upload = post_upload_file_to_url(url=upload_url, token=context.token, traceparent=context.traceparent,
+                                         file_name=context.debt_positions_file_name)
+    assert_response_ok(res_upload, "Upload debt positions flow to authorized URL")
+
+    os.remove(context.debt_positions_file_name)
+
+    context.debt_positions_file_id = res_body['requestToken']
+
+
+@then("the debt positions import completes successfully")
+def step_check_debt_positions_import_status(context):
+    """Polls the debt positions import status (`paaSILChiediStatoImportFlusso`) until it reaches `FILE_CARICATO`
+    and verifies that are presents urls to downloads iuvs and notices file"""
+    res_body = retry_get_import_debt_positions_status(token=context.token, traceparent=context.traceparent,
+                                                      ipa_code=context.org_info.ipa_code,
+                                                      request_token=context.import_request_token)
+
+    org_id = context.org_info.id
+    expected_pattern = notices_url_pattern(org_id=org_id, request_token=context.import_request_token)
+    assert re.match(expected_pattern, res_body['urlFileAvvisi']), (
+        f"Notices URL does not match with expected: {res_body['urlFileAvvisi']}"
+    )
+
+    expected_pattern = iuvs_url_pattern(org_id=org_id, request_token=context.import_request_token)
+    assert re.match(expected_pattern, res_body['urlFileIUV']), (
+        f"IUVs URL does not match with expected: {res_body['urlFileIUV']}"
+    )

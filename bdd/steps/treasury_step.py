@@ -5,12 +5,14 @@ import zipfile
 from datetime import datetime
 from zipfile import ZipFile
 
+from bdd.steps.utils.date_utils import today, now
+
 from behave import when, then
 
 from api.fileshare import post_upload_file
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import get_installment_paid
-from bdd.steps.utils.utility import retry_get_process_file_status
+from bdd.steps.utils.debt_position_utils import get_installment_paid
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus
@@ -24,8 +26,8 @@ IUF_NOT_FOUND = 'IUF_NOT_FOUND'
 def format_ingestion_flow_file(context, amount, file, org_info):
     iuf = get_installment_paid(context).iuf or IUF_NOT_FOUND
 
-    date = datetime.now().strftime('%Y-%m-%d')
-    date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    date = today()
+    date_time = now()
     year = datetime.now().year
     remittance_description = '/PUR/LGPE-RIVERSAMENTO/URI/' + iuf + ' .PUR.LGPE-RIVERSAMENTO.URI.2025-05- TRXID: ' + ''.join(
         random.choices(string.digits, k=17))

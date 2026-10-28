@@ -3,8 +3,10 @@ import random
 import string
 import uuid
 import zipfile
-from datetime import datetime
 from zipfile import ZipFile
+
+from bdd.steps.utils.date_utils import today, now
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 
 from behave import given, when, then
 
@@ -13,9 +15,9 @@ from api.fileshare import post_upload_file
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_position_created
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
+from bdd.steps.utils.debt_position_utils import find_installment_by_seq_num_and_po_index, find_installment_by_iuv, \
     generate_iuv, get_installment_paid, set_installment_paid, fetch_debt_position, find_mixed_installment
-from bdd.steps.utils.utility import retry_get_process_file_status
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
 from bdd.steps.workflow_step import check_workflow_status
 from config.configuration import secrets, settings
 from model.debt_position import Status, Installment
@@ -58,12 +60,12 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
 
     installment.iur = installment.iur if int(outcome_code) != 9 else uuid.uuid4().hex
 
-    date = datetime.now().strftime('%Y-%m-%d')
-    date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    date = today()
+    date_time = now()
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
 
-    amount = "{:.2f}".format(int(installment.amount_cents) / 100)
+    amount = cents_to_euro_str(installment.amount_cents)
 
     with open('./bdd/steps/file_template/data_single_payment.xml', 'r') as file:
         data_single_payment_file = file.read()
@@ -73,7 +75,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
         data_payments += data_single_payment_file.format(iuv=installment.iuv,
                                                          iur=installment.iur,
                                                          transfer_index=transfer.transfer_index,
-                                                         amount_paid="{:.2f}".format(int(transfer.amount_cents) / 100),
+                                                         amount_paid=cents_to_euro_str(transfer.amount_cents),
                                                          payment_outcome_code=int(outcome_code),
                                                          payment_date=date)
 
@@ -138,11 +140,11 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
     with open('./bdd/steps/file_template/payment_reporting.xml', 'r') as file:
         ingestion_flow_file = file.read()
 
-    date = datetime.now().strftime('%Y-%m-%d')
-    date_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    date = today()
+    date_time = now()
     iuf = date + '-' + psp_info.id + '-' + ''.join(random.choices(string.digits + string.ascii_letters, k=14))
     regulation_unique_identifier = ''.join(random.choices(string.digits, k=20))
-    amount = "{:.2f}".format(random.randint(1, 200)) if installment is None else "{:.2f}".format(int(installment.amount_cents) / 100)
+    amount = "{:.2f}".format(random.randint(1, 200)) if installment is None else cents_to_euro_str(installment.amount_cents)
     iuv = generate_iuv() if installment is None else installment.iuv
     iur = uuid.uuid4().hex
 

@@ -1,5 +1,10 @@
 import json
 import uuid
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from behave import given, when, then
+
 from api.debt_position_type import get_debt_position_type_org_by_id
 from api.debt_positions import post_create_debt_position, \
     get_debt_position_by_organization_id_and_installment_nav, get_installment, \
@@ -12,7 +17,8 @@ from bdd.steps.authentication_step import step_get_token_org, \
 from bdd.steps.gpd_aca_step import \
     step_verify_presence_debt_position_in_gpd_or_aca
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, \
+from bdd.steps.utils.date_utils import unique_timestamp
+from bdd.steps.utils.debt_position_utils import calculate_po_total_amount, \
     calculate_amount_first_transfer, \
     find_payment_option_by_po_index, find_installment_by_seq_num_and_po_index, \
     create_debt_position, create_installment, \
@@ -22,12 +28,11 @@ from bdd.steps.utils.debt_position_utility import calculate_po_total_amount, \
     retrieve_dp_type_org_by_code, \
     retrieve_taxonomy_code_by_dp_type_org, build_feature_test_iud, \
     find_installment_by_iud
-from bdd.steps.utils.utility import retry_get_dp_status, get_workflow_run_id
+from bdd.steps.utils.generic_utils import get_workflow_run_id
+from bdd.steps.utils.polling_utils import retry_get_dp_status
 from bdd.steps.workflow_step import check_workflow_status, \
     step_debt_position_workflow_check_expiration
-from behave import given, when, then
 from config.configuration import settings
-from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry
 from model.csv_file_debt_positions import CSVVersion, Action
 from model.debt_position import DebtPosition, Installment, Status, \
@@ -36,7 +41,6 @@ from model.debt_position import DebtPosition, Installment, Status, \
     Stamp, NAV_PREFIX
 from model.debt_position import DebtPositionOrigin
 from model.workflow_hub import WorkflowStatus
-from pathlib import Path
 
 
 @given("a new debt position of type {debt_position_type_org_code}")
@@ -206,6 +210,7 @@ def step_create_multiple_debt_positions(context, identifiers, pagopa_interaction
         step_debt_position_workflow_check_expiration(context=context, status="scheduled")
 
         store_debt_position_by_id(context, dp_identifier)
+
 
 @given("a simple debt position with balance created by organization interacting with {pagopa_interaction}")
 def step_create_simple_debt_position_with_balance(context, pagopa_interaction):
@@ -423,7 +428,7 @@ def step_create_dp_on_gpd(context, pagopa_interaction):
     installment.transfers.append(transfer)
     installment.iuv = generate_iuv()
     installment.nav = NAV_PREFIX + installment.iuv
-    installment.iupd_pagopa = f'{context.org_info.fiscal_code}_{datetime.now().strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}'
+    installment.iupd_pagopa = f'{context.org_info.fiscal_code}_{unique_timestamp()}_{uuid.uuid4().hex[:5]}'
     context.debt_position.payment_options[0].installments[0] = installment
 
     res = post_create_debt_position_on_gpd(token=context.token, traceparent=context.traceparent,
@@ -543,7 +548,8 @@ def step_modify_installment(context, seq_num, po_index, amount_increase, due_dat
     debt_position_dict = _get_debt_position_dict(context)
     stored_installment = find_installment_by_seq_num_and_po_index(debt_position=context.debt_position,
                                                                   po_index=int(po_index), seq_num=int(seq_num))
-    payment_option_dict = next(po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == int(po_index))
+    payment_option_dict = next(
+        po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == int(po_index))
 
     installment = next(inst for inst in payment_option_dict['installments'] if inst['iud'] == stored_installment.iud)
     installment['remittanceInformation'] = f'Feature test installment {seq_num} updated'
@@ -571,7 +577,8 @@ def step_check_debt_position_update_synchronized(context):
 
 
 @then("the installment {seq_num} of payment option {po_index} is saved with the requested data")
-@then("the installment {seq_num} of payment option {po_index} of debt position {dp_identifier} is saved with the requested data")
+@then(
+    "the installment {seq_num} of payment option {po_index} of debt position {dp_identifier} is saved with the requested data")
 def step_check_installment_saved(context, seq_num, po_index, dp_identifier=None):
     debt_position = _get_updated_debt_position(context, dp_identifier)
     installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=int(po_index),
@@ -627,7 +634,8 @@ def _get_debt_position_dict(context) -> dict:
 
 def _put_manage_installments(context, debt_position_dict: dict, po_index: int, action: Action,
                              installment: dict):
-    payment_option_dict = next(po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == po_index)
+    payment_option_dict = next(
+        po for po in debt_position_dict['paymentOptions'] if po['paymentOptionIndex'] == po_index)
     manage_debt_position = {
         'debtPositionDescription': debt_position_dict['description'],
         'validityDate': debt_position_dict.get('validityDate'),

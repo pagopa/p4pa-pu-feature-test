@@ -1,11 +1,11 @@
-import xmltodict
 from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_position_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_mixed_installment, \
+from bdd.steps.utils.debt_position_utils import find_installment_by_seq_num_and_po_index, find_mixed_installment, \
     get_installment_paid, set_installment_paid, get_stored_debt_position
-from bdd.steps.utils.utility import retry_get_process_file_status
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
+from bdd.steps.utils.soap_utils import extract_soap_body
 from bdd.steps.workflow_step import check_workflow_status
 from behave import given, when, then
 from config.configuration import secrets
@@ -16,14 +16,9 @@ from model.workflow_hub import WorkflowType, WorkflowStatus
 psp_info = secrets.payment_info.psp
 
 
-def get_res_body(response_content, tag_name):
-    res_parsed = xmltodict.parse(response_content.decode('utf-8'))
-    return res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
-
-
 def check_res_ok_and_get_body(response_content, tag_name):
-    res_body = get_res_body(response_content, tag_name)
-    assert res_body['outcome'] == 'OK'
+    res_body = extract_soap_body(response_content, tag_name)
+    assert res_body['outcome'] == 'OK', f'Payment failed: {res_body}'
     return res_body
 
 
@@ -230,6 +225,6 @@ def step_installment_not_payable(context):
     res = verify_payment_notice(psp=psp, org_fiscal_code=context.org_info.fiscal_code, nav=installment.nav)
 
     assert_response_ok(res, "Verify payment notice")
-    res_body = get_res_body(res.content, tag_name='verifyPaymentNoticeRes')
+    res_body = extract_soap_body(res.content, tag_name='verifyPaymentNoticeRes')
     assert res_body['outcome'] == 'KO', \
         f"outcome mismatch: expected KO, got {res_body['outcome']}"
