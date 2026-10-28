@@ -626,6 +626,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-debt-positions-are-created-from-an-ingestion-flow-file-version-14-via-importaflusso-by-a-sil-for-organization-interacting-with-gpd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: Debt positions are created from an ingestion flow file version 1.4 via 'ImportaFlusso', by a SIL for organization interacting with GPD
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -927,6 +938,17 @@
     <span class="md-ellipsis">
       
         Scenario: A debt position created by SIL via 'ImportaDovuto' on GPD is cancelled via 'ImportaDovuto' and is no longer payable
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-debt-positions-are-created-from-an-ingestion-flow-file-version-14-via-importaflusso-by-a-sil-for-organization-interacting-with-gpd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: Debt positions are created from an ingestion flow file version 1.4 via 'ImportaFlusso', by a SIL for organization interacting with GPD
       
     </span>
   </a>
@@ -1429,6 +1451,42 @@
 </li>
 <li>
 <p>Checks through the pagoPA node (<code>verifyPaymentNotice</code>) that the installment can no longer be paid.</p>
+</li>
+</ol>
+<h2 id="scenario-debt-positions-are-created-from-an-ingestion-flow-file-version-14-via-importaflusso-by-a-sil-for-organization-interacting-with-gpd">Scenario: Debt positions are created from an ingestion flow file version 1.4 via 'ImportaFlusso', by a SIL for organization interacting with GPD</h2>
+<p><strong>Tags:</strong> <code>@sil_importa_flusso</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a SIL acting on behalf of an organization interacting with GPD</span>
+<span class="k">And </span><span class="nf">debt positions A B C with the installments configured as follows:</span>
+<span class="k">  |</span><span class="s"> identifier</span><span class="k"> |</span><span class="s"> po index</span><span class="k"> |</span><span class="s"> po type</span><span class="k"> |</span><span class="s"> installment seq</span><span class="k"> |</span><span class="s"> action</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> A</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> B</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">  |</span><span class="s"> C</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> SINGLE_INSTALLMENT</span><span class="k"> |</span><span class="s"> 1</span><span class="k"> |</span><span class="s"> I</span><span class="k"> |</span>
+<span class="k">And </span><span class="nf">debt positions A B C inserted into an ingestion flow file with version </span><span class="s">1</span><span class="nf">_</span><span class="s">4</span>
+<span class="k">When </span><span class="nf">SIL imports the debt positions flow</span>
+<span class="c"># (1)!</span>
+<span class="k">Then </span><span class="nf">the debt positions import completes successfully</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">the debt positions A B C are created in status UNPAID</span>
+<span class="c"># (3)!</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Imports a treasury flow through SIL (<code>paaSILAutorizzaImportFlusso</code>)</p>
+<ul>
+<li>authorizes the import and reads the upload URL and request token</li>
+<li>uploads the file to the returned URL</li>
+</ul>
+</li>
+<li>
+<p>Polls the debt positions import status (<code>paaSILChiediStatoImportFlusso</code>) until it reaches <code>FILE_CARICATO</code>
+    and verifies that are presents urls to downloads iuvs and notices file</p>
+</li>
+<li>
+<p>Checks that the debt positions imported from the file were created in the expected status:</p>
+<ul>
+<li>fetches the debt positions by ingestion flow id and asserts the count matches the identifiers;</li>
+<li>validates each created debt position against its request (fields, payment options, installments).</li>
+</ul>
 </li>
 </ol>
 
