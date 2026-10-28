@@ -1,27 +1,29 @@
 import copy
 import os
-import pandas
 import random
 import string
 import uuid
 from api.debt_positions import get_receipt, get_receipt_by_id, get_debt_position_by_organization_id_and_installment_nav, \
-    get_installment
+    get_installment, get_receipt_by_iur
 from api.fileshare import post_upload_file
 from bdd.steps.assessments_step import step_check_assessment, step_check_assessment_detail
 from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_positions_created, \
     step_check_installment_status
 from bdd.steps.payments_step import step_check_receipt_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.balance_utility import build_balance_xml
-from bdd.steps.utils.debt_position_utility import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
+from bdd.steps.utils.balance_utils import build_balance_xml, extract_balance_from_xml
+from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
+from bdd.steps.utils.amount_utils import cents_to_euro_str
+from bdd.steps.utils.debt_position_utils import generate_iuv, set_installment_paid, FEATURE_TEST_IUD_PREFIX, \
     get_installment_paid, fetch_debt_position
-from bdd.steps.utils.utility import retry_get_process_file_status, get_workflow_run_id
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
+from bdd.steps.utils.generic_utils import get_workflow_run_id
 from bdd.steps.workflow_step import check_workflow_status
 from behave import given, when, then
 from config.configuration import secrets, settings
 from datetime import datetime, timedelta
 from model.classification import AssessmentRegistry, Section
-from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, to_csv_lines, CSVVersion
+from model.csv_file_receipts import CSVRow, EntityIdType, PersonEntityType, CSVVersion
 from model.debt_position import DebtPosition, DebtPositionOrigin, Status, NAV_PREFIX
 from model.file import IngestionFlowFileType, FileOrigin, FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowStatus, WorkflowType
@@ -39,18 +41,11 @@ def step_create_receipts_file_for_non_existent_dp(context, csv_version: str):
 def _write_receipts_file(context, csv_rows: list):
       csv_version = context.csv_version
       csv_lines = to_csv_lines(csv_rows=csv_rows, csv_version=csv_version)
-
-      dataset_dataframe = pandas.DataFrame(data=csv_lines)
-
       filename = f'FeatureTestImportPagati_{datetime.now().strftime("%Y%m%d%H%M%S")}-{csv_version.value}'
-      zip_file_path = f'{filename}.zip'
-      dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
-                               compression=dict(method='zip',
-                                                archive_name=f'{filename}.csv'))
 
       context.receipts_rows = csv_rows
       context.receipts_rows_len = len(csv_rows)
-      context.receipts_file_name = zip_file_path
+      context.receipts_file_name = write_csv_zip(csv_lines=csv_lines, filename=filename)
 
 
 
@@ -115,7 +110,7 @@ def create_receipts_rows(context, receipts_size: int = 3, debt_position: DebtPos
     for i in range(receipts_size):
         iud = f'{FEATURE_TEST_IUD_PREFIX}{i + 1}_{date_time.strftime("%Y%m%d%H%M%S%f")[:15]}_{uuid.uuid4().hex[:5]}' if debt_position is None else debt_position.first_installment.iud
         amount = "{:.2f}".format(
-            random.randint(1, 200)) if debt_position is None else (float(debt_position.first_installment.amount_cents) / 100)
+            random.randint(1, 200)) if debt_position is None else cents_to_euro_str(debt_position.first_installment.amount_cents)
         iuv = generate_iuv() if debt_position is None else debt_position.first_installment.iuv
         context.iuvs.append(iuv)
 
@@ -215,6 +210,18 @@ def step_create_receipts_file_with_balance_for_non_existent_dp(context, csv_vers
     _write_receipts_file(context, csv_rows)
 
 
+@given("a receipt with balance of the paid installment inserted into an ingestion flow file with version {csv_version}")
+def step_create_receipts_file_with_balance_for_paid_installment(context, csv_version: str):
+    context.csv_version = CSVVersion(csv_version)
+
+    csv_rows = create_receipts_rows(context, receipts_size=1, debt_position=context.debt_position)
+    row = csv_rows[0]
+    row.balance = build_balance_xml([Section(amount_cents=_to_cents(row.paymentAmountCents),
+                                             assessment_registry=AssessmentRegistry())])
+
+    _write_receipts_file(context, csv_rows)
+
+
 @when("the same receipt with amount increased by {amount_increase} euros, modified remittance information and balance "
       "is inserted into an ingestion flow file with version {csv_version}")
 def step_create_receipts_file_with_modified_receipt(context, csv_version: str, amount_increase: str):
@@ -229,7 +236,7 @@ def step_create_receipts_file_with_modified_receipt(context, csv_version: str, a
     row = copy.deepcopy(context.receipts_rows[0])
     row.remittanceInformation = 'Feature Test Import Receipts File updated'
     amount_cents = _to_cents(row.paymentAmountCents) + int(amount_increase) * 100
-    row.paymentAmountCents = "{:.2f}".format(amount_cents / 100)
+    row.paymentAmountCents = cents_to_euro_str(amount_cents)
     row.singlePaymentAmount = row.paymentAmountCents
 
     row.balance = build_balance_xml([
@@ -354,6 +361,19 @@ def step_receipt_of_existing_dp_imported(context, csv_version: str):
     step_check_assessment(context=context, status='closed')
     step_check_assessment_detail(context=context)
 
+@given("a receipt of the installment created outside PU successfully imported from a receipts file with version {csv_version}")
+def step_receipt_of_installment_outside_pu_imported(context, csv_version: str):
+    """Imports a receipt of an installment created outside PU and checks it is processed:
+
+    - builds the receipts file and uploads it
+    - checks that the file is processed and the technical debt position is created with origin `RECEIPT_FILE`
+    - checks that the receipt is created with origin `RECEIPT_FILE`
+    - checks that the installment of payment option 1 and the debt position are `PAID`"""
+    step_create_receipts_file_for_existing_dp(context=context, csv_version=csv_version)
+    step_uploads_receipts_file(context=context)
+    step_receipts_file_processed(context=context)
+    step_check_debt_positions_created(context=context, debt_position_origin=DebtPositionOrigin.RECEIPT_FILE.value)
+    step_check_receipt_imported_and_dp_paid(context=context)
 
 @given("a receipt with balance of a non-existent debt position successfully imported from a receipts file with version {csv_version}")
 def step_receipt_with_balance_of_non_existent_dp_imported(context, csv_version: str):
@@ -386,3 +406,58 @@ def step_check_receipt_imported_and_dp_paid(context):
     step_check_receipt_created(context=context, receipt_origin=ReceiptOriginType.RECEIPT_FILE.value)
     step_check_installment_status(context=context, po_index='1', status=Status.PAID.value)
     step_check_dp_status(context=context, status=Status.PAID.value)
+
+
+@then("the installment is linked to the pagoPA receipt")
+def step_check_installment_linked_to_pagopa_receipt(context):
+    """Checks that the installment is linked to the receipt sent by pagoPA instead of the one imported from file.
+    It verifies that:
+
+    - the installment IUR isn't the one imported from file
+    - the receipt linked to the installment has origin `RECEIPT_PAGOPA` and the same IUR of the installment"""
+    installment_paid = get_installment_paid(context)
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    assert_response_ok(res, "Get installment by id")
+    installment = res.json()
+
+    file_row = context.receipts_rows[0]
+
+    assert installment['iur'] != file_row.paymentReceiptId, \
+        f"iur is equal to the one imported from file: {file_row.paymentReceiptId}"
+
+    res = get_receipt_by_id(token=context.token, traceparent=context.traceparent, receipt_id=installment['receiptId'])
+    assert_response_ok(res, "Get receipt by id")
+    receipt = res.json()
+    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_PAGOPA.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt['receiptOrigin']}"
+    assert receipt['paymentReceiptId'] == installment['iur'], \
+        f"paymentReceiptId mismatch: expected {installment['iur']}, got {receipt['paymentReceiptId']}"
+
+
+@then("the receipt imported from file is created with origin receipt_file")
+def step_check_file_receipt_created(context):
+    """Checks that the receipt in the file is imported with origin `RECEIPT_FILE`."""
+    row = context.receipts_rows[0]
+
+    res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=row.paymentReceiptId)
+    assert_response_ok(res, "Get receipt by IUR")
+    receipt = res.json()
+    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_FILE.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_FILE.value}, got {receipt['receiptOrigin']}"
+    assert receipt['ingestionFlowFileId'] == context.receipts_file_id, \
+        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt['ingestionFlowFileId']}"
+
+
+@then("the installment balance is updated by the receipts file")
+def step_check_installment_balance_updated(context):
+    """Checks that the balance of the paid installment has been replaced by the balance of the receipt in the file."""
+    installment_paid = get_installment_paid(context)
+    row = context.receipts_rows[0]
+
+    res = get_installment(token=context.token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
+    assert_response_ok(res, "Get installment by id")
+    installment_balance = res.json()['balance']
+
+    assert installment_balance is not None, "Installment balance not set"
+    assert extract_balance_from_xml(installment_balance) == extract_balance_from_xml(row.balance), \
+        f"balance mismatch: expected {row.balance}, got {installment_balance}"

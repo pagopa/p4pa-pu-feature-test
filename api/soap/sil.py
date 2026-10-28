@@ -2,7 +2,7 @@ import base64
 import re
 from typing import Optional
 
-from bdd.steps.utils.debt_position_utility import format_amount
+from bdd.steps.utils.amount_utils import cents_to_euro_str
 from common import http_client
 from config.configuration import settings, secrets
 from model.debt_position import Installment, Transfer, Stamp, SilDebtPositionAction
@@ -39,7 +39,7 @@ def _build_dati_singolo_versamento(iud: str, amount_cents, tipo_dovuto: str, dat
     return _render(
         'datiVersamento.xml',
         iud=iud,
-        importo=format_amount(amount_cents),
+        importo=cents_to_euro_str(amount_cents),
         tipo_dovuto=tipo_dovuto,
         dati_specifici_riscossione=dati_specifici_riscossione,
         dati_marca_bollo=_build_marca_bollo(marca_bollo),
@@ -77,7 +77,7 @@ def _build_dovuto_secondario_base64(second_transfer: Transfer) -> str:
         iban_ente_secondario=second_transfer.iban,
         causale_ente_secondario=second_transfer.remittance_information,
         dati_specifici_riscossione_ente_secondario=second_transfer.category,
-        importo_ente_secondario=format_amount(second_transfer.amount_cents),
+        importo_ente_secondario=cents_to_euro_str(second_transfer.amount_cents),
     )
     return _to_base64(dovuti_enti_secondari)
 
@@ -98,7 +98,7 @@ def _build_versamento_base64(installment: Installment, debt_position_type_org_co
         data_esecuzione_pagamento=installment.due_date,
         identificativo_univoco_versamento=_build_iuv_element(installment.iuv),
         iud=installment.iud,
-        importo=format_amount(installment.amount_cents),
+        importo=cents_to_euro_str(installment.amount_cents),
         tipo_dovuto=debt_position_type_org_code,
         causale=installment.remittance_information,
         dati_specifici_riscossione=installment.legacy_payment_metadata,
@@ -133,6 +133,16 @@ def post_sil_reconciliation(token, traceparent: str, data: str):
 def checkout_url_pattern(org_fiscal_code: str) -> str:
     base = f'{secrets.base_url}/pu/sil'
     return re.escape(base) + rf'/organization/{re.escape(org_fiscal_code)}/checkout\?token=[^&]+$'
+
+
+def notices_url_pattern(org_id: int, request_token: int):
+    base = f'{secrets.base_url}/pu/fileshare'
+    return re.escape(base) + rf'/organization/{org_id}/ingestionflowfiles/{request_token}/notice'
+
+
+def iuvs_url_pattern(org_id: int, request_token: int):
+    base = f'{secrets.base_url}/pu/fileshare'
+    return re.escape(base) + rf'/organization/{org_id}/ingestionflowfiles/{request_token}/iuv'
 
 
 def get_sil_print_payment_notice(token, traceparent: str, url: str):
@@ -267,6 +277,18 @@ def post_sil_chiedi_stato_export_flusso(token, traceparent: str, ipa_code: str, 
     return post_sil_payments(token=token, traceparent=traceparent, data=data)
 
 
+def post_sil_autorizza_import_flusso_posizioni_debitorie(token, traceparent: str, ipa_code: str):
+    data = _render('autorizzaImportFlussoPosizioniDebitorie.xml', codice_ipa=ipa_code)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_import_flusso_posizioni_debitorie(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoImportFlussoPosizioniDebitorie.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_payments(token=token, traceparent=traceparent, data=data)
+
+
 # ---------------------------------------------------------------------------
 # Reconciliation
 # ---------------------------------------------------------------------------
@@ -284,11 +306,14 @@ def post_sil_chiedi_stato_import_flusso_tesoreria(token, traceparent: str, ipa_c
 
 
 def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, iuv: str,
-                                                   classification_label: str, version: str = 'v1.4'):
+                                                   classification_labels: str, version: str = 'v1.4'):
+    labels = [l.strip() for l in classification_labels.split(",") if l.strip()]
+    classificazioni = "".join(f"<classificazione>{l}</classificazione>" for l in labels)
+
     data = _render(
         'prenotaExportFlussoRiconciliazione.xml',
         codice_ipa=ipa_code,
-        classificazione=classification_label,
+        classificazioni=classificazioni,
         iuv=iuv,
         versione_tracciato=version,
     )
@@ -298,6 +323,18 @@ def post_sil_prenota_export_flusso_riconciliazione(token, traceparent: str, ipa_
 
 def post_sil_chiedi_stato_export_flusso_riconciliazione(token, traceparent: str, ipa_code: str, request_token: str):
     data = _render('chiediStatoExportFlussoRiconciliazione.xml', codice_ipa=ipa_code, request_token=request_token)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_autorizza_import_flusso_notificati(token, traceparent: str, ipa_code: str):
+    data = _render('autorizzaImportFlussoNotificati.xml', codice_ipa=ipa_code)
+
+    return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
+
+
+def post_sil_chiedi_stato_import_flusso_notificati(token, traceparent: str, ipa_code: str, request_token: str):
+    data = _render('chiediStatoImportFlussoNotificati.xml', codice_ipa=ipa_code, request_token=request_token)
 
     return post_sil_reconciliation(token=token, traceparent=traceparent, data=data)
 

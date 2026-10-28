@@ -42,32 +42,3 @@ class CSVRow:
     @classmethod
     def header(cls) -> list[str]:
         return [f.name for f in fields(cls)]
-
-
-def _escape(value: str) -> str:
-    return f'"{value}"' if ';' in value else value
-
-
-def to_csv_lines(csv_rows: list[CSVRow], with_header=True) -> list[str]:
-    if not csv_rows:
-        return []
-
-    header = CSVRow.header()
-    lines = []
-
-    if with_header:
-        lines.append(';'.join(_escape(h) for h in header))
-
-    for row in csv_rows:
-        values = []
-        for f in header:
-            val = getattr(row, f)
-            if val is None:
-                values.append('')
-            elif hasattr(val, 'value'):
-                values.append(val.value)
-            else:
-                values.append(str(val))
-        lines.append(';'.join(_escape(v) for v in values))
-
-    return lines

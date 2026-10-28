@@ -1,29 +1,24 @@
-import xmltodict
 from api.debt_positions import get_installment, get_receipt, get_receipt_by_iur
 from api.soap.nodo import verify_payment_notice, activate_payment_notice, send_payment_outcome, PSP
-from bdd.steps.debt_positions_step import step_check_dp_status
+from bdd.steps.debt_positions_step import step_check_dp_status, step_check_debt_position_created
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import find_installment_by_seq_num_and_po_index, find_mixed_installment, \
+from bdd.steps.utils.debt_position_utils import find_installment_by_seq_num_and_po_index, find_mixed_installment, \
     get_installment_paid, set_installment_paid, get_stored_debt_position
-from bdd.steps.utils.utility import retry_get_process_file_status
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
+from bdd.steps.utils.soap_utils import extract_soap_body
 from bdd.steps.workflow_step import check_workflow_status
 from behave import given, when, then
 from config.configuration import secrets
-from model.debt_position import Status
+from model.debt_position import Status, DebtPositionOrigin
 from model.file import FilePathName, FileStatus, ReceiptOriginType
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 psp_info = secrets.payment_info.psp
 
 
-def get_res_body(response_content, tag_name):
-    res_parsed = xmltodict.parse(response_content.decode('utf-8'))
-    return res_parsed['soapenv:Envelope']['soapenv:Body'][f'nfp:{tag_name}']
-
-
 def check_res_ok_and_get_body(response_content, tag_name):
-    res_body = get_res_body(response_content, tag_name)
-    assert res_body['outcome'] == 'OK'
+    res_body = extract_soap_body(response_content, tag_name)
+    assert res_body['outcome'] == 'OK', f'Payment failed: {res_body}'
     return res_body
 
 
@@ -203,6 +198,24 @@ def step_successful_installment_payment_outside_pu(context):
     step_check_receipt_processed(context=context)
 
 
+@given("the successful payment of the installment created outside PU that creates a technical debt position")
+def step_successful_installment_payment_outside_pu_creating_technical_dp(context):
+    """Pays the first installment of a debt position created outside PU and not yet present in PU. It:
+
+    - pays the installment and waits for the pagoPA receipt `RT_<nav>.xml` to be `COMPLETED`;
+    - checks the technical debt position is created with origin `RECEIPT_PAGOPA` and is `PAID`;
+    - checks the receipt is processed correctly."""
+    installment = context.debt_position.payment_options[0].installments[0]
+    step_installment_payment(context=context, installment_to_paid=installment)
+    retry_get_process_file_status(token=context.token, traceparent=context.traceparent,
+                                  organization_id=context.org_info.id, file_path_name=FilePathName.RECEIPT_PAGOPA,
+                                  file_name='RT_' + installment.nav + '.xml', status=FileStatus.COMPLETED)
+    step_check_debt_position_created(context=context, debt_position_origin=DebtPositionOrigin.RECEIPT_PAGOPA.value,
+                                     iuv=installment.iuv)
+    step_check_dp_status(context=context, status=Status.PAID.value)
+    step_check_receipt_processed(context=context)
+
+
 @then("the citizen cannot pay the installment")
 def step_installment_not_payable(context):
     """Checks through the pagoPA node (`verifyPaymentNotice`) that the installment can no longer be paid."""
@@ -212,6 +225,6 @@ def step_installment_not_payable(context):
     res = verify_payment_notice(psp=psp, org_fiscal_code=context.org_info.fiscal_code, nav=installment.nav)
 
     assert_response_ok(res, "Verify payment notice")
-    res_body = get_res_body(res.content, tag_name='verifyPaymentNoticeRes')
+    res_body = extract_soap_body(res.content, tag_name='verifyPaymentNoticeRes')
     assert res_body['outcome'] == 'KO', \
         f"outcome mismatch: expected KO, got {res_body['outcome']}"

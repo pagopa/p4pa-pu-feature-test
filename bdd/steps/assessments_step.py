@@ -7,8 +7,9 @@ from api.classifications import get_assessment, get_assessment_details, get_asse
 from api.debt_position_type import get_debt_position_type_org_by_code, get_dpto_balance_cost_by_id
 from api.debt_positions import get_installment
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.balance_utility import extract_balance_from_xml, extract_sections, build_section
-from bdd.steps.utils.debt_position_utility import get_installment_paid, set_installment_paid
+from bdd.steps.utils.balance_utils import extract_balance_from_xml, extract_sections, build_section
+from bdd.steps.utils.date_utils import today
+from bdd.steps.utils.debt_position_utils import get_installment_paid, set_installment_paid
 from bdd.steps.workflow_step import check_workflow_status
 from model.classification import Balance, AssessmentRegistry, Section, AssessmentDetailClassificationLabel
 from model.debt_position import DebtPositionTypeOrgBalanceCostType
@@ -58,7 +59,7 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
     assert_response_ok(res, "Get assessment details by IUD and IUV")
     assert len(res.json()["_embedded"]["assessmentsDetails"]) == 0
 
-    date_now = datetime.now().strftime('%Y-%m-%d')
+    date_now = today()
     res = get_classification(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
                              last_classification_date_from=date_now, last_classification_date_to=date_now,
                              iuv=installment_paid.iuv, iud=installment_paid.iud)

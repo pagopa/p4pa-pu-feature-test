@@ -1,7 +1,7 @@
-from bdd.steps.utils import utility
+from bdd.steps.utils import generic_utils
 
 def before_scenario(context, scenario):
-    context.traceparent = utility.generate_traceparent()
+    context.traceparent = generic_utils.generate_traceparent()
     context.debt_positions = {}
     context.payment_reporting_flows = {}
     context.installments_paid_by_id = {}

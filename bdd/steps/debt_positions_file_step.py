@@ -1,21 +1,30 @@
+import copy
 import os
 import uuid
-from datetime import datetime
-
-import pandas
-from behave import given, when, then
-
-from api.debt_positions import get_debt_positions_by_ingestion_flow_id
+from api.debt_positions import get_debt_positions_by_ingestion_flow_id, \
+    get_debt_position_by_iud
 from api.fileshare import post_upload_file
+from api.gpd_aca import get_debt_position_on_aca_or_gpd
 from bdd.steps.debt_positions_step import validate_debt_position_created
+from bdd.steps.gpd_aca_step import step_verify_presence_debt_positions_in_gpd
 from bdd.steps.utils.assertions import assert_response_ok
-from bdd.steps.utils.debt_position_utility import create_debt_position, create_payment_option, create_installment
-from bdd.steps.utils.utility import retry_get_process_file_status
-from bdd.steps.workflow_step import check_workflow_status
+from bdd.steps.utils.csv_utils import to_csv_lines, write_csv_zip
+from bdd.steps.utils.debt_position_utils import create_debt_position, \
+    create_payment_option, create_installment, \
+    get_stored_debt_position, fetch_debt_position, \
+    find_payment_option_by_po_index, \
+    find_installment_by_seq_num_and_po_index, seq_num_of
+from bdd.steps.utils.amount_utils import cents_to_euro_str
+from bdd.steps.utils.polling_utils import retry_get_process_file_status
+from bdd.steps.workflow_step import check_workflow_status, \
+    step_debt_positions_workflow_check_expiration
+from behave import given, when, then
 from config.configuration import settings
-from model.csv_file_debt_positions import CSVRow, to_csv_lines, CSVVersion
+from datetime import datetime, timedelta
+from model.csv_file_debt_positions import CSVRow, CSVVersion, Action
 from model.debt_position import Status, PaymentOptionType, DebtPosition
-from model.file import FileOrigin, IngestionFlowFileType, FilePathName, FileStatus
+from model.file import FileOrigin, IngestionFlowFileType, FilePathName, \
+    FileStatus
 from model.workflow_hub import WorkflowType, WorkflowStatus
 
 
@@ -63,16 +72,14 @@ def step_create_debt_positions_file(context, identifiers, csv_version):
 
     installments_rows = create_installments_rows(identifiers=identifiers, debt_positions=debt_positions)
 
+    _write_debt_positions_file(context=context, installments_rows=installments_rows, csv_version=csv_version)
+
+
+def _write_debt_positions_file(context, installments_rows: list, csv_version: str):
     csv_lines = to_csv_lines(csv_rows=installments_rows, csv_version=csv_version)
-
-    dataset_dataframe = pandas.DataFrame(data=csv_lines)
-
     filename = f'ImportFeatureTest_{datetime.now().strftime("%Y%m%d%H%M%S")}-{csv_version}'
-    zip_file_path = f'{filename}.zip'
-    dataset_dataframe.to_csv(zip_file_path, index=False, header=False,
-                             compression=dict(method='zip', archive_name=f'{filename}.csv'))
 
-    context.debt_positions_file_name = zip_file_path
+    context.debt_positions_file_name = write_csv_zip(csv_lines=csv_lines, filename=filename)
     context.csv_version = csv_version
 
 
@@ -83,31 +90,37 @@ def create_installments_rows(identifiers: list, debt_positions: dict) -> list:
         dp = debt_positions.get(identifier)
         for po in dp.payment_options:
             for inst in po.installments:
-                row = CSVRow()
-                row.action = inst.ingestion_flow_file_action
-                row.iupdOrg = dp.iupd_org
-                row.description = dp.description
-                row.paymentOptionIndex = po.payment_option_index
-                row.paymentOptionType = po.payment_option_type
-                row.paymentOptionDescription = po.description
-                row.entityType = inst.debtor.entity_type
-                row.fiscalCode = inst.debtor.fiscal_code
-                row.fullName = inst.debtor.full_name
-                row.address = inst.debtor.address
-                row.civic = inst.debtor.civic
-                row.postalCode = inst.debtor.postal_code
-                row.location = inst.debtor.location
-                row.province = inst.debtor.province
-                row.nation = inst.debtor.nation
-                row.email = inst.debtor.email
-                row.iud = inst.iud
-                row.dueDate = inst.due_date
-                row.amount = str(inst.amount_cents / 100)
-                row.remittanceInformation = inst.remittance_information
-
-                installments_rows.append(row)
+                installments_rows.append(_create_installment_row(debt_position=dp, payment_option=po, installment=inst,
+                                                                 action=inst.ingestion_flow_file_action))
 
     return installments_rows
+
+
+def _create_installment_row(debt_position, payment_option, installment, action: str) -> CSVRow:
+    row = CSVRow()
+    row.action = action
+    row.iupdOrg = debt_position.iupd_org
+    row.description = debt_position.description
+    row.paymentOptionIndex = payment_option.payment_option_index
+    row.paymentOptionType = payment_option.payment_option_type
+    row.paymentOptionDescription = payment_option.description
+    row.entityType = installment.debtor.entity_type
+    row.fiscalCode = installment.debtor.fiscal_code
+    row.fullName = installment.debtor.full_name
+    row.address = installment.debtor.address
+    row.civic = installment.debtor.civic
+    row.postalCode = installment.debtor.postal_code
+    row.location = installment.debtor.location
+    row.province = installment.debtor.province
+    row.nation = installment.debtor.nation
+    row.email = installment.debtor.email
+    row.iud = installment.iud
+    row.dueDate = installment.due_date
+    row.amount = cents_to_euro_str(installment.amount_cents)
+    row.remittanceInformation = installment.remittance_information
+    row.iuv = installment.iuv
+
+    return row
 
 
 @when("the organization uploads the debt positions file")
@@ -205,3 +218,135 @@ def check_debt_positions_created(context, identifiers, status, debt_position_by_
         debt_positions_created.append(DebtPosition.from_dict(debt_position_response))
 
     return debt_positions_created
+
+
+@given("debt positions {identifiers} with the installments configured as follows are successfully imported from an "
+       "ingestion flow file with version {csv_version}")
+def step_debt_positions_imported_from_file(context, identifiers, csv_version):
+    """Imports the debt positions configured in the table from a file and checks they are created.
+
+    - builds the debt positions file and uploads it
+    - checks that the file is processed and the debt positions are created in status `UNPAID`
+    - checks that the notices are present in the GPD archive in status `valid`
+    - checks that the expiration checks are scheduled"""
+    step_configure_debt_positions_for_file(context=context, identifiers=identifiers)
+    step_create_debt_positions_file(context=context, identifiers=identifiers, csv_version=csv_version)
+    step_uploads_debt_positions_file(context=context)
+    step_debt_position_file_processed(context=context)
+    step_check_debt_positions_created_from_file(context=context, identifiers=identifiers, status=Status.UNPAID.value)
+    step_verify_presence_debt_positions_in_gpd(context=context, status='valid')
+    step_debt_positions_workflow_check_expiration(context=context, status='scheduled')
+
+    for identifier, debt_position in zip(identifiers.split(), context.debt_positions_created):
+        context.debt_positions[identifier] = debt_position
+
+
+@when("the changes configured as follows are inserted into an ingestion flow file with version {csv_version}")
+def step_create_debt_positions_changes_file(context, csv_version):
+    """Builds a file with the changes configured in the table. For each row:
+
+    - `I`: inserts a new installment in the given payment option
+    - `M`: updates the installment with new remittance information, amount increased by 10 euros and due date
+      postponed by 5 days
+    - `A`: deletes the installment"""
+    installments_rows = []
+    requested_installments = {}
+
+    for table_row in context.table:
+        debt_position = get_stored_debt_position(context, table_row['identifier'])
+        po_index = int(table_row['po index'])
+        seq_num = int(table_row['installment seq'])
+        action = Action(table_row['action'])
+        payment_option = find_payment_option_by_po_index(debt_position=debt_position, po_index=po_index)
+
+        if action == Action.I:
+            installment = create_installment(expiration_days=1, seq_num=seq_num)
+            requested_installments[installment.iud] = installment
+        else:
+            installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=po_index,
+                                                                   seq_num=seq_num)
+            if action == Action.M:
+                installment = copy.deepcopy(installment)
+                installment.remittance_information = f'Feature test installment {seq_num} updated'
+                installment.amount_cents += 1000
+                installment.due_date = (datetime.strptime(installment.due_date, '%Y-%m-%d')
+                                        + timedelta(days=5)).strftime('%Y-%m-%d')
+                requested_installments[installment.iud] = installment
+
+        installments_rows.append(_create_installment_row(debt_position=debt_position, payment_option=payment_option,
+                                                         installment=installment, action=action.value))
+
+    _write_debt_positions_file(context=context, installments_rows=installments_rows, csv_version=csv_version)
+    context.requested_installments = requested_installments
+    context.total_installments = len(installments_rows)
+
+
+@then("the installment {seq_num} of payment option {po_index} of debt position {dp_identifier} is cancelled and its notice is removed from GPD")
+def step_check_installment_cancelled(context, seq_num, po_index, dp_identifier):
+    debt_position = fetch_debt_position(context, get_stored_debt_position(context, dp_identifier).debt_position_id)
+    installment = find_installment_by_seq_num_and_po_index(debt_position=debt_position, po_index=int(po_index),
+                                                           seq_num=int(seq_num))
+
+    assert installment.status == Status.CANCELLED, \
+        f"status mismatch: expected {Status.CANCELLED.value}, got {installment.status}"
+
+    res = get_debt_position_on_aca_or_gpd(org_fiscal_code=context.org_info.fiscal_code,
+                                          iupd_pagopa=installment.iupd_pagopa)
+    assert_response_ok(res, "Get cancelled debt position on GPD", expected_status=404)
+
+
+@then("the installment {seq_num} of payment option {po_index} of debt position {dp_identifier} is created in a new debt position")
+def step_check_installment_created_in_new_debt_position(context, seq_num, po_index, dp_identifier):
+    stored_debt_position = get_stored_debt_position(context, dp_identifier)
+    requested_installment = next(inst for inst in context.requested_installments.values()
+                                 if seq_num_of(inst.iud) == int(seq_num))
+
+    res = get_debt_position_by_iud(token=context.token, traceparent=context.traceparent,
+                                   organization_id=context.org_info.id, iud=requested_installment.iud)
+    assert_response_ok(res, "Get debt position by iud")
+    assert len(res.json()) == 1, f"Expected exactly 1 debt position for iud {requested_installment.iud}, " \
+                                 f"got {len(res.json())}"
+
+    new_debt_position = DebtPosition.from_dict(res.json()[0])
+    installment = find_installment_by_seq_num_and_po_index(debt_position=new_debt_position, po_index=int(po_index),
+                                                           seq_num=int(seq_num))
+
+    assert new_debt_position.debt_position_id != stored_debt_position.debt_position_id, \
+        f"Expected a new debt position, got the debt position {dp_identifier} " \
+        f"({stored_debt_position.debt_position_id})"
+    assert new_debt_position.status == Status.UNPAID, \
+        f"status mismatch: expected {Status.UNPAID.value}, got {new_debt_position.status}"
+    assert installment.amount_cents == requested_installment.amount_cents, \
+        f"amountCents mismatch: expected {requested_installment.amount_cents}, got {installment.amount_cents}"
+    assert installment.due_date == requested_installment.due_date, \
+        f"dueDate mismatch: expected {requested_installment.due_date}, got {installment.due_date}"
+    assert installment.remittance_information == requested_installment.remittance_information, \
+        f"remittanceInformation mismatch: expected {requested_installment.remittance_information}, " \
+        f"got {installment.remittance_information}"
+
+
+@then("the debt position {dp_identifier} is unchanged")
+def step_check_debt_position_unchanged(context, dp_identifier):
+    stored_debt_position = get_stored_debt_position(context, dp_identifier)
+    stored_installment = stored_debt_position.payment_options[0].installments[0]
+    debt_position = fetch_debt_position(context, stored_debt_position.debt_position_id)
+
+    assert len(debt_position.payment_options) == 1, \
+        f"Expected 1 payment option, got {len(debt_position.payment_options)}"
+    assert len(debt_position.payment_options[0].installments) == 1, \
+        f"Expected 1 installment, got {len(debt_position.payment_options[0].installments)}"
+
+    installment = debt_position.payment_options[0].installments[0]
+    assert installment.iud == stored_installment.iud, \
+        f"iud mismatch: expected {stored_installment.iud}, got {installment.iud}"
+    assert installment.iuv == stored_installment.iuv, \
+        f"iuv mismatch: expected {stored_installment.iuv}, got {installment.iuv}"
+    assert installment.amount_cents == stored_installment.amount_cents, \
+        f"amountCents mismatch: expected {stored_installment.amount_cents}, got {installment.amount_cents}"
+    assert installment.due_date == stored_installment.due_date, \
+        f"dueDate mismatch: expected {stored_installment.due_date}, got {installment.due_date}"
+    assert installment.remittance_information == stored_installment.remittance_information, \
+        f"remittanceInformation mismatch: expected {stored_installment.remittance_information}, " \
+        f"got {installment.remittance_information}"
+    assert installment.status == Status.UNPAID, \
+        f"status mismatch: expected {Status.UNPAID.value}, got {installment.status}"
