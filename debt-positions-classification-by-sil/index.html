@@ -565,6 +565,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scenario-sil-checks-assessment-by-iuf-for-a-reported-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL checks assessment by IUF for a reported notice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-checks-assessment-by-bill-for-a-cashed-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL checks assessment by bill for a cashed notice
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -861,6 +883,28 @@
     <span class="md-ellipsis">
       
         Scenario: SIL imports a payment notification file and the paid notice is correctly reconciled
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-checks-assessment-by-iuf-for-a-reported-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL checks assessment by IUF for a reported notice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scenario-sil-checks-assessment-by-bill-for-a-cashed-notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario: SIL checks assessment by bill for a cashed notice
       
     </span>
   </a>
@@ -1241,6 +1285,91 @@
 </li>
 <li>
 <p>Polls the treasury import status (<code>pivotSILChiediStatoImportFlussoTesoreria</code>) until it reaches <code>FILE_CARICATO</code></p>
+</li>
+</ol>
+<h2 id="scenario-sil-checks-assessment-by-iuf-for-a-reported-notice">Scenario: SIL checks assessment by IUF for a reported notice</h2>
+<p><strong>Tags:</strong> <code>@sil_assessments</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position with balance created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">0</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">an assessment, classified as 'reported', exists for the installment</span>
+<span class="k">When </span><span class="nf">SIL requests to check the assessment using the IUF</span>
+<span class="k">Then </span><span class="nf">the assessment returned matches the classified assessment details</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the installment. It:</p>
+<ul>
+<li>creates the debt position and checks it become <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
+</ol>
+<h2 id="scenario-sil-checks-assessment-by-bill-for-a-cashed-notice">Scenario: SIL checks assessment by bill for a cashed notice</h2>
+<p><strong>Tags:</strong> <code>@sil_assessments</code></p>
+<div class="annotate highlight"><pre><span></span><code><span class="k">Given </span><span class="nf">a simple debt position with balance created by organization interacting with GPD</span>
+<span class="c"># (1)!</span>
+<span class="k">And </span><span class="nf">the successful payment of the installment</span>
+<span class="c"># (2)!</span>
+<span class="k">And </span><span class="nf">a payment reporting with outcome code </span><span class="s">0</span><span class="nf"> has been successfully processed for the installment</span>
+<span class="c"># (3)!</span>
+<span class="k">And </span><span class="nf">a treasury file has been successfully processed for the installment</span>
+<span class="c"># (4)!</span>
+<span class="k">And </span><span class="nf">an assessment, classified as 'cashed', exists for the installment</span>
+<span class="k">When </span><span class="nf">SIL requests to check the assessment using the bill</span>
+<span class="k">Then </span><span class="nf">the assessment returned matches the classified assessment details</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Like <code>a simple debt position created by organization...</code>, but with a balance set to the installment. It:</p>
+<ul>
+<li>creates the debt position and checks it become <code>UNPAID</code>;</li>
+<li>verifies the notice is present as <code>valid</code> in the GPD/ACA archive;</li>
+<li>checks the expiration workflow is scheduled.</li>
+</ul>
+</li>
+<li>
+<p>Performs a full successful payment in one step:</p>
+<ul>
+<li>pays the installment,</li>
+<li>checks the debt position becomes <code>PAID</code></li>
+<li>checks the receipt is processed correctly.</li>
+</ul>
+</li>
+<li>
+<p>Uploads a payment reporting and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks the debt position becomes <code>REPORTED</code>;</li>
+<li>checks processing and (for outcome 9) that the receipt is created.</li>
+</ul>
+</li>
+<li>
+<p>Uploads a treasury file and checks it is processed:</p>
+<ul>
+<li>uploads the file;</li>
+<li>checks if processing is complete</li>
+</ul>
 </li>
 </ol>
 
