@@ -110,7 +110,7 @@ def step_upload_payment_reporting_file(context, po_index='1', seq_num='1', outco
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload payment reporting file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the payment reporting file upload"
 
     context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
     context.payment_reporting_file_name = zip_file_path
@@ -187,7 +187,7 @@ def step_upload_payment_reporting_file_no_debt_position(context, outcome_code='9
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload payment reporting file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the payment reporting file upload"
 
     context.payment_reporting_file_id = res.json()['ingestionFlowFileId']
     context.payment_reporting_file_name = zip_file_path
@@ -233,7 +233,7 @@ def step_check_payment_reporting_processed(context):
     res = get_installment(token=token, traceparent=context.traceparent, installment_id=installment_paid.installment_id)
 
     assert_response_ok(res, "Get installment by id")
-    assert res.json()['iuf'] is not None
+    assert res.json().get('iuf') is not None, f"Installment {installment_paid.installment_id} has no iuf set"
     installment_paid.iuf = res.json()['iuf']
 
 

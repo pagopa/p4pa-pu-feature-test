@@ -69,7 +69,7 @@ def step_uploads_receipts_file(context):
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload receipts file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the receipts file upload"
 
     context.receipts_file_id = res.json()['ingestionFlowFileId']
 
@@ -91,8 +91,10 @@ def step_receipts_file_processed(context):
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=FileStatus.COMPLETED, delay=10)
 
-    assert res['numTotalRows'] == context.receipts_rows_len
-    assert res['numTotalRows'] == res['numCorrectlyImportedRows']
+    assert res.get('numTotalRows') == context.receipts_rows_len, \
+        f"Expected numTotalRows {context.receipts_rows_len}, got {res.get('numTotalRows')}"
+    assert res.get('numTotalRows') == res.get('numCorrectlyImportedRows'), \
+        f"Expected all {res.get('numTotalRows')} rows imported correctly, got {res.get('numCorrectlyImportedRows')}"
 
     check_workflow_status(context=context, workflow_type=WorkflowType.RECEIPT_INGESTION_FLOW,
                           entity_id=context.receipts_file_id, status=WorkflowStatus.COMPLETED)
@@ -269,8 +271,8 @@ def step_check_receipt_updated(context):
                       receipt_origin=ReceiptOriginType.RECEIPT_FILE.value, iuv=installment_paid.iuv,
                       iur=installment_paid.iur)
     assert_response_ok(res, "Get receipt by IUV and IUR")
-    assert len(res.json()['content']) == 1, \
-        f"Expected exactly 1 receipt for IUV {installment_paid.iuv} / IUR {installment_paid.iur}, got {len(res.json()['content'])}"
+    assert len(res.json().get('content') or []) == 1, \
+        f"Expected exactly 1 receipt for IUV {installment_paid.iuv} / IUR {installment_paid.iur}, got {len(res.json().get('content') or [])}"
     receipt_id = res.json()['content'][0]['receiptId']
     assert receipt_id == installment_paid.receipt_id, \
         f"receiptId mismatch: expected {installment_paid.receipt_id}, got {receipt_id}"
@@ -280,12 +282,12 @@ def step_check_receipt_updated(context):
     receipt = res.json()
 
     expected_amount_cents = _to_cents(row.paymentAmountCents)
-    assert receipt['ingestionFlowFileId'] == context.receipts_file_id, \
-        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt['ingestionFlowFileId']}"
-    assert receipt['description'] == row.remittanceInformation, \
-        f"description mismatch: expected {row.remittanceInformation}, got {receipt['description']}"
-    assert receipt['paymentAmountCents'] == expected_amount_cents, \
-        f"paymentAmountCents mismatch: expected {expected_amount_cents}, got {receipt['paymentAmountCents']}"
+    assert receipt.get('ingestionFlowFileId') == context.receipts_file_id, \
+        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt.get('ingestionFlowFileId')}"
+    assert receipt.get('description') == row.remittanceInformation, \
+        f"description mismatch: expected {row.remittanceInformation}, got {receipt.get('description')}"
+    assert receipt.get('paymentAmountCents') == expected_amount_cents, \
+        f"paymentAmountCents mismatch: expected {expected_amount_cents}, got {receipt.get('paymentAmountCents')}"
 
 
 @then("the technical debt position is updated")
@@ -304,8 +306,8 @@ def step_check_technical_debt_position_updated(context):
                                                                    organization_id=context.org_info.id, nav=nav)
     assert_response_ok(res, "Get debt position by NAV")
     assert len(res.json()) == 1, f"Expected exactly 1 debt position for NAV {nav}, got {len(res.json())}"
-    assert res.json()[0]['debtPositionId'] == debt_position_id, \
-        f"debtPositionId mismatch: expected {debt_position_id}, got {res.json()[0]['debtPositionId']}"
+    assert res.json()[0].get('debtPositionId') == debt_position_id, \
+        f"debtPositionId mismatch: expected {debt_position_id}, got {res.json()[0].get('debtPositionId')}"
 
     debt_position = fetch_debt_position(context, debt_position_id=debt_position_id)
     installment = debt_position.payment_options[0].installments[0]
@@ -342,8 +344,8 @@ def step_check_installment_amount_unchanged(context):
     res = get_installment(token=context.token, traceparent=context.traceparent,
                           installment_id=installment_paid.installment_id)
     assert_response_ok(res, "Get installment by id")
-    assert res.json()['amountCents'] == installment_paid.amount_cents, \
-        f"amountCents mismatch: expected {installment_paid.amount_cents}, got {res.json()['amountCents']}"
+    assert res.json().get('amountCents') == installment_paid.amount_cents, \
+        f"amountCents mismatch: expected {installment_paid.amount_cents}, got {res.json().get('amountCents')}"
 
 
 @given("a receipt successfully imported from a receipts file with version {csv_version}")
@@ -422,16 +424,16 @@ def step_check_installment_linked_to_pagopa_receipt(context):
 
     file_row = context.receipts_rows[0]
 
-    assert installment['iur'] != file_row.paymentReceiptId, \
+    assert installment.get('iur') != file_row.paymentReceiptId, \
         f"iur is equal to the one imported from file: {file_row.paymentReceiptId}"
 
     res = get_receipt_by_id(token=context.token, traceparent=context.traceparent, receipt_id=installment['receiptId'])
     assert_response_ok(res, "Get receipt by id")
     receipt = res.json()
-    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_PAGOPA.value, \
-        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt['receiptOrigin']}"
-    assert receipt['paymentReceiptId'] == installment['iur'], \
-        f"paymentReceiptId mismatch: expected {installment['iur']}, got {receipt['paymentReceiptId']}"
+    assert receipt.get('receiptOrigin') == ReceiptOriginType.RECEIPT_PAGOPA.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_PAGOPA.value}, got {receipt.get('receiptOrigin')}"
+    assert receipt.get('paymentReceiptId') == installment.get('iur'), \
+        f"paymentReceiptId mismatch: expected {installment.get('iur')}, got {receipt.get('paymentReceiptId')}"
 
 
 @then("the receipt imported from file is created with origin receipt_file")
@@ -442,10 +444,10 @@ def step_check_file_receipt_created(context):
     res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=row.paymentReceiptId)
     assert_response_ok(res, "Get receipt by IUR")
     receipt = res.json()
-    assert receipt['receiptOrigin'] == ReceiptOriginType.RECEIPT_FILE.value, \
-        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_FILE.value}, got {receipt['receiptOrigin']}"
-    assert receipt['ingestionFlowFileId'] == context.receipts_file_id, \
-        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt['ingestionFlowFileId']}"
+    assert receipt.get('receiptOrigin') == ReceiptOriginType.RECEIPT_FILE.value, \
+        f"receiptOrigin mismatch: expected {ReceiptOriginType.RECEIPT_FILE.value}, got {receipt.get('receiptOrigin')}"
+    assert receipt.get('ingestionFlowFileId') == context.receipts_file_id, \
+        f"ingestionFlowFileId mismatch: expected {context.receipts_file_id}, got {receipt.get('ingestionFlowFileId')}"
 
 
 @then("the installment balance is updated by the receipts file")

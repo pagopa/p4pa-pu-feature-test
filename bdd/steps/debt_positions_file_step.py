@@ -96,7 +96,7 @@ def create_installments_rows(identifiers: list, debt_positions: dict) -> list:
     return installments_rows
 
 
-def _create_installment_row(debt_position, payment_option, installment, action: str) -> CSVRow:
+def _create_installment_row(debt_position, payment_option, installment, action: Action) -> CSVRow:
     row = CSVRow()
     row.action = action
     row.iupdOrg = debt_position.iupd_org
@@ -135,7 +135,7 @@ def step_uploads_debt_positions_file(context):
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload debt positions file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the debt positions file upload"
 
     context.debt_positions_file_id = res.json()['ingestionFlowFileId']
 
@@ -161,8 +161,10 @@ def step_debt_position_file_processed(context):
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=status, delay=10)
 
-    assert res['numTotalRows'] == context.total_installments
-    assert res['numTotalRows'] == res['numCorrectlyImportedRows']
+    assert res.get('numTotalRows') == context.total_installments, \
+        f"Expected numTotalRows {context.total_installments}, got {res.get('numTotalRows')}"
+    assert res.get('numTotalRows') == res.get('numCorrectlyImportedRows'), \
+        f"Expected all {res.get('numTotalRows')} rows imported correctly, got {res.get('numCorrectlyImportedRows')}"
 
     check_workflow_status(context=context, workflow_type=WorkflowType.DEBT_POSITION_INGESTION_FLOW,
                           entity_id=context.debt_positions_file_id, status=WorkflowStatus.COMPLETED)
@@ -195,7 +197,8 @@ def step_check_debt_positions_created_from_file(context, identifiers, status):
 
 
 def check_debt_positions_created(context, identifiers, status, debt_position_by_ingestion_flow_id) -> list[DebtPosition]:
-    assert len(identifiers) == debt_position_by_ingestion_flow_id['totalElements']
+    assert len(identifiers) == debt_position_by_ingestion_flow_id.get('totalElements'), \
+        f"Expected {len(identifiers)} debt positions, got {debt_position_by_ingestion_flow_id.get('totalElements')}"
 
     debt_positions_response = debt_position_by_ingestion_flow_id['content']
 
@@ -274,7 +277,7 @@ def step_create_debt_positions_changes_file(context, csv_version):
                 requested_installments[installment.iud] = installment
 
         installments_rows.append(_create_installment_row(debt_position=debt_position, payment_option=payment_option,
-                                                         installment=installment, action=action.value))
+                                                         installment=installment, action=action))
 
     _write_debt_positions_file(context=context, installments_rows=installments_rows, csv_version=csv_version)
     context.requested_installments = requested_installments

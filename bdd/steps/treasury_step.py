@@ -97,7 +97,7 @@ def step_upload_treasury_file_with_amount(context, amount):
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload treasury file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the treasury file upload"
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
 
@@ -124,7 +124,7 @@ def step_upload_treasury_file(context, po_index, installment_seq_num):
                            file_origin=FileOrigin.PORTAL, file_name=zip_file_path)
 
     assert_response_ok(res, "Upload treasury file")
-    assert res.json()['ingestionFlowFileId'] is not None
+    assert res.json().get('ingestionFlowFileId') is not None, "No ingestionFlowFileId returned by the treasury file upload"
 
     context.treasury_file_id = res.json()['ingestionFlowFileId']
 

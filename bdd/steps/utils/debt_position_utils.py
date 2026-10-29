@@ -175,7 +175,8 @@ def retrieve_dp_type_org_by_code(token, traceparent: str, organization_id: int, 
                                                          code=debt_position_type_org_code)
 
     assert_response_ok(res_dp_type_org, "Get debt position type org by code")
-    assert res_dp_type_org.json() is not None
+    assert res_dp_type_org.json() is not None, \
+        f"No debt position type org found for code {debt_position_type_org_code}"
 
     return res_dp_type_org.json()
 

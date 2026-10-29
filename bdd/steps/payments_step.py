@@ -18,7 +18,7 @@ psp_info = secrets.payment_info.psp
 
 def check_res_ok_and_get_body(response_content, tag_name):
     res_body = extract_soap_body(response_content, tag_name)
-    assert res_body['outcome'] == 'OK', f'Payment failed: {res_body}'
+    assert res_body.get('outcome') == 'OK', f'Payment failed: {res_body}'
     return res_body
 
 
@@ -103,7 +103,8 @@ def step_check_receipt_processed(context, dp_identifier=None, organization_id=No
                           installment_id=installment_paid.installment_id)
 
     assert_response_ok(res, "Get installment by id")
-    assert res.json()['iur'] is not None and res.json()['receiptId'] is not None
+    assert res.json().get('iur') is not None and res.json().get('receiptId') is not None, \
+        f"Expected installment to have iur and receiptId, got iur={res.json().get('iur')}, receiptId={res.json().get('receiptId')}"
     installment_paid.iur = res.json()['iur']
     installment_paid.receipt_id = res.json()['receiptId']
 
@@ -148,20 +149,26 @@ def step_check_receipt_created(context, receipt_origin: str = ReceiptOriginType.
         res = get_receipt_by_iur(token=context.token, traceparent=context.traceparent, iur=installment_paid.iur)
         assert_response_ok(res, "Get receipt by IUR")
         receipt = res.json()
-        assert receipt['receiptOrigin'] == receipt_origin
-        assert installment['iur'] != installment_paid.iur
+        assert receipt.get('receiptOrigin') == receipt_origin, \
+            f"Expected receiptOrigin {receipt_origin}, got {receipt.get('receiptOrigin')}"
+        assert installment.get('iur') != installment_paid.iur, \
+            f"Expected installment iur to differ from {installment_paid.iur} (duplicate receipt)"
     else:
         res = get_receipt(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
                           receipt_origin=receipt_origin, iuv=installment_paid.iuv,
                           iur=installment_paid.iur)
         assert_response_ok(res, "Get receipt by IUV and IUR")
-        assert len(res.json()['content']) == 1, \
-            f"Expected exactly 1 receipt for IUV {installment_paid.iuv} / IUR {installment_paid.iur}, got {len(res.json()['content'])}"
+        assert len(res.json().get('content') or []) == 1, \
+            f"Expected exactly 1 receipt for IUV {installment_paid.iuv} / IUR {installment_paid.iur}, got {len(res.json().get('content') or [])}"
         receipt = res.json()['content'][0]
-        assert receipt['receiptOrigin'] == receipt_origin
-        assert installment_paid.iuv == receipt['iuv']
-        assert installment['iur'] is not None and installment['receiptId'] is not None \
-               and receipt['receiptId'] == installment['receiptId']
+        assert receipt.get('receiptOrigin') == receipt_origin, \
+            f"Expected receiptOrigin {receipt_origin}, got {receipt.get('receiptOrigin')}"
+        assert installment_paid.iuv == receipt.get('iuv'), \
+            f"Expected receipt iuv {installment_paid.iuv}, got {receipt.get('iuv')}"
+        assert installment.get('iur') is not None and installment.get('receiptId') is not None \
+               and receipt.get('receiptId') == installment.get('receiptId'), \
+            f"Expected installment linked to receipt: installment iur={installment.get('iur')}, " \
+            f"installment receiptId={installment.get('receiptId')}, receipt receiptId={receipt.get('receiptId')}"
         installment_paid.iur = installment['iur']
         installment_paid.receipt_id = installment['receiptId']
 
@@ -226,5 +233,5 @@ def step_installment_not_payable(context):
 
     assert_response_ok(res, "Verify payment notice")
     res_body = extract_soap_body(res.content, tag_name='verifyPaymentNoticeRes')
-    assert res_body['outcome'] == 'KO', \
-        f"outcome mismatch: expected KO, got {res_body['outcome']}"
+    assert res_body.get('outcome') == 'KO', \
+        f"outcome mismatch: expected KO, got {res_body.get('outcome')}"

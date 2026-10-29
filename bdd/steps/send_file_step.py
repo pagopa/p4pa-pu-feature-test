@@ -103,8 +103,8 @@ def step_upload_send_notifications(context):
 
     assert_response_ok(res_file_auth, "SIL authorization to upload SEND campaign file")
     file_auth = res_file_auth.json()
-    assert file_auth['uploadUrl'] is not None, "No uploadUrl returned by the send notification import authorization"
-    assert file_auth['importId'] is not None, "No importId returned by the send notification import authorization"
+    assert file_auth.get('uploadUrl') is not None, "No uploadUrl returned by the send notification import authorization"
+    assert file_auth.get('importId') is not None, "No importId returned by the send notification import authorization"
 
     context.send_notification_file_id = file_auth['importId']
 
@@ -134,8 +134,10 @@ def step_check_send_file_processed(context):
                                         file_path_name=file_path_name, file_name=file_name,
                                         status=FileStatus.COMPLETED, delay=10)
 
-    assert res['numTotalRows'] == context.notifications_rows_len
-    assert res['numTotalRows'] == res['numCorrectlyImportedRows']
+    assert res.get('numTotalRows') == context.notifications_rows_len, \
+        f"Expected numTotalRows {context.notifications_rows_len}, got {res.get('numTotalRows')}"
+    assert res.get('numTotalRows') == res.get('numCorrectlyImportedRows'), \
+        f"Expected all {res.get('numTotalRows')} rows imported correctly, got {res.get('numCorrectlyImportedRows')}"
 
     check_workflow_status(context=context, workflow_type=WorkflowType.SEND_NOTIFICATION_INGESTION_FLOW,
                           entity_id=context.send_notification_file_id, status=WorkflowStatus.COMPLETED)
@@ -151,15 +153,19 @@ def step_check_campaign_status(context):
                                              organization_id=org_id, external_campaign_id=external_campaign_id)
 
     assert_response_ok(res_campaign_detail, "Get campaign detail")
-    assert len(res_campaign_detail.json()['content']) == 1
+    assert len(res_campaign_detail.json().get('content') or []) == 1, \
+        f"Expected exactly 1 campaign for external id {external_campaign_id}, got {len(res_campaign_detail.json().get('content') or [])}"
     campaign_detail = res_campaign_detail.json()['content'][0]
 
-    assert campaign_detail['campaignId'] is not None
-    assert campaign_detail['counters'] is not None
-    assert campaign_detail['counters']['total'] == total_notifications
+    assert campaign_detail.get('campaignId') is not None, "Campaign has no campaignId"
+    assert campaign_detail.get('counters') is not None, "Campaign has no counters"
+    assert (campaign_detail.get('counters') or {}).get('total') == total_notifications, \
+        f"Expected counters total {total_notifications}, got {(campaign_detail.get('counters') or {}).get('total')}"
     date_now = today()
-    assert campaign_detail['startDate'] == date_now
-    assert campaign_detail['endDate'] == date_now
+    assert campaign_detail.get('startDate') == date_now, \
+        f"Expected startDate {date_now}, got {campaign_detail.get('startDate')}"
+    assert campaign_detail.get('endDate') == date_now, \
+        f"Expected endDate {date_now}, got {campaign_detail.get('endDate')}"
 
     context.campaign_id = campaign_detail['campaignId']
 
@@ -170,14 +176,16 @@ def step_check_campaign_status(context):
     assert_response_ok(res_campaign_notifications, "Get campaign notifications")
     campaign_notifications = res_campaign_notifications.json()
 
-    assert campaign_notifications['totalElements'] == total_notifications
+    assert campaign_notifications.get('totalElements') == total_notifications, \
+        f"Expected totalElements {total_notifications}, got {campaign_notifications.get('totalElements')}"
     notifications = campaign_notifications['content']
-    assert len(notifications) == total_notifications
+    assert len(notifications) == total_notifications, \
+        f"Expected {total_notifications} notifications, got {len(notifications)}"
 
     for notification in notifications:
-        assert notification['sendNotificationId'] is not None
-        assert notification['status'] == SendCampaignNotificationStatus.IN_PROGRESS.value, \
-            f"Notification {notification['sendNotificationId']} in status {notification['status']}"
+        assert notification.get('sendNotificationId') is not None, "Notification has no sendNotificationId"
+        assert notification.get('status') == SendCampaignNotificationStatus.IN_PROGRESS.value, \
+            f"Notification {notification.get('sendNotificationId')} in status {notification.get('status')}"
         assert notification.get('iun') is None, \
             f"Notification {notification['sendNotificationId']} has already the IUN {notification['iun']}"
 
@@ -235,11 +243,11 @@ def step_check_campaign_installments_iun(context):
     assert_response_ok(res_campaign_detail, "Get campaign details")
     campaign_detail = res_campaign_detail.json()
 
-    assert campaign_detail['campaignId'] is not None
-    counters = campaign_detail['counters']
-    assert counters is not None
+    assert campaign_detail.get('campaignId') is not None, "Campaign has no campaignId"
+    counters = campaign_detail.get('counters')
+    assert counters is not None, "Campaign has no counters"
 
-    assert counters['total'] == total
-    assert counters['accepted'] == total, f"Accepted counter is {counters['accepted']}, expected {total}"
-    assert delivered_found <= counters['delivered'] <= total, \
-        f"Delivered counter is {counters['delivered']}, expected between {delivered_found} and {total}"
+    assert counters.get('total') == total, f"Expected counters total {total}, got {counters.get('total')}"
+    assert counters.get('accepted') == total, f"Accepted counter is {counters.get('accepted')}, expected {total}"
+    assert delivered_found <= (counters.get('delivered') or 0) <= total, \
+        f"Delivered counter is {counters.get('delivered')}, expected between {delivered_found} and {total}"

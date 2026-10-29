@@ -251,8 +251,6 @@ def step_request_to_check_assessment(context, parameter):
         res = post_sil_chiedi_accertamento_per_iuf(token=context.token, traceparent=context.traceparent,
                                                    ipa_code=context.org_info.ipa_code, iuf=iuf)
     elif parameter == "bill":
-        print(context.bill_code)
-        print(context.bill_year)
         res = post_sil_chiedi_accertamento_per_bolletta(token=context.token, traceparent=context.traceparent,
                                                         ipa_code=context.org_info.ipa_code,
                                                         bill_year=context.bill_year, bill_code=context.bill_code)

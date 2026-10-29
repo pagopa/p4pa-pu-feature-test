@@ -12,7 +12,9 @@ def check_presence_debt_position_in_aca_or_gpd(org_fiscal_code, pagopa_interacti
             res = get_debt_position_on_aca_or_gpd(org_fiscal_code=org_fiscal_code, iupd_pagopa=installment.iupd_pagopa)
 
             assert_response_ok(res, f"Get debt position on {pagopa_interaction}")
-            assert res.json()['status'] == status.upper()
+            assert res.json().get('status') == status.upper(), \
+                f"Expected status {status.upper()} on {pagopa_interaction} for iupdPagopa {installment.iupd_pagopa}, " \
+                f"got {res.json().get('status')}"
 
 
 @then("the notice is present in {pagopa_interaction} archive in status {status}")

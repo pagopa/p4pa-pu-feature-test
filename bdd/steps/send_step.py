@@ -70,8 +70,9 @@ def step_create_send_notification(context, dp_identifiers, installments_size=1):
                                         payload=notification_request.to_json())
 
     assert_response_ok(res, "Create SEND notification")
-    assert res.json()['sendNotificationId'] is not None
-    assert res.json()['status'] == SendStatus.WAITING.value
+    assert res.json().get('sendNotificationId') is not None, "No sendNotificationId returned by the SEND notification creation"
+    assert res.json().get('status') == SendStatus.WAITING.value, \
+        f"Expected SEND notification status {SendStatus.WAITING.value}, got {res.json().get('status')}"
 
     context.send_notification_id = res.json()['sendNotificationId']
     context.installments_notified = installments_notified
@@ -109,7 +110,8 @@ def step_upload_notification_file(context):
 
         if i == len(installments_notified):
             assert_response_ok(res_payment_file, "Upload last payment file to SEND")
-            assert res_payment_file.json()['workflowId'] is not None
+            assert res_payment_file.json().get('workflowId') is not None, \
+                "No workflowId returned by the last payment file upload to SEND"
             workflow_id = res_payment_file.json()['workflowId']
         else:
             assert_response_ok(res_payment_file, "Upload payment file to SEND", expected_status=202)
@@ -119,8 +121,10 @@ def step_upload_notification_file(context):
                                        notification_id=notification_id)
 
     assert_response_ok(res_status, "Get SEND notification")
-    assert res_status.json()['status'] == SendStatus.IN_VALIDATION.value
-    assert res_status.json().get('iun') is None
+    assert res_status.json().get('status') == SendStatus.IN_VALIDATION.value, \
+        f"Expected SEND notification status {SendStatus.IN_VALIDATION.value}, got {res_status.json().get('status')}"
+    assert res_status.json().get('iun') is None, \
+        f"Expected no IUN yet, got {res_status.json().get('iun')}"
 
     retry_get_workflow_status(token=context.token, traceparent=context.traceparent, workflow_id=workflow_id,
                               status=WorkflowStatus.COMPLETED)
@@ -144,9 +148,9 @@ def get_valid_send_notification(context, notification_id, statuses=None) -> dict
 
     assert_response_ok(res_status, "Get valid SEND notification")
     notification = res_status.json()
-    assert notification['status'] in statuses, \
-        f"Notification {notification_id} in status {notification['status']}, expected one of {statuses}"
-    assert notification['iun'] is not None
+    assert notification.get('status') in statuses, \
+        f"Notification {notification_id} in status {notification.get('status')}, expected one of {statuses}"
+    assert notification.get('iun') is not None, f"Notification {notification_id} has no IUN"
 
     return notification
 
@@ -156,7 +160,7 @@ def assert_installment_iun(context, installment, iun: str):
                           installment_id=installment.installment_id)
 
     assert_response_ok(res, "Get installment by id")
-    assert res.json()['iun'] == iun
+    assert res.json().get('iun') == iun, f"Expected installment IUN {iun}, got {res.json().get('iun')}"
 
 
 @then("the notification is accepted by SEND and the IUN is assigned to the installment")
@@ -188,10 +192,12 @@ def step_check_notification_fee(context):
                                             nav=installment.nav, org_id=context.org_info.id)
 
         assert_response_ok(res_fee, "Get SEND notification fee")
-        assert res_fee.json()['totalPrice'] is not None
+        assert res_fee.json().get('totalPrice') is not None, \
+            f"No totalPrice returned for notification fee of NAV {installment.nav}"
         notification_fee[i] = res_fee.json()['totalPrice']
         if i != 1:
-            assert notification_fee[i] == notification_fee[i - 1]
+            assert notification_fee[i] == notification_fee[i - 1], \
+                f"Notification fees differ between installments: {notification_fee[i]} != {notification_fee[i - 1]}"
         i += 1
 
     context.notification_fee = notification_fee[1]
@@ -214,5 +220,7 @@ def step_check_installment_amount_with_fee(context, dp_identifier, seq_num='1'):
                                   installment_id=installment.installment_id)
 
             assert_response_ok(res, "Get installment by id")
-            assert res.json()['notificationFeeCents'] == context.notification_fee
-            assert res.json()['amountCents'] == expected_amount
+            assert res.json().get('notificationFeeCents') == context.notification_fee, \
+                f"Expected notificationFeeCents {context.notification_fee}, got {res.json().get('notificationFeeCents')}"
+            assert res.json().get('amountCents') == expected_amount, \
+                f"Expected amountCents {expected_amount}, got {res.json().get('amountCents')}"

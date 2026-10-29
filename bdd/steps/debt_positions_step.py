@@ -288,18 +288,22 @@ def step_check_debt_position_created(context, debt_position_origin: str = DebtPo
         f"Expected exactly 1 debt position for NAV {nav}, got {len(res.json())}"
 
     res_debt_position = res.json()[0]
-    assert res_debt_position['debtPositionId'] is not None
+    assert res_debt_position.get('debtPositionId') is not None, f"No debtPositionId returned for NAV {nav}"
 
     debt_position = fetch_debt_position(context, debt_position_id=res_debt_position['debtPositionId'])
-    assert DebtPositionOrigin[debt_position_origin.upper()] == debt_position.debt_position_origin
+    assert DebtPositionOrigin[debt_position_origin.upper()] == debt_position.debt_position_origin, \
+        f"Expected debtPositionOrigin {debt_position_origin.upper()}, got {debt_position.debt_position_origin}"
     if DebtPositionOrigin.RECEIPT_FILE.value == debt_position_origin.upper():
-        assert Status.PAID == debt_position.status
+        assert Status.PAID == debt_position.status, \
+            f"Expected debt position status PAID, got {debt_position.status}"
 
     installment = debt_position.payment_options[0].installments[0]
-    assert iuv == installment.iuv
+    assert iuv == installment.iuv, f"Expected installment IUV {iuv}, got {installment.iuv}"
     if DebtPositionOrigin.REPORTING_PAGOPA.value == debt_position_origin.upper():
-        assert PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE == installment.remittance_information
-        assert ANONYMOUS_DEBTOR_FISCAL_CODE == installment.debtor.fiscal_code
+        assert PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE == installment.remittance_information, \
+            f"Expected remittanceInformation {PAYMENTS_REPORTING_OUTCOME_9_REMITTANCE}, got {installment.remittance_information}"
+        assert ANONYMOUS_DEBTOR_FISCAL_CODE == installment.debtor.fiscal_code, \
+            f"Expected debtor fiscal code {ANONYMOUS_DEBTOR_FISCAL_CODE}, got {installment.debtor.fiscal_code}"
 
     context.debt_position = debt_position
     set_installment_paid(context, installment)
@@ -315,7 +319,8 @@ def step_check_installment_fields(context, installment_field: str, dp_identifier
                           installment_id=installment.installment_id)
 
     assert_response_ok(res, "Get installment by id")
-    assert installment_field in res.json()
+    assert installment_field in res.json(), \
+        f"Field '{installment_field}' is missing in the installment response"
 
 
 def validate_debt_position_created(org_info, debt_position_request: DebtPosition, debt_position_response: dict,
@@ -326,34 +331,43 @@ def validate_debt_position_created(org_info, debt_position_request: DebtPosition
 
 
 def _validate_debt_position_fields(org_info, request, response, status, csv_version):
-    assert response['status'] == status.value
-    assert response['debtPositionTypeOrgId'] == request.debt_position_type_org_id
+    assert response.get('status') == status.value, \
+        f"Expected debt position status {status.value}, got {response.get('status')}"
+    assert response.get('debtPositionTypeOrgId') == request.debt_position_type_org_id, \
+        f"Expected debtPositionTypeOrgId {request.debt_position_type_org_id}, got {response.get('debtPositionTypeOrgId')}"
 
     if request.iupd_org is None or not CSVVersion.is_v2(csv_version):
-        assert response['iupdOrg'].startswith(org_info.fiscal_code)
+        assert (response.get('iupdOrg') or '').startswith(org_info.fiscal_code), \
+            f"Expected iupdOrg to start with {org_info.fiscal_code}, got {response.get('iupdOrg')}"
     else:
-        assert response['iupdOrg'] == request.iupd_org
+        assert response.get('iupdOrg') == request.iupd_org, \
+            f"Expected iupdOrg {request.iupd_org}, got {response.get('iupdOrg')}"
 
     if csv_version:
         csv_version = CSVVersion(csv_version)
         if not CSVVersion.is_v2(csv_version):
             assert f"DebtPosition with code {settings.debt_position_type_org_code.feature_test} was created" in \
-                   response[
-                       'description']
+                   (response.get('description') or ''), \
+                f"Unexpected debt position description: {response.get('description')}"
         if csv_version <= CSVVersion.V1_4:
-            assert len(response['paymentOptions']) == 1
-            assert len(response['paymentOptions'][0]['installments']) == 1
+            assert len(response.get('paymentOptions') or []) == 1, \
+                f"Expected exactly 1 payment option, got {len(response.get('paymentOptions') or [])}"
+            assert len(response['paymentOptions'][0].get('installments') or []) == 1, \
+                f"Expected exactly 1 installment, got {len(response['paymentOptions'][0].get('installments') or [])}"
         if csv_version <= CSVVersion.V1_2:
-            assert response['flagPuPagoPaPayment'] is True
+            assert response.get('flagPuPagoPaPayment') is True, \
+                f"Expected flagPuPagoPaPayment True, got {response.get('flagPuPagoPaPayment')}"
 
 
 def _validate_payment_options(org_info, request, response_options, status, csv_version):
-    assert len(response_options) == len(request.payment_options)
+    assert len(response_options) == len(request.payment_options), \
+        f"Expected {len(request.payment_options)} payment options, got {len(response_options)}"
 
     map_po_request = {po.payment_option_index: po for po in request.payment_options}
     for po_response in response_options:
         if csv_version and CSVVersion(csv_version) < CSVVersion.V1_4:
-            assert po_response['paymentOptionIndex'] == 1
+            assert po_response.get('paymentOptionIndex') == 1, \
+                f"Expected paymentOptionIndex 1, got {po_response.get('paymentOptionIndex')}"
 
         po_request = map_po_request.get(po_response['paymentOptionIndex'])
         _validate_payment_option(po_response, po_request, status, csv_version)
@@ -363,31 +377,46 @@ def _validate_payment_options(org_info, request, response_options, status, csv_v
 
 
 def _validate_payment_option(po_response, po_request, status, csv_version):
-    assert po_response['status'] == status.value
-    assert po_response['paymentOptionType'] == po_request.payment_option_type.value
-    assert po_response['totalAmountCents'] == calculate_po_total_amount(po_request)
-    assert len(po_response['installments']) == len(po_request.installments)
+    assert po_response.get('status') == status.value, \
+        f"Expected payment option status {status.value}, got {po_response.get('status')}"
+    assert po_response.get('paymentOptionType') == po_request.payment_option_type.value, \
+        f"Expected paymentOptionType {po_request.payment_option_type.value}, got {po_response.get('paymentOptionType')}"
+    assert po_response.get('totalAmountCents') == calculate_po_total_amount(po_request), \
+        f"Expected totalAmountCents {calculate_po_total_amount(po_request)}, got {po_response.get('totalAmountCents')}"
+    assert len(po_response.get('installments') or []) == len(po_request.installments), \
+        f"Expected {len(po_request.installments)} installments, got {len(po_response.get('installments') or [])}"
 
     if csv_version and not CSVVersion.is_v2(csv_version):
-        assert po_response['description'] == 'Pagamento Singolo Avviso'
+        assert po_response.get('description') == 'Pagamento Singolo Avviso', \
+            f"Expected payment option description 'Pagamento Singolo Avviso', got {po_response.get('description')}"
 
 
 def _validate_installments(org_info, inst_request_map, inst_responses, status):
     for inst_response in inst_responses:
-        inst_request = inst_request_map.get(inst_response['iud'])
+        inst_request = inst_request_map.get(inst_response.get('iud'))
 
-        assert inst_response['status'] == status.value
+        assert inst_response.get('status') == status.value, \
+            f"Expected installment status {status.value}, got {inst_response.get('status')}"
         if status == Status.TO_SYNC:
-            assert inst_response['syncStatus']['syncStatusFrom'] == Status.DRAFT.value
-            assert inst_response['syncStatus']['syncStatusTo'] == Status.UNPAID.value
+            assert (inst_response.get('syncStatus') or {}).get('syncStatusFrom') == Status.DRAFT.value, \
+                f"Expected syncStatusFrom DRAFT, got {(inst_response.get('syncStatus') or {}).get('syncStatusFrom')}"
+            assert (inst_response.get('syncStatus') or {}).get('syncStatusTo') == Status.UNPAID.value, \
+                f"Expected syncStatusTo UNPAID, got {(inst_response.get('syncStatus') or {}).get('syncStatusTo')}"
 
-        assert inst_response['iupdPagopa'].startswith(org_info.fiscal_code)
-        assert len(inst_response['iuv']) == 17
-        assert len(inst_response['nav']) == 18 and inst_response['nav'] == NAV_PREFIX + inst_response['iuv']
-        assert inst_response['dueDate'] == inst_request.due_date
-        assert inst_response['amountCents'] == inst_request.amount_cents
-        assert inst_response['debtor'] == json.loads(inst_request.debtor.to_json())
-        assert len(inst_response['transfers']) == len(inst_request.transfers) + 1
+        assert (inst_response.get('iupdPagopa') or '').startswith(org_info.fiscal_code), \
+            f"Expected iupdPagopa to start with {org_info.fiscal_code}, got {inst_response.get('iupdPagopa')}"
+        assert len(inst_response.get('iuv') or '') == 17, \
+            f"Expected IUV of length 17, got {len(inst_response.get('iuv') or '')} ({inst_response.get('iuv')})"
+        assert len(inst_response.get('nav') or '') == 18 and inst_response.get('nav') == NAV_PREFIX + (inst_response.get('iuv') or ''), \
+            f"Unexpected NAV {inst_response.get('nav')} (expected {NAV_PREFIX + (inst_response.get('iuv') or '')})"
+        assert inst_response.get('dueDate') == inst_request.due_date, \
+            f"Expected dueDate {inst_request.due_date}, got {inst_response.get('dueDate')}"
+        assert inst_response.get('amountCents') == inst_request.amount_cents, \
+            f"Expected amountCents {inst_request.amount_cents}, got {inst_response.get('amountCents')}"
+        assert inst_response.get('debtor') == json.loads(inst_request.debtor.to_json()), \
+            f"Installment debtor does not match: got {inst_response.get('debtor')}"
+        assert len(inst_response.get('transfers') or []) == len(inst_request.transfers) + 1, \
+            f"Expected {len(inst_request.transfers) + 1} transfers, got {len(inst_response.get('transfers') or [])}"
 
         _validate_first_transfer(org_info, inst_response, inst_request)
 
@@ -395,13 +424,19 @@ def _validate_installments(org_info, inst_request_map, inst_responses, status):
 def _validate_first_transfer(org_info, inst_response, inst_request):
     first_transfer = next(transfer for transfer in inst_response['transfers'] if transfer['transferIndex'] == 1)
 
-    assert first_transfer['orgFiscalCode'] == org_info.fiscal_code
-    assert first_transfer['orgName'] == org_info.name
-    assert first_transfer['iban'] == org_info.iban
-    assert first_transfer['category'] is not None
-    assert first_transfer['remittanceInformation'] == inst_request.remittance_information
-    assert first_transfer['amountCents'] == calculate_amount_first_transfer(
-        installment=Installment.from_dict(inst_request))
+    assert first_transfer.get('orgFiscalCode') == org_info.fiscal_code, \
+        f"Expected orgFiscalCode {org_info.fiscal_code}, got {first_transfer.get('orgFiscalCode')}"
+    assert first_transfer.get('orgName') == org_info.name, \
+        f"Expected orgName {org_info.name}, got {first_transfer.get('orgName')}"
+    assert first_transfer.get('iban') == org_info.iban, \
+        f"Expected iban {org_info.iban}, got {first_transfer.get('iban')}"
+    assert first_transfer.get('category') is not None, "First transfer has no category"
+    assert first_transfer.get('remittanceInformation') == inst_request.remittance_information, \
+        f"Expected remittanceInformation {inst_request.remittance_information}, got {first_transfer.get('remittanceInformation')}"
+    assert first_transfer.get('amountCents') == calculate_amount_first_transfer(
+        installment=Installment.from_dict(inst_request)), \
+        f"Expected first transfer amountCents {calculate_amount_first_transfer(installment=Installment.from_dict(inst_request))}, " \
+        f"got {first_transfer.get('amountCents')}"
 
 
 @given("a simple debt position created on {pagopa_interaction}")
@@ -496,25 +531,36 @@ def step_check_secondary_org_dp(context, org_name):
 
     secondary_dp = DebtPosition.from_dict(res.json()[0])
 
-    assert secondary_dp.status == Status.PAID
-    assert len(secondary_dp.payment_options) == 1
-    assert len(secondary_dp.payment_options[0].installments) == 1
+    assert secondary_dp.status == Status.PAID, \
+        f"Expected secondary debt position status PAID, got {secondary_dp.status}"
+    assert len(secondary_dp.payment_options) == 1, \
+        f"Expected exactly 1 payment option, got {len(secondary_dp.payment_options)}"
+    assert len(secondary_dp.payment_options[0].installments) == 1, \
+        f"Expected exactly 1 installment, got {len(secondary_dp.payment_options[0].installments)}"
     assert (secondary_dp.payment_options[0].installments[0].amount_cents ==
-            primary_installment.amount_cents + second_transfer_req.amount_cents)
-    assert len(secondary_dp.payment_options[0].installments[0].transfers) == 1
+            primary_installment.amount_cents + second_transfer_req.amount_cents), \
+        f"Expected installment amountCents {primary_installment.amount_cents + second_transfer_req.amount_cents}, " \
+        f"got {secondary_dp.payment_options[0].installments[0].amount_cents}"
+    assert len(secondary_dp.payment_options[0].installments[0].transfers) == 1, \
+        f"Expected exactly 1 transfer, got {len(secondary_dp.payment_options[0].installments[0].transfers)}"
 
     transfer_res = secondary_dp.payment_options[0].installments[0].transfers[0]
-    assert transfer_res.amount_cents == second_transfer_req.amount_cents
-    assert transfer_res.org_fiscal_code == second_transfer_req.org_fiscal_code
-    assert transfer_res.iban == second_transfer_req.iban
+    assert transfer_res.amount_cents == second_transfer_req.amount_cents, \
+        f"Expected transfer amountCents {second_transfer_req.amount_cents}, got {transfer_res.amount_cents}"
+    assert transfer_res.org_fiscal_code == second_transfer_req.org_fiscal_code, \
+        f"Expected transfer orgFiscalCode {second_transfer_req.org_fiscal_code}, got {transfer_res.org_fiscal_code}"
+    assert transfer_res.iban == second_transfer_req.iban, \
+        f"Expected transfer iban {second_transfer_req.iban}, got {transfer_res.iban}"
     # assert transfer_res.category == second_transfer_req.category #TODO check correctness of taxonomy category mapping, see P4ADEV-4530
-    assert transfer_res.transfer_index == 2
+    assert transfer_res.transfer_index == 2, \
+        f"Expected transferIndex 2, got {transfer_res.transfer_index}"
 
     res_dpto = get_debt_position_type_org_by_id(token=context.token, traceparent=context.traceparent,
                                                 debt_position_type_org_id=secondary_dp.debt_position_type_org_id)
 
     assert_response_ok(res_dpto, "Get debt position type org by id")
-    assert res_dpto.json()['debtPositionTypeId'] == -1
+    assert res_dpto.json().get('debtPositionTypeId') == -1, \
+        f"Expected debtPositionTypeId -1 (UNKNOWN), got {res_dpto.json().get('debtPositionTypeId')}"
 
 
 @then('the transfer is created with stamp data instead of iban')
@@ -524,10 +570,13 @@ def step_check_transfer_data(context):
 
     transfer = debt_position.payment_options[0].installments[0].transfers[0]
 
-    assert transfer.iban is None
-    assert transfer.stamp_type == stamp_data.stamp_type
-    assert transfer.stamp_hash_document == stamp_data.stamp_hash_document
-    assert transfer.stamp_provincial_residence == stamp_data.stamp_provincial_residence
+    assert transfer.iban is None, f"Expected transfer iban to be None (stamp transfer), got {transfer.iban}"
+    assert transfer.stamp_type == stamp_data.stamp_type, \
+        f"Expected stamp_type {stamp_data.stamp_type}, got {transfer.stamp_type}"
+    assert transfer.stamp_hash_document == stamp_data.stamp_hash_document, \
+        f"Expected stamp_hash_document {stamp_data.stamp_hash_document}, got {transfer.stamp_hash_document}"
+    assert transfer.stamp_provincial_residence == stamp_data.stamp_provincial_residence, \
+        f"Expected stamp_provincial_residence {stamp_data.stamp_provincial_residence}, got {transfer.stamp_provincial_residence}"
 
 
 @when("the organization adds the installment {seq_num} to payment option {po_index} with an amount of {amount} euros "
@@ -614,15 +663,15 @@ def step_check_installment_on_gpd(context, seq_num, po_index, dp_identifier=None
     gpd_position = res.json()
     gpd_installment = gpd_position['paymentOption'][0]['installments'][0]
 
-    assert gpd_position['status'] == 'VALID', f"GPD status mismatch: expected VALID, got {gpd_position['status']}"
-    assert gpd_installment['iuv'] == installment.iuv, \
-        f"GPD iuv mismatch: expected {installment.iuv}, got {gpd_installment['iuv']}"
-    assert gpd_installment['amount'] == installment.amount_cents, \
-        f"GPD amount mismatch: expected {installment.amount_cents}, got {gpd_installment['amount']}"
-    assert gpd_installment['dueDate'].startswith(installment.due_date), \
-        f"GPD dueDate mismatch: expected {installment.due_date}, got {gpd_installment['dueDate']}"
-    assert gpd_installment['description'] == installment.remittance_information, \
-        f"GPD description mismatch: expected {installment.remittance_information}, got {gpd_installment['description']}"
+    assert gpd_position.get('status') == 'VALID', f"GPD status mismatch: expected VALID, got {gpd_position.get('status')}"
+    assert gpd_installment.get('iuv') == installment.iuv, \
+        f"GPD iuv mismatch: expected {installment.iuv}, got {gpd_installment.get('iuv')}"
+    assert gpd_installment.get('amount') == installment.amount_cents, \
+        f"GPD amount mismatch: expected {installment.amount_cents}, got {gpd_installment.get('amount')}"
+    assert (gpd_installment.get('dueDate') or '').startswith(installment.due_date), \
+        f"GPD dueDate mismatch: expected {installment.due_date}, got {gpd_installment.get('dueDate')}"
+    assert gpd_installment.get('description') == installment.remittance_information, \
+        f"GPD description mismatch: expected {installment.remittance_information}, got {gpd_installment.get('description')}"
 
 
 def _get_debt_position_dict(context) -> dict:

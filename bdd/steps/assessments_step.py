@@ -35,7 +35,8 @@ def step_check_assessment(context, status: str, dp_identifier: str = None):
                           installment_id=installment_paid.installment_id)
 
     assert_response_ok(res, "Get installment by id")
-    assert res.json()["sourceFlowName"] is not None
+    assert res.json().get("sourceFlowName") is not None, \
+        f"Installment {installment_paid.installment_id} has no sourceFlowName"
     installment_paid.source_flow_name = res.json()["sourceFlowName"]
 
     res = get_assessment(token=context.token, traceparent=context.traceparent, organization_id=org_info.id,
@@ -43,8 +44,10 @@ def step_check_assessment(context, status: str, dp_identifier: str = None):
                          assessment_name=installment_paid.source_flow_name)
 
     assert_response_ok(res, "Get assessment")
-    assert res.json()["assessmentId"] is not None
-    assert res.json()["status"] == status.upper()
+    assert res.json().get("assessmentId") is not None, \
+        f"No assessmentId returned for assessment '{installment_paid.source_flow_name}'"
+    assert res.json().get("status") == status.upper(), \
+        f"Expected assessment status {status.upper()}, got {res.json().get('status')}"
 
     context.assessment_id = int(res.json()["assessmentId"])
 
@@ -57,7 +60,9 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
                                                 organization_id=context.org_info.id,
                                                 iud=installment_paid.iud, iuv=installment_paid.iuv)
     assert_response_ok(res, "Get assessment details by IUD and IUV")
-    assert len(res.json()["_embedded"]["assessmentsDetails"]) == 0
+    assert len((res.json().get("_embedded") or {}).get("assessmentsDetails") or []) == 0, \
+        f"Expected no assessmentDetails for IUD {installment_paid.iud} / IUV {installment_paid.iuv}, " \
+        f"got {len((res.json().get('_embedded') or {}).get('assessmentsDetails') or [])}"
 
     date_now = today()
     res = get_classification(token=context.token, traceparent=context.traceparent, organization_id=context.org_info.id,
@@ -65,7 +70,9 @@ def check_dp_with_dpto_mixed_not_classified(context, installment_paid):
                              iuv=installment_paid.iuv, iud=installment_paid.iud)
 
     assert_response_ok(res, "Get classification by IUD and IUV")
-    assert len(res.json()['content']) == 0
+    assert len(res.json().get('content') or []) == 0, \
+        f"Expected no classification for IUD {installment_paid.iud} / IUV {installment_paid.iuv}, " \
+        f"got {len(res.json().get('content') or [])}"
 
 
 @then("the assessment classification label for each IUD is {label}")
@@ -104,9 +111,13 @@ def step_check_assessment_detail_classification_label(context, label):
             assert assessment_detail is not None, \
                 f"No assessmentDetail matches {section.assessment_registry} for IUD {transfer_mixed.iud}"
 
-            assert assessment_detail["iur"] == installment_paid.iur
-            assert assessment_detail["debtPositionTypeOrgCode"] == transfer_mixed.debt_position_type_org_code
-            assert assessment_detail['classificationLabel'] == label
+            assert assessment_detail.get("iur") == installment_paid.iur, \
+                f"Expected IUR {installment_paid.iur}, got {assessment_detail.get('iur')}"
+            assert assessment_detail.get("debtPositionTypeOrgCode") == transfer_mixed.debt_position_type_org_code, \
+                f"Expected debtPositionTypeOrgCode {transfer_mixed.debt_position_type_org_code}, " \
+                f"got {assessment_detail.get('debtPositionTypeOrgCode')}"
+            assert assessment_detail.get('classificationLabel') == label, \
+                f"Expected classificationLabel {label}, got {assessment_detail.get('classificationLabel')}"
 
 
 @then("the assessment detail is created correctly based on balance")
@@ -137,19 +148,26 @@ def step_check_assessment_detail(context, dptobc_type=None,
     assert_response_ok(res, "Get assessment details")
     assessment_details = res.json()["_embedded"]["assessmentsDetails"]
     context.assessment_details = assessment_details
-    assert len(assessment_details) == len(balance.sections)
+    assert len(assessment_details) == len(balance.sections), \
+        f"Expected {len(balance.sections)} assessmentDetails (one for each section), got {len(assessment_details)}"
 
     for section in balance.sections:
         assessment_detail = _find_matching_assessment_detail(assessment_details, section)
         assert assessment_detail is not None, f"No assessmentDetail matches {section.assessment_registry}"
 
-        assert installment_paid.iur == assessment_detail["iur"]
-        assert assessment_detail['classificationLabel'] == classification_label
-        assert int(section.amount_cents) == assessment_detail["amountCents"]
-        assert (assessment_detail["sectionCode"] is not None and
-                section.assessment_registry.section_code == assessment_detail["sectionCode"])
-        assert section.assessment_registry.office_code == assessment_detail["officeCode"]
-        assert section.assessment_registry.assessment_code == assessment_detail["assessmentCode"]
+        assert installment_paid.iur == assessment_detail.get("iur"), \
+            f"Expected IUR {installment_paid.iur}, got {assessment_detail.get('iur')}"
+        assert assessment_detail.get('classificationLabel') == classification_label, \
+            f"Expected classificationLabel {classification_label}, got {assessment_detail.get('classificationLabel')}"
+        assert int(section.amount_cents) == assessment_detail.get("amountCents"), \
+            f"Expected amountCents {int(section.amount_cents)}, got {assessment_detail.get('amountCents')}"
+        assert (assessment_detail.get("sectionCode") is not None and
+                section.assessment_registry.section_code == assessment_detail.get("sectionCode")), \
+            f"Expected sectionCode {section.assessment_registry.section_code}, got {assessment_detail.get('sectionCode')}"
+        assert section.assessment_registry.office_code == assessment_detail.get("officeCode"), \
+            f"Expected officeCode {section.assessment_registry.office_code}, got {assessment_detail.get('officeCode')}"
+        assert section.assessment_registry.assessment_code == assessment_detail.get("assessmentCode"), \
+            f"Expected assessmentCode {section.assessment_registry.assessment_code}, got {assessment_detail.get('assessmentCode')}"
 
 
 def _find_matching_assessment_detail(assessment_details, section):
@@ -185,7 +203,9 @@ def retrieve_balance(context, installment_paid, debt_position_type_org_code, dpt
                                       organization_id=context.org_info.id,
                                       debt_position_type_org_code=debt_position_type_org_code)
         assert_response_ok(res, "Get assessment registry")
-        assert len(res.json()["_embedded"]["assessmentsRegistries"]) == 1
+        assert len((res.json().get("_embedded") or {}).get("assessmentsRegistries") or []) == 1, \
+            f"Expected exactly 1 assessmentRegistry for type org code {debt_position_type_org_code}, " \
+            f"got {len((res.json().get('_embedded') or {}).get('assessmentsRegistries') or [])}"
         ass_reg = res.json()["_embedded"]["assessmentsRegistries"][0]
 
         assessment_registry = AssessmentRegistry(section_code=ass_reg['sectionCode'],

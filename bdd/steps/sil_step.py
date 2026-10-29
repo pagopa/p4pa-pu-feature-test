@@ -64,8 +64,8 @@ def _check_checkout_session(soap_action, res_body, org_info, installment):
     assert res_body.get(session_field) is not None, f"No {session_field} returned by '{soap_action}'"
 
     expected_pattern = checkout_url_pattern(org_info.fiscal_code)
-    assert re.match(expected_pattern, res_body['url']), (
-        f"Checkout URL does not match with expected: {res_body['url']}"
+    assert re.match(expected_pattern, res_body.get('url') or ''), (
+        f"Checkout URL does not match with expected: {res_body.get('url')}"
     )
 
     installment.installment_id = res_body[session_field]
@@ -185,7 +185,7 @@ def step_sil_chiedi_esito_carrello(context, status):
     assert_response_ok(res, "SIL chiedi esito carrello")
     res_body = extract_soap_body(res.content, 'paaSILChiediEsitoCarrelloDovutiRisposta') \
         ['listaCarrelli']['rispostaCarrello']
-    assert res_body['esito'] == status
+    assert res_body.get('esito') == status, f"Expected 'ChiediEsitoCarrello' esito {status}, got {res_body.get('esito')}"
 
     context.chiedi_esito_carrello_response = res_body
 
@@ -200,7 +200,8 @@ def step_chiedi_esito_carrello_rt_matches(context):
 @then("'ChiediPagati' reports the outcome as '{status}'")
 def step_sil_chiedi_pagati_outcome(context, status):
     res_body = _chiedi_pagati(context)
-    assert res_body['fault']['faultCode'] == status
+    assert (res_body.get('fault') or {}).get('faultCode') == status, \
+        f"Expected 'ChiediPagati' faultCode {status}, got {(res_body.get('fault') or {}).get('faultCode')}"
 
 
 def _chiedi_pagati(context):
@@ -357,8 +358,8 @@ def step_sil_verifica_avviso_fault(context, status):
         ipa_code=context.org_info.ipa_code,
     ), 'VerificaAvviso')
     assert res_body.get('fault') is not None, f"'VerificaAvviso' did not return a fault: {res_body}"
-    assert res_body['fault']['faultCode'] == status, \
-        f"'VerificaAvviso' fault code mismatch: expected {status}, got {res_body['fault']['faultCode']}"
+    assert (res_body.get('fault') or {}).get('faultCode') == status, \
+        f"'VerificaAvviso' fault code mismatch: expected {status}, got {(res_body.get('fault') or {}).get('faultCode')}"
 
 
 @then("the payment notice PDF returned by 'ImportaDovuto' is no longer available")
@@ -386,14 +387,14 @@ def step_sil_chiedi_pagati_as_paid(context):
     installment = get_installment_paid(context)
     expected_amount = cents_to_euro_str(installment.amount_cents)
 
-    assert payment_data['identificativoUnivocoVersamento'] == installment.iuv, \
-        f"iuv mismatch: expected {installment.iuv}, got {payment_data['identificativoUnivocoVersamento']}"
-    assert payment_data['codiceEsitoPagamento'] == '0', \
-        f"payment outcome code mismatch: expected 0, got {payment_data['codiceEsitoPagamento']}"
-    assert single_payment_data['identificativoUnivocoDovuto'] == installment.iud, \
-        f"iud mismatch: expected {installment.iud}, got {single_payment_data['identificativoUnivocoDovuto']}"
-    assert single_payment_data['singoloImportoPagato'] == expected_amount, \
-        f"amount mismatch: expected {expected_amount}, got {single_payment_data['singoloImportoPagato']}"
+    assert payment_data.get('identificativoUnivocoVersamento') == installment.iuv, \
+        f"iuv mismatch: expected {installment.iuv}, got {payment_data.get('identificativoUnivocoVersamento')}"
+    assert payment_data.get('codiceEsitoPagamento') == '0', \
+        f"payment outcome code mismatch: expected 0, got {payment_data.get('codiceEsitoPagamento')}"
+    assert single_payment_data.get('identificativoUnivocoDovuto') == installment.iud, \
+        f"iud mismatch: expected {installment.iud}, got {single_payment_data.get('identificativoUnivocoDovuto')}"
+    assert single_payment_data.get('singoloImportoPagato') == expected_amount, \
+        f"amount mismatch: expected {expected_amount}, got {single_payment_data.get('singoloImportoPagato')}"
 
 
 @when("SIL updates the installment amount to {amount} euros through SIL 'ImportaDovuto'")
@@ -408,8 +409,8 @@ def step_sil_importa_dovuto_update(context, amount):
     installment.amount_cents = int(amount) * 100
 
     res_body = _importa_dovuto(context, SilDebtPositionAction.UPDATE)
-    assert res_body['identificativoUnivocoVersamento'] == iuv, \
-        f"iuv mismatch: expected {iuv}, got {res_body['identificativoUnivocoVersamento']}"
+    assert res_body.get('identificativoUnivocoVersamento') == iuv, \
+        f"iuv mismatch: expected {iuv}, got {res_body.get('identificativoUnivocoVersamento')}"
     assert res_body.get('urlFileAvviso'), "No payment notice URL returned by 'ImportaDovuto'"
 
     context.payment_notice_url = res_body['urlFileAvviso']
@@ -429,8 +430,8 @@ def step_sil_importa_dovuto_cancel(context):
     iuv = context.installment.iuv
 
     res_body = _importa_dovuto(context, SilDebtPositionAction.CANCEL)
-    assert res_body['identificativoUnivocoVersamento'] == iuv, \
-        f"iuv mismatch: expected {iuv}, got {res_body['identificativoUnivocoVersamento']}"
+    assert res_body.get('identificativoUnivocoVersamento') == iuv, \
+        f"iuv mismatch: expected {iuv}, got {res_body.get('identificativoUnivocoVersamento')}"
     assert res_body.get('urlFileAvviso') is None, \
         f"Unexpected payment notice URL returned for a cancelled debt position: {res_body.get('urlFileAvviso')}"
 
@@ -471,11 +472,11 @@ def step_check_debt_positions_import_status(context):
 
     org_id = context.org_info.id
     expected_pattern = notices_url_pattern(org_id=org_id, request_token=context.import_request_token)
-    assert re.match(expected_pattern, res_body['urlFileAvvisi']), (
-        f"Notices URL does not match with expected: {res_body['urlFileAvvisi']}"
+    assert re.match(expected_pattern, res_body.get('urlFileAvvisi') or ''), (
+        f"Notices URL does not match with expected: {res_body.get('urlFileAvvisi')}"
     )
 
     expected_pattern = iuvs_url_pattern(org_id=org_id, request_token=context.import_request_token)
-    assert re.match(expected_pattern, res_body['urlFileIUV']), (
-        f"IUVs URL does not match with expected: {res_body['urlFileIUV']}"
+    assert re.match(expected_pattern, res_body.get('urlFileIUV') or ''), (
+        f"IUVs URL does not match with expected: {res_body.get('urlFileIUV')}"
     )
