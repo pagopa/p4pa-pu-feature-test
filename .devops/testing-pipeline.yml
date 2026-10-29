@@ -49,8 +49,8 @@ parameters:
       - sil_send_notification_file
 
 variables:
-  # Python version: 3.x
-  pythonVersion: '3.x'
+  # Python version: 3.11
+  pythonVersion: '3.11'
   # Folder name of this sub-repository
   working-dir: '.'
   # Project root folder
