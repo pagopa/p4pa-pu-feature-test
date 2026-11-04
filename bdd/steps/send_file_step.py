@@ -29,12 +29,11 @@ def create_send_notification_rows(installments: list, org_info, external_campaig
     send_notification_rows = []
 
     for index, inst in enumerate(installments, start=1):
-        row = CSVRow(organizationId=org_info.id,
-                     paProtocolNumber=f'PROT_FT_{timestamp}',
+        row = CSVRow(paProtocolNumber=f'PROT_FT_{timestamp}',
                      externalCampaignId=external_campaign_id)
         row.senderDenomination = org_info.name
         row.senderTaxId = org_info.fiscal_code
-        row.amount = inst.amount_cents
+        row.amountCents = inst.amount_cents
         row.paymentExpirationDate = inst.due_date
         row.pagoPaIntMode = pagopa_int_mode
         row.paymentNoticeCode_1 = inst.nav

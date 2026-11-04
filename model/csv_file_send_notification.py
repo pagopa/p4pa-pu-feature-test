@@ -6,7 +6,6 @@ from model.send_notification import SendPdfDigest, CONTENT_TYPE, PhysicalAddress
 
 @dataclass
 class CSVRow:
-    organizationId: int
     paProtocolNumber: str
     externalCampaignId: str
     notificationFeePolicy: str = 'DELIVERY_MODE'
@@ -14,10 +13,10 @@ class CSVRow:
     subject: str = 'Feature-test send massive import'
     senderDenomination: str = None
     senderTaxId: str = None
-    amount: int = 0
+    amountCents: int = 0
     paymentExpirationDate: str = None
     taxonomyCode: str = '030101P'
-    paFee: int = 100
+    paFeeCents: int = 100
     vat: int = 22
     pagoPaIntMode: str = 'ASYNC'
     recipientType: str = 'PF'
