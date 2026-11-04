@@ -104,10 +104,10 @@ class NotificationRequest:
     subject: str = "P4PA feature-test subject"
     sender_denomination: str = None
     sender_tax_id: str = '00000000018'
-    amount: int = 0
+    amount_cents: int = 0
     payment_expiration_date: str = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
     taxonomy_code: str = '030101P'
-    pa_fee: int = 100
+    pa_fee_cents: int = 100
     vat: int = 22
     externalCampaignId: str = 'featureTest-'+datetime.now().strftime('%Y-%m-%d')
 
