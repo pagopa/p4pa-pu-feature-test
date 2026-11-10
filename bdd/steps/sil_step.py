@@ -289,13 +289,20 @@ def _extract_notice_data(pdf_bytes: bytes) -> dict:
     def after(label: str, offset: int = 1) -> str:
         return lines[lines.index(label) + offset]
 
+    def between(start_label: str, end_label: str) -> str:
+        start = lines.index(start_label) + 1
+        for end in range(start, len(lines)):
+            if lines[end].startswith(end_label):
+                return ''.join(lines[start:end])
+        raise ValueError(f"'{end_label}' not found after '{start_label}'")
+
     return {
         'subject': after('AVVISO DI PAGAMENTO'),
         'creditor_fiscal_code': after('ENTE CREDITORE'),
         'creditor_name': after('ENTE CREDITORE', 2),
         'debtor_name': after('DESTINATARIO'),
         'amount': after('Importo').removesuffix(' Euro'),
-        'due_date': after('entro il') + after('entro il', 2),
+        'due_date': between('entro il', 'In fase di pagamento'),
         'notice_number': after('Cod. Avviso').replace(' ', ''),
         'cbill_code': after('Cod. CBILL'),
     }
